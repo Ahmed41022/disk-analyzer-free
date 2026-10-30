@@ -3,6 +3,7 @@ add_library(dafree_core STATIC src/version.cpp src/units.cpp src/model/aggregate
                                 src/model/tree.cpp)
 target_include_directories(dafree_core PUBLIC include)
 target_compile_features(dafree_core PUBLIC cxx_std_20)
+set_target_properties(dafree_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(dafree_core PUBLIC DAFREE_VERSION="${DAFREE_VERSION}")
 dafree_enable_warnings(dafree_core)
 
