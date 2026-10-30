@@ -1,0 +1,61 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 26, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "dev",
+      "displayName": "Developer build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/dev",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "DAFREE_BUILD_TESTS": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "dev",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "dev-asan",
+      "inherits": "dev",
+      "binaryDir": "${sourceDir}/build/dev-asan",
+      "cacheVariables": { "DAFREE_SANITIZE": "address,undefined" }
+    },
+    {
+      "name": "dev-tsan",
+      "inherits": "dev",
+      "binaryDir": "${sourceDir}/build/dev-tsan",
+      "cacheVariables": { "DAFREE_SANITIZE": "thread" }
+    },
+    {
+      "name": "coverage",
+      "inherits": "dev",
+      "binaryDir": "${sourceDir}/build/coverage",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "fuzz",
+      "inherits": "dev",
+      "binaryDir": "${sourceDir}/build/fuzz",
+      "cacheVariables": { "DAFREE_BUILD_FUZZ": "ON" }
+    },
+    {
+      "name": "bench",
+      "inherits": "dev",
+      "binaryDir": "${sourceDir}/build/bench",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "DAFREE_BUILD_BENCH": "ON" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "dev", "configurePreset": "dev" },
+    { "name": "release", "configurePreset": "release" }
+  ],
+  "testPresets": [
+    { "name": "dev", "configurePreset": "dev", "output": { "outputOnFailure": true } },
+    { "name": "release", "configurePreset": "release", "output": { "outputOnFailure": true } }
+  ]
+}

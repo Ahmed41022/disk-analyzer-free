@@ -1,0 +1,5 @@
+Checks: >-
+  bugprone-*,cert-*,cppcoreguidelines-*,performance-*,modernize-*,
+  readability-identifier-naming
+WarningsAsErrors: '*'
+HeaderFilterRegex: 'core/include/dafree/.*'
