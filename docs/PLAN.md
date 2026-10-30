@@ -1125,7 +1125,7 @@ Conventions for every task:
   - **Depends on:** T0.1
   - **Acceptance:** `typos` passes; `mkdocs build --strict -f docs/mkdocs.yml` succeeds (CI docs job); link check passes.
 
-- [ ] **T0.7 — i18n scaffolding**
+- [x] **T0.7 — i18n scaffolding**
   - **Files:** C `src/dafree/i18n/__init__.py`, `src/dafree/i18n/locales/{en_US,ar,de}/LC_MESSAGES/dafree.po`, `tools/i18n_check.py`, CMake custom command compiling `.mo` files into the wheel.
   - **Interface:**
     ```python

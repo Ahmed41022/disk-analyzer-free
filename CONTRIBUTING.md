@@ -48,7 +48,7 @@ After changing nanobind bindings, regenerate the checked-in type stub:
 python tools/gen_stubs.py
 ```
 
-When adding a translation, initialize its gettext catalogue with `pybabel init -l xx`; the i18n checker will be available with the i18n milestone. Build the documentation with:
+When adding a translation, initialize its gettext catalogue with `pybabel init -l xx`. Update `src/dafree/i18n/dafree.pot` with `pybabel extract`, then run `python tools/i18n_check.py` to check for stale strings and placeholder mismatches. Build the documentation with:
 
 ```console
 mkdocs build --strict -f docs/mkdocs.yml

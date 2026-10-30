@@ -30,5 +30,28 @@ include(Sanitizers)
 find_package(Python 3.12 REQUIRED COMPONENTS Interpreter Development.Module Development.SABIModule)
 include(Dependencies)
 
+set(DAFREE_LOCALES en_US ar de)
+set(_dafree_mo_files)
+foreach(_locale IN LISTS DAFREE_LOCALES)
+  set(_po_file "${CMAKE_CURRENT_SOURCE_DIR}/src/dafree/i18n/locales/${_locale}/LC_MESSAGES/dafree.po")
+  set(_mo_dir "${CMAKE_CURRENT_BINARY_DIR}/i18n/${_locale}/LC_MESSAGES")
+  set(_mo_file "${_mo_dir}/dafree.mo")
+  add_custom_command(
+    OUTPUT "${_mo_file}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${_mo_dir}"
+    COMMAND "${Python_EXECUTABLE}" -m babel.messages.frontend compile
+            --input-file "${_po_file}" --output-file "${_mo_file}"
+            --domain dafree --locale "${_locale}"
+    DEPENDS "${_po_file}"
+    COMMENT "Compiling ${_locale} gettext catalogue"
+    VERBATIM
+  )
+  list(APPEND _dafree_mo_files "${_mo_file}")
+  install(FILES "${_mo_file}"
+          DESTINATION "dafree/i18n/locales/${_locale}/LC_MESSAGES")
+endforeach()
+add_custom_target(dafree_translations ALL DEPENDS ${_dafree_mo_files})
+
 add_subdirectory(core)
 add_subdirectory(bindings)
+add_dependencies(_core dafree_translations)

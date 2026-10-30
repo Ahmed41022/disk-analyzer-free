@@ -9,5 +9,4 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 - Initial Python and C++20 package scaffold with a version command and Qt window stub.
 - Cross-platform build, test, lint, type, and dependency-policy checks.
 - Contributor and project documentation.
-
-\n
+- gettext locale negotiation and Arabic, German, and English catalogue scaffolding.

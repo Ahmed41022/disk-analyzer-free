@@ -25,6 +25,7 @@ The project is being built toward these capabilities:
 - **Actions:** reveal and inspect files, and carefully confirmed delete or move operations with trash as the default.
 - **Network:** scanning network shares with suitable defaults.
 - **Reports and automation:** CSV, JSON, HTML, and PDF exports, scheduled scans, and alerts.
+- **Languages:** English is the initial interface language; Arabic (right-to-left) and German catalogues are being scaffolded.
 
 See the [implementation plan](docs/PLAN.md) for milestone status and the complete scope.
 

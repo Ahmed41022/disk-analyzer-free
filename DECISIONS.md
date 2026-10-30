@@ -36,6 +36,18 @@ Alternatives: Add the full workflow immediately, which would fail on files and t
 
 Task: T0.5
 
+## D-0004 — 2026-10-30 — NumPy license expression
+
+Question: How should the runtime allowlist treat NumPy's compound license expression, which the planned exact allowlist does not include?
+
+Choice: Add NumPy's exact expression `BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0` to the exact allowlist.
+
+Reasoning: NumPy is an explicitly required dependency and the listed identifiers are permissive; exact matching keeps mixed expressions from passing through a broad partial match.
+
+Alternatives: Use partial matching, which could admit an expression containing a forbidden license, or remove NumPy contrary to the plan.
+
+Task: T0.5
+
 ## Project assumptions A1–A15 — 2026-10-30 — Platform and product contracts
 
 These are the product owner's global assumptions from §0.3 of `docs/PLAN.md`; they remain the source of truth for implementation.
@@ -72,7 +84,7 @@ The selected stack and licenses are:
 | Click / Rich | BSD-3-Clause / MIT | Runtime CLI. |
 | platformdirs / Send2Trash / tomli-w | MIT / BSD-3-Clause / MIT | Runtime paths, trash integration, and TOML writing. |
 | PySide6-Essentials / shiboken6 / Qt | LGPL-3.0 | Optional GUI dependency; kept separately replaceable and documented per §8.6. GPL-only Qt modules are excluded. |
-| Babel | BSD-3-Clause | Translation tooling. |
+| Babel | BSD-3-Clause | Build-time `.mo` compilation and translation checks; not a runtime dependency. |
 | pytest / pytest-qt / pytest-timeout | MIT / MIT / MIT | Test-only. |
 | Hypothesis | MPL-2.0 | Test-only. |
 | syrupy / jsonschema / pypdf | MIT / MIT / BSD-3-Clause | Test-only. |
@@ -104,14 +116,14 @@ Alternatives: Invent a real-looking email address, which could send private repo
 
 Task: T0.6
 
-## D-0004 — 2026-10-30 — NumPy license expression
+## D-0006 — 2026-10-30 — Babel in isolated builds
 
-Question: How should the runtime allowlist treat NumPy's compound license expression, which the planned exact allowlist does not include?
+Question: How can the CMake translation-compilation step find Babel during an isolated wheel build, where development extras are not installed?
 
-Choice: Add NumPy's exact expression `BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0` to the exact allowlist.
+Choice: Declare Babel as a build-system requirement and compile each checked-in `.po` catalogue through Python during the CMake build.
 
-Reasoning: NumPy is an explicitly required dependency and the listed identifiers are permissive; exact matching keeps mixed expressions from passing through a broad partial match.
+Reasoning: The built wheel must contain `.mo` files without adding Babel to runtime dependencies; build-system requirements are installed in the isolated build environment.
 
-Alternatives: Use partial matching, which could admit an expression containing a forbidden license, or remove NumPy contrary to the plan.
+Alternatives: Ship precompiled catalogues without a build step, or make Babel a runtime dependency. The former can leave generated translations stale and the latter unnecessarily expands runtime dependencies.
 
-Task: T0.5
+Task: T0.7
