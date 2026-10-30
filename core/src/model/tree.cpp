@@ -8,6 +8,7 @@
 namespace dafree {
 namespace {
 
+#if defined(_WIN32) || defined(__APPLE__)
 char32_t simple_fold(char32_t codepoint) noexcept {
     if (codepoint > 0xFFFF) {
         return codepoint;
@@ -36,6 +37,7 @@ void append_utf8(std::string &output, char32_t codepoint) {
         output.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
     }
 }
+#endif
 
 std::string normalized_path(std::string_view path) {
 #ifdef _WIN32
