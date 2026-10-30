@@ -2,8 +2,13 @@
 
 import os
 import sys
+from collections.abc import Callable
+from typing import cast
 
-_add_dll_directory = getattr(os, "add_dll_directory", None)
+_add_dll_directory = cast(
+    Callable[[str], object] | None,
+    getattr(os, "add_dll_directory", None),
+)
 _python_dll_directory = (
     _add_dll_directory(sys.base_prefix)
     if sys.platform == "win32" and _add_dll_directory is not None
