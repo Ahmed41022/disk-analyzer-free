@@ -52,6 +52,10 @@ foreach(_locale IN LISTS DAFREE_LOCALES)
 endforeach()
 add_custom_target(dafree_translations ALL DEPENDS ${_dafree_mo_files})
 
+if(DAFREE_BUILD_BENCH)
+  FetchContent_MakeAvailable(benchmark)
+endif()
+
 add_subdirectory(core)
 add_subdirectory(bindings)
 add_dependencies(_core dafree_translations)

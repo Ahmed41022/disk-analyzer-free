@@ -164,3 +164,15 @@ Reasoning: The plan stages these APIs across tasks. Defining scan options and is
 Alternatives: Move scan-owned types into the model now, or omit the corresponding tree API until later tasks, both of which would drift from the planned module boundaries and interfaces.
 
 Task: T1.3
+
+## D-0010 — 2026-10-30 — Saturated totals during deletion
+
+Question: How should incremental deletion update an ancestor whose size has saturated at `UINT64_MAX`?
+
+Choice: Subtract and add the changed child contribution along ordinary ancestor paths. Recompute a saturated ancestor from its direct children before continuing upward. Use a direct segment-index fast path for the usual full-size `SegVector` segments, with binary-search fallback after `shrink_last` followed by an append.
+
+Reasoning: Saturating addition cannot be reversed by subtraction; the recompute path preserves the result of a fresh aggregation. The segment lookup avoids repeated binary searches in the 10-million-node aggregation pass while preserving random access after shrinking.
+
+Alternatives: Always reaggregate the whole tree after deletion, or subtract from saturated totals and risk incorrect values.
+
+Task: T1.4

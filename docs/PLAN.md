@@ -1160,12 +1160,13 @@ Conventions for every task:
   - **Depends on:** T1.1, T1.2
   - **Acceptance:** doctest `children_contiguous`, `parent_less_than_child_random_builds` (1,000 seeded random builds), `path_reconstruction`, `find_path_case_rules`, `add_children_twice_throws`.
 
-- [ ] **T1.4 — Aggregation and incremental updates**
+- [x] **T1.4 — Aggregation and incremental updates**
   - **Files:** C `core/src/model/aggregate.cpp`, `core/tests/test_aggregate.cpp`, `core/bench/bench_aggregate.cpp`.
   - **Interface:** `void aggregate(SegVector<Node>&, SegVector<Counts>&)`; `Tree::mark_deleted(NodeId)` (§2.3).
   - **Behavior:** §2.3.1, saturating adds.
   - **Depends on:** T1.3
   - **Acceptance:** doctest `aggregate_matches_recursive_oracle` (random trees ≤ 5,000 nodes, 500 seeds), `hardlink_dup_counted_once`, `excluded_not_counted`, `mark_deleted_equals_full_reaggregate`; benchmark `BM_Aggregate/10000000` recorded (CI threshold §6.5).
+  - **Recorded benchmark:** 77.54 ms median, Windows MinGW Release build, three repetitions on 2026-10-30. The §6.5 absolute limit is 120 ms on nightly runners.
 
 - [ ] **T1.5 — Units**
   - **Files:** C `core/include/dafree/units.hpp`, `core/src/units.cpp`, `core/tests/test_units.cpp`.

@@ -284,6 +284,13 @@ template <class T> class SegVector {
     }
 
     [[nodiscard]] std::size_t find_segment(std::uint32_t index) const {
+        const auto expected = static_cast<std::size_t>(index / kSegmentSize);
+        if (expected < segments_.size()) {
+            const auto &segment = segments_[expected];
+            if (index >= segment.begin && index - segment.begin < segment.capacity) {
+                return expected;
+            }
+        }
         const auto it = std::upper_bound(
             segments_.begin(), segments_.end(), index,
             [](std::uint32_t value, const Segment &segment) { return value < segment.begin; });
@@ -369,6 +376,9 @@ class OwnerTable {
     std::vector<std::string> displays_;
     std::unordered_map<OwnerKey, std::uint32_t, Hash> ids_;
 };
+
+/// Compute directory sizes and descendant counts in one reverse node pass.
+void aggregate(SegVector<Node> &nodes, SegVector<Counts> &counts);
 
 /// Access and update a built scan tree.
 class Tree {

@@ -87,7 +87,10 @@ void TreeBuilder::mark(NodeId id, std::uint16_t flags) {
     tree_.nodes_[id].flags = static_cast<std::uint16_t>(tree_.nodes_[id].flags | flags);
 }
 
+void TreeBuilder::aggregate_partial() { aggregate(tree_.nodes_, tree_.counts_); }
+
 Tree TreeBuilder::finish(ScanMeta meta) && {
+    aggregate(tree_.nodes_, tree_.counts_);
     tree_.meta_ = std::move(meta);
     tree_.nodes_.shrink_last();
     tree_.counts_.shrink_last();
