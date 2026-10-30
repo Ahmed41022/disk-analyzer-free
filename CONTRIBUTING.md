@@ -30,6 +30,8 @@ ctest --preset dev --output-on-failure
 
 The GUI tests run offscreen in CI. Set `QT_QPA_PLATFORM=offscreen` when running them in a headless environment. If Qt is installed, the smoke test opens and closes the window; CI sets `DAFREE_REQUIRE_GUI=1` so a missing Qt installation fails instead of silently skipping the test.
 
+Filesystem tests can describe a tree with `tests.testkit.spec`, create it under pytest's `tmp_path` with `Fixture.create`, and compare logical totals with `oracle`. Keep each fixture inside the test's temporary directory. Call `fixture.caps.require("feature")` before relying on an optional OS feature; CI sets `DAFREE_REQUIRE_ALL_CAPS=1` so an unexpected missing capability fails the test.
+
 ## Project boundaries
 
 - The Python package owns orchestration and the user interface; the C++20 core owns work over file-system entries.

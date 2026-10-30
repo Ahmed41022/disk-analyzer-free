@@ -19,6 +19,7 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: 1
   FETCHCONTENT_BASE_DIR: ${{ github.workspace }}/.deps
   DAFREE_REQUIRE_GUI: 1
+  DAFREE_REQUIRE_ALL_CAPS: 1
   QT_QPA_PLATFORM: offscreen
 
 defaults:

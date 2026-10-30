@@ -1174,7 +1174,7 @@ Conventions for every task:
   - **Depends on:** T0.1
   - **Acceptance:** doctest `format_table`, `parse_table`, `parse_format_roundtrip_within_rounding` (seeded 10k values); Python `test_units_parity_json` exports the same table for GUI delegates.
 
-- [ ] **T1.6 — Python testkit: fixture spec, builder, oracle**
+- [x] **T1.6 — Python testkit: fixture spec, builder, oracle**
   - **Files:** C `tests/testkit/{__init__.py,spec.py,builder.py,oracle.py,presets.py,platform_caps.py}`, `tests/unit/test_testkit.py`.
   - **Interface:**
     ```python

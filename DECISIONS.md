@@ -188,3 +188,15 @@ Reasoning: The style object makes locale behavior explicit and deterministic. Th
 Alternatives: Depend on process locale, use floating-point conversion near `UINT64_MAX`, or keep a separate Python formatter whose output could diverge from C++.
 
 Task: T1.5
+
+## D-0012 — 2026-10-30 — Fixture oracle paths and capability handling
+
+Question: How should the testkit represent the fixture root, unreadable directory contents, links, and unavailable OS features in expected results?
+
+Choice: Use an empty string for the root and POSIX-style relative keys for descendants. Count each file or hard-link directory entry as a file; in dedup mode only the first regular file contributes bytes and each extra hard link increments `hardlink_dups`. Treat unreadable directory contents as unseen. Keep links unfollowed by default. Create every fixture inside a test-owned temporary directory and expose observed feature support through `Caps.require`, which fails in CI when `DAFREE_REQUIRE_ALL_CAPS=1`.
+
+Reasoning: The keys can be compared independent of the host OS. The totals reflect what a scanner can observe without access or link following. Explicit capability checks keep platform limitations visible, while cleanup restores directory permissions before removing the owned fixture. Linux long paths use directory-relative operations so the preset can exceed `PATH_MAX`.
+
+Alternatives: Use absolute platform paths in the oracle, count hidden unreadable children, or silently skip unsupported features in CI; these would make cross-platform assertions or failure diagnosis unreliable.
+
+Task: T1.6
