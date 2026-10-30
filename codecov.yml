@@ -1,0 +1,29 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: 75%
+
+component_management:
+  individual_components:
+    - component_id: api
+      name: Python API
+      paths:
+        - src/dafree/api/**
+    - component_id: cli
+      name: Python CLI
+      paths:
+        - src/dafree/cli/**
+    - component_id: gui
+      name: Python GUI
+      paths:
+        - src/dafree/gui/**
+    - component_id: core
+      name: C++ core
+      paths:
+        - core/src/**
+        - bindings/src/**
