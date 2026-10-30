@@ -10,3 +10,4 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 - Cross-platform build, test, lint, type, and dependency-policy checks.
 - Contributor and project documentation.
 - gettext locale negotiation and Arabic, German, and English catalogue scaffolding.
+- Segmented C++ storage with indexed, forward, and reverse iteration.

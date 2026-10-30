@@ -1140,7 +1140,7 @@ Conventions for every task:
 
 ### M1 — Core scanner (C++) and testkit (Python)
 
-- [ ] **T1.1 — `SegVector<T>`**
+- [x] **T1.1 — `SegVector<T>`**
   - **Files:** C `core/include/dafree/model.hpp` (partial), `core/src/model/segvector.cpp` (explicit instantiations), `core/tests/test_segvector.cpp`.
   - **Interface:** §2.3 plus `begin()/end()` iterators and `rbegin()/rend()`.
   - **Behavior:** 65,536-element segments allocated with `std::make_unique_for_overwrite<T[]>`; growth beyond `UINT32_MAX - 1` throws `CapacityError`; `shrink_last()` reallocates the last segment to exact size.
