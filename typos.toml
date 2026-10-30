@@ -1,3 +1,5 @@
 [default.extend-words]
 dafree = "dafree"
 nanobind = "nanobind"
+nam = "nam"
+pn = "pn"

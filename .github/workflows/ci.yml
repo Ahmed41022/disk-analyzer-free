@@ -149,10 +149,31 @@ jobs:
       - name: C++ dependency licenses
         run: python tools/cpp_licenses.py cmake/Dependencies.cmake
 
+  docs:
+    name: Documentation
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements/docs.txt
+      - name: Install documentation dependencies and package
+        run: |
+          python -m pip install --require-hashes -r requirements/docs.txt
+          python -m pip install .
+      - name: Build documentation (strict)
+        run: mkdocs build --strict -f docs/mkdocs.yml
+      - uses: lycheeverse/lychee-action@v2
+        with:
+          args: --offline --no-progress 'docs/**/*.md' README.md CONTRIBUTING.md
+          fail: true
+
   ci-success:
     name: ci-success
     if: always()
-    needs: [lint, cpp, python, audit]
+    needs: [lint, cpp, python, audit, docs]
     runs-on: ubuntu-24.04
     steps:
       - name: Check all jobs

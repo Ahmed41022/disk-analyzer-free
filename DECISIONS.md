@@ -36,6 +36,74 @@ Alternatives: Add the full workflow immediately, which would fail on files and t
 
 Task: T0.5
 
+## Project assumptions A1–A15 — 2026-10-30 — Platform and product contracts
+
+These are the product owner's global assumptions from §0.3 of `docs/PLAN.md`; they remain the source of truth for implementation.
+
+- **A1 — Supported operating systems:** Windows 10 22H2+/11 x86_64 (arm64 best-effort per A12), macOS 13+ arm64 and x86_64, and Linux with glibc 2.35+ x86_64 and aarch64.
+- **A2 — Python and ABI:** Python 3.12–3.15 for pip installs; frozen apps bundle CPython 3.14; the extension uses the stable ABI (`abi3`, `cp312`).
+- **A3 — Native toolchain:** C++20; MSVC 2022 v143 on Windows, GCC 12+ on Linux, Apple Clang 15+ on macOS; CMake 3.26+.
+- **A4 — Size units:** base 1024 by default with KB/MB/GB/TB labels; settings may choose IEC labels or base 1000; CLI options will include `--si` and `--iec-labels`.
+- **A5 — Size meaning:** size is logical file length; allocated is on-disk allocation; directory entries add zero to either total.
+- **A6 — Link and mount policy:** scans do not follow symlinks or junctions and do not cross file-system boundaries unless requested.
+- **A7 — Hard links:** count a file once per scan; later entries are marked `HARDLINK_DUP` and add zero to totals.
+- **A8 — Windows streams:** Alternate Data Streams are excluded by default; `include_ads` enables them.
+- **A9 — Timestamps:** store seconds since Unix epoch in `uint32`; zero means unknown, pre-1970 maps to 1, and post-2106 clamps to `UINT32_MAX`.
+- **A10 — Owner lookup:** resolve lazily for visible rows, owner queries, or exports that include owners.
+- **A11 — Scheduling:** use OS schedulers only (Task Scheduler, launchd, systemd user timers, or crontab fallback).
+- **A12 — Windows arm64:** produce installers only when PySide6-Essentials has a win_arm64 wheel for the bundled Python; always build the Qt-free pip wheel.
+- **A13 — Languages:** en-US is primary; ship Arabic (RTL) and German; use gettext catalogues managed by Babel for CLI and GUI.
+- **A14 — Signing:** use Authenticode and Apple notarization only when repository secrets are configured; otherwise builds are unsigned.
+- **A15 — GUI toolkit:** use Qt Widgets rather than QML for accessibility, native-feeling tables, and lower memory use.
+
+## Architecture and dependency decisions — 2026-10-30
+
+The product is Python-based with a C++20 core. Per-entry scanning, parsing, tree storage, aggregation, filtering, and other hot paths belong in C++; Python owns orchestration, CLI, and GUI. `dafree.api` is the only Python layer that imports `_core`. Native dependencies are fetched as pinned release archives with SHA-256 hashes; no submodules are used.
+
+The selected stack and licenses are:
+
+| Dependency or component | License | Use / distribution note |
+| --- | --- | --- |
+| CMake / Ninja | BSD-3-Clause / Apache-2.0 | Build tools, not shipped in runtime packages. |
+| scikit-build-core | Apache-2.0 | Python/CMake build backend. |
+| nanobind | BSD-3-Clause | Native Python bindings. |
+| cibuildwheel | BSD-2-Clause | Wheel build tool, not shipped. |
+| NumPy | BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0 | Runtime; exact compound expression is allowlisted by CI. |
+| Click / Rich | BSD-3-Clause / MIT | Runtime CLI. |
+| platformdirs / Send2Trash / tomli-w | MIT / BSD-3-Clause / MIT | Runtime paths, trash integration, and TOML writing. |
+| PySide6-Essentials / shiboken6 / Qt | LGPL-3.0 | Optional GUI dependency; kept separately replaceable and documented per §8.6. GPL-only Qt modules are excluded. |
+| Babel | BSD-3-Clause | Translation tooling. |
+| pytest / pytest-qt / pytest-timeout | MIT / MIT / MIT | Test-only. |
+| Hypothesis | MPL-2.0 | Test-only. |
+| syrupy / jsonschema / pypdf | MIT / MIT / BSD-3-Clause | Test-only. |
+| Ruff / mypy | MIT / MIT | Development checks. |
+| coverage.py / gcovr | Apache-2.0 / BSD-3-Clause | Development and coverage checks. |
+| pip-licenses / pip-audit | MIT / Apache-2.0 | Development policy and vulnerability checks. |
+| MkDocs Material / mkdocs-click | MIT / MIT | Documentation tooling. |
+| PyInstaller | GPL-2.0 with bootloader exception | Build-only; onedir distributions keep Qt libraries separate. |
+| robin-map / doctest | MIT / MIT | C++ dependency and test framework. |
+| zstd / xxHash / BLAKE3 / PCRE2 / Google Benchmark | BSD-3-Clause / BSD-2-Clause / Apache-2.0 or CC0 / BSD-3-Clause / Apache-2.0 | Pinned C++ compression, hashing, regex, and benchmark dependencies. |
+
+The current Python runtime allowlist is checked against the installed runtime set. Development-only dependencies are not shipped. GPL, AGPL, and SSPL runtime dependencies are prohibited.
+
+The repository and package use the name **Disk Analyzer Free**, import name `dafree`, and repository name `disk-analyzer-free`. The product owner selected the descriptive name; the name check recorded in §0.1 found no exact well-known product but noted generic-name search and trademark limitations. Do not rename it. Do not use TreeSize branding, assets, screenshots, wording, or code. The app icon will be original.
+
+The project license is MIT, Copyright (c) 2026 Disk Analyzer Free contributors. This maximizes reuse and is compatible with the chosen dependencies; the accepted trade-off is that MIT permits closed-source forks and does not grant an explicit patent license. PySide6/Qt is the named LGPL-3.0 exception: frozen builds will be onedir, ship Qt and shiboken as replaceable shared libraries, include LGPL/GPL text and source pointers, and not prevent library replacement. The pip wheel does not bundle Qt.
+
+Task: T0.6
+
+## D-0005 — 2026-10-30 — Code of Conduct contact placeholder
+
+Question: Which contact should the code of conduct name before a project support address exists?
+
+Choice: Use `conduct@Ahmed41022.invalid` as an explicit non-deliverable placeholder and direct security reports to GitHub private vulnerability reporting.
+
+Reasoning: No verified conduct mailbox was provided; the reserved `.invalid` domain cannot accidentally route reports to an unrelated person.
+
+Alternatives: Invent a real-looking email address, which could send private reports to an unrelated recipient, or omit the contact required by the plan.
+
+Task: T0.6
+
 ## D-0004 — 2026-10-30 — NumPy license expression
 
 Question: How should the runtime allowlist treat NumPy's compound license expression, which the planned exact allowlist does not include?

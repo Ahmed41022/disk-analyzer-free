@@ -1,0 +1,25 @@
+site_name: Disk Analyzer Free
+site_description: Find out what's using your disk space.
+site_url: https://ahmed41022.github.io/disk-analyzer-free/
+repo_url: https://github.com/Ahmed41022/disk-analyzer-free
+edit_uri: edit/main/docs/
+
+docs_dir: .
+site_dir: ../build/docs
+strict: true
+
+theme:
+  name: material
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - toc:
+      permalink: true
+
+nav:
+  - Overview: index.md
+  - Implementation plan: PLAN.md

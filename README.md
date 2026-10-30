@@ -1,0 +1,99 @@
+# Disk Analyzer Free
+
+Find out what's using your disk space — fast, free and open source.
+
+[![CI](https://github.com/Ahmed41022/disk-analyzer-free/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Ahmed41022/disk-analyzer-free/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/Ahmed41022/disk-analyzer-free/branch/main/graph/badge.svg)](https://codecov.io/gh/Ahmed41022/disk-analyzer-free)
+[![Release](https://img.shields.io/github/v/release/Ahmed41022/disk-analyzer-free)](https://github.com/Ahmed41022/disk-analyzer-free/releases)
+[![PyPI](https://img.shields.io/pypi/v/disk-analyzer-free)](https://pypi.org/project/disk-analyzer-free/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-blue)
+
+> **Project status:** early development. The current build is a tested CLI and GUI scaffold. Scanning and analysis features are being implemented milestone by milestone; packaged releases are not available yet.
+
+## Screenshots
+
+Screenshots of the light and dark interfaces will be added when the GUI milestone is complete.
+
+## Planned features
+
+The project is being built toward these capabilities:
+
+- **Scanning:** fast directory walks, Windows NTFS fast mode, progress controls, multiple targets, and safe handling of links and permissions.
+- **Views:** virtualized directory tables, treemaps, charts, file counts, logical size, and allocated size.
+- **Search and analysis:** filters, largest files, extension and age breakdowns, empty folders, duplicates, snapshots, and comparisons.
+- **Actions:** reveal and inspect files, and carefully confirmed delete or move operations with trash as the default.
+- **Network:** scanning network shares with suitable defaults.
+- **Reports and automation:** CSV, JSON, HTML, and PDF exports, scheduled scans, and alerts.
+
+See the [implementation plan](docs/PLAN.md) for milestone status and the complete scope.
+
+## Install
+
+There are no published installers or PyPI package yet. When packaged releases are available, the planned downloads are an MSI, EXE, or portable ZIP for Windows; a DMG for macOS (Gatekeeper may warn while unsigned); and AppImage, deb, or rpm packages for Linux. The pip package is intended for the CLI, with the GUI available as an extra.
+
+To build from a source checkout, install Python 3.12+, a C++20 compiler, CMake 3.26+, and Ninja, then run:
+
+```console
+python -m pip install .
+```
+
+For the desktop window, install the optional Qt dependencies too:
+
+```console
+python -m pip install ".[gui]"
+```
+
+Windows, macOS, and Linux packaging instructions will be added with the release milestone. The pip package will provide the CLI; the GUI is an optional extra. Qt is distributed under LGPL-3.0 as replaceable shared libraries when bundled.
+
+## Quick start
+
+For the current desktop scaffold:
+
+1. Install the source package with the `[gui]` extra as shown above.
+2. Open a terminal in the environment where it was installed.
+3. Launch the app:
+
+```console
+dafree --version
+dafree gui
+```
+
+The CLI version command is:
+
+```console
+dafree --version
+```
+
+The following shows the planned CLI syntax; scan and report commands are not implemented yet:
+
+```console
+dafree scan C:\ --depth 2
+dafree find ~/ "size>1GB"
+dafree dupes ~/Pictures
+dafree export / --to html -o report.html
+```
+
+The Python scan API will be documented when the public API is implemented. Its planned entry point is `from dafree.api import scan, ScanRequest`.
+
+## Windows fast mode
+
+The planned Windows NTFS fast mode reads file-system metadata to avoid opening every file individually. It can require administrator privileges and will fall back to a regular directory walk when unavailable.
+
+## Safety
+
+Destructive operations are planned with safety as a default: confirmation, dry-run support, trash or recycle bin by default, protected paths, and no link following when deleting. The current scaffold does not scan, delete, or move files.
+
+## Contributing and support
+
+- [Documentation](docs/index.md)
+- [Contributing guide](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security policy](SECURITY.md)
+- [Report a bug or request a feature](https://github.com/Ahmed41022/disk-analyzer-free/issues)
+
+## License and third-party software
+
+The project is licensed under the [MIT License](LICENSE). PySide6-Essentials and shiboken6 use LGPL-3.0 and remain separate dependencies. Distribution notices and source pointers will accompany packaged builds.
+
+Disk Analyzer Free is not affiliated with or endorsed by JAM Software. TreeSize is a trademark of JAM Software.
