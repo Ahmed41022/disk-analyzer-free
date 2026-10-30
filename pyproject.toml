@@ -37,6 +37,8 @@ dev = [
   "pip-audit",
   "nanobind>=3.1",
 ]
+docs = ["mkdocs-material>=9.8,<10", "mkdocs-click>=0.9,<1"]
+freeze = ["PyInstaller>=6.22,<7"]
 
 [project.scripts]
 dafree = "dafree.cli.main:cli"
@@ -55,3 +57,40 @@ sdist.include = ["core/**", "bindings/**", "cmake/**", "CMakeLists.txt", "CMakeP
 
 [tool.ruff]
 extend-exclude = ["PLAN.md", "docs/PLAN.md"]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF", "PTH", "PL", "TID"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"shutil.rmtree" = { msg = "Use dafree.actions for safe filesystem removal." }
+"os.system" = { msg = "Use subprocess with an argument list." }
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+
+[tool.mypy]
+strict = true
+plugins = []
+files = ["src/dafree"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers --import-mode=importlib"
+timeout = 120
+testpaths = ["tests"]
+markers = [
+  "gui: requires the Qt GUI dependencies",
+  "slow: long-running tests",
+  "windows_only: Windows-specific behavior",
+  "needs_mounts: requires mount privileges",
+  "needs_scheduler: requires OS scheduler integration",
+  "needs_smb: requires an SMB share",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["dafree"]
+
+[tool.coverage.paths]
+source = ["src/dafree", "*/site-packages/dafree"]
