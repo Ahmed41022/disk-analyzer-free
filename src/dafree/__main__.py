@@ -1,1 +1,5 @@
-"""Module entry point for the command line interface added in the CLI milestone."""
+"""Run the command line interface as a module."""
+
+from .cli.main import cli
+
+cli()
