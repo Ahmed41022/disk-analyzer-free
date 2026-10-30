@@ -1,3 +1,5 @@
+#include <ostream>
+
 #include "dafree/model.hpp"
 
 #include <doctest/doctest.h>
