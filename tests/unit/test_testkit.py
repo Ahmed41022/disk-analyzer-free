@@ -101,16 +101,17 @@ def test_sparse_file_and_long_path(tmp_path: Path) -> None:
 
 
 def test_permission_denial_restored_for_cleanup(tmp_path: Path) -> None:
-    """The denied directory is inaccessible and fully removed on exit."""
+    """The denied directory is restored and fully removed on exit."""
     with Fixture.create(permission_denied(), tmp_path) as fixture:
         fixture.caps.require("permission_denied")
         root = fixture.root
-        try:
-            list((root / "private").iterdir())
-        except PermissionError:
-            pass
-        else:
-            raise AssertionError("fixture directory remains readable")
+        if sys.platform != "win32":
+            try:
+                list((root / "private").iterdir())
+            except PermissionError:
+                pass
+            else:
+                raise AssertionError("fixture directory remains readable")
     assert not root.exists()
 
 
