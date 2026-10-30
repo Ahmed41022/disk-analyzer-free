@@ -1153,7 +1153,7 @@ Conventions for every task:
   - **Depends on:** T1.1
   - **Acceptance:** doctest `roundtrip_arbitrary_bytes` (incl. `\xFF`, embedded UTF-8 Arabic/CJK/emoji, NFC vs NFD kept distinct), `ext_rules_table` (`a.TXT`→`txt`, `.bashrc`→none, `archive.tar.gz`→`gz`, `noext`→none, `x.verylongextension123`→none, `my file.a b`→none), `owner_table_dedups_keys`; CI verifies the generated Unicode fold table is current.
 
-- [ ] **T1.3 — `Node`, `Tree`, `TreeBuilder`**
+- [x] **T1.3 — `Node`, `Tree`, `TreeBuilder`**
   - **Files:** C `core/src/model/{tree.cpp,builder.cpp}`, M `model.hpp`, `core/tests/test_tree.cpp`.
   - **Interface:** §2.3.
   - **Behavior:** builder creates `kRoot` (`kSynthetic|kDir`) and root nodes via one `add_children` call; root node names are full root paths. `add_children` twice on a dir throws `AlreadyPopulated`. `path_bytes` joins with the platform separator (root path + names). `find_path` normalizes separators and compares case-insensitively on Windows/macOS (simple Unicode case folding).

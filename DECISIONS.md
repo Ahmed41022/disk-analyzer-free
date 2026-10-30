@@ -152,3 +152,15 @@ Reasoning: The plan requires UTF-8-aware BMP simple folding. A generated table g
 Alternatives: Fold ASCII only, which misses the specified BMP behavior, or add a Unicode runtime library, which adds a dependency outside the plan.
 
 Task: T1.2
+
+## D-0009 — 2026-10-30 — Staged tree metadata and aggregation
+
+Question: How can `Tree` and `TreeBuilder` be introduced in T1.3 while scan metadata and aggregation are assigned to later tasks?
+
+Choice: Keep `ScanMeta` empty until the scan API types are introduced, expose the planned tree and builder signatures, and defer aggregation, deletion, and subtree-replacement definitions to T1.4 and later. `MemoryReport` reports reserved storage by core category and estimates interner storage.
+
+Reasoning: The plan stages these APIs across tasks. Defining scan options and issue types inside the model prematurely would duplicate scan ownership; implementing aggregation early would pull T1.4 into T1.3.
+
+Alternatives: Move scan-owned types into the model now, or omit the corresponding tree API until later tasks, both of which would drift from the planned module boundaries and interfaces.
+
+Task: T1.3

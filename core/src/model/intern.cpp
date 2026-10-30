@@ -156,6 +156,19 @@ std::uint32_t ExtInterner::intern(std::string_view filename, bool is_directory) 
 
 std::string_view ExtInterner::get(std::uint32_t id) const { return extensions_.at(id); }
 
+std::size_t ExtInterner::heap_bytes() const noexcept {
+    std::size_t bytes =
+        extensions_.capacity() * sizeof(std::string) + ids_.bucket_count() * sizeof(void *);
+    for (const auto &extension : extensions_) {
+        bytes += extension.capacity();
+    }
+    for (const auto &[extension, id] : ids_) {
+        (void)id;
+        bytes += extension.capacity();
+    }
+    return bytes;
+}
+
 OwnerKey OwnerKey::posix_uid(std::uint32_t owner_uid) { return {Kind::PosixUid, owner_uid, {}}; }
 
 OwnerKey OwnerKey::windows_sid(std::string_view sid_bytes) {
@@ -192,6 +205,19 @@ std::uint32_t OwnerTable::intern(const OwnerKey &key, std::string_view display) 
 }
 
 std::string_view OwnerTable::get(std::uint32_t id) const { return displays_.at(id); }
+
+std::size_t OwnerTable::heap_bytes() const noexcept {
+    std::size_t bytes =
+        displays_.capacity() * sizeof(std::string) + ids_.bucket_count() * sizeof(void *);
+    for (const auto &display : displays_) {
+        bytes += display.capacity();
+    }
+    for (const auto &[key, id] : ids_) {
+        (void)id;
+        bytes += key.value.capacity();
+    }
+    return bytes;
+}
 
 std::size_t OwnerTable::Hash::operator()(const OwnerKey &key) const noexcept {
     std::size_t seed = std::hash<std::uint8_t>{}(static_cast<std::uint8_t>(key.kind));

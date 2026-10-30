@@ -9,6 +9,7 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -18,6 +19,63 @@
 #include <vector>
 
 namespace dafree {
+
+using NodeId = std::uint32_t;
+inline constexpr NodeId kRoot = 0;
+inline constexpr NodeId kNone = 0xFFFF'FFFFu;
+
+/// Flags that describe a scanned tree entry.
+enum NodeFlags : std::uint16_t {
+    kDir = 1u << 0,
+    kSymlink = 1u << 1,
+    kReparse = 1u << 2,
+    kMountPoint = 1u << 3,
+    kHardlinkDup = 1u << 4,
+    kHidden = 1u << 5,
+    kSystem = 1u << 6,
+    kAccessDenied = 1u << 7,
+    kPartial = 1u << 8,
+    kSparse = 1u << 9,
+    kCompressed = 1u << 10,
+    kCloudPlaceholder = 1u << 11,
+    kExcluded = 1u << 12,
+    kError = 1u << 13,
+    kAllocUnreliable = 1u << 14,
+    kSynthetic = 1u << 15,
+};
+
+/// A compact node in a scan tree. Names are held in the tree's NameArena.
+struct Node {
+    NodeId parent = kNone;
+    NodeId first_child = kNone;
+    std::uint32_t child_count = 0;
+    std::uint32_t name_off = 0;
+    std::uint16_t name_len = 0;
+    std::uint16_t flags = 0;
+    std::uint32_t ext_id = 0;
+    std::uint64_t size = 0;
+    std::uint64_t alloc = 0;
+    std::uint32_t mtime = 0, btime = 0, atime = 0;
+    std::uint32_t owner = 0;
+};
+static_assert(sizeof(Node) == 56 && alignof(Node) == 8);
+static_assert(std::is_trivially_copyable_v<Node>);
+
+/// Descendant file and directory counts for a node.
+struct Counts {
+    std::uint32_t files = 0, dirs = 0;
+};
+
+/// Scan metadata placeholder expanded by the scan API milestone.
+struct ScanMeta {};
+
+/// Memory usage of tree-owned storage.
+struct MemoryReport {
+    std::size_t nodes = 0;
+    std::size_t counts = 0;
+    std::size_t names = 0;
+    std::size_t interners = 0;
+};
 
 /// A segmented vector that preserves existing segments as it grows.
 ///
@@ -264,6 +322,8 @@ class ExtInterner {
     std::uint32_t intern(std::string_view filename, bool is_directory = false);
     /// Return the extension for an ID; ID zero returns an empty view.
     [[nodiscard]] std::string_view get(std::uint32_t id) const;
+    /// Return a lower-bound estimate of extension storage bytes.
+    [[nodiscard]] std::size_t heap_bytes() const noexcept;
 
   private:
     std::vector<std::string> extensions_;
@@ -298,6 +358,8 @@ class OwnerTable {
     std::uint32_t intern(const OwnerKey &key, std::string_view display);
     /// Return the display name for an ID; ID zero returns an empty view.
     [[nodiscard]] std::string_view get(std::uint32_t id) const;
+    /// Return a lower-bound estimate of owner storage bytes.
+    [[nodiscard]] std::size_t heap_bytes() const noexcept;
 
   private:
     struct Hash {
@@ -306,6 +368,85 @@ class OwnerTable {
 
     std::vector<std::string> displays_;
     std::unordered_map<OwnerKey, std::uint32_t, Hash> ids_;
+};
+
+/// Access and update a built scan tree.
+class Tree {
+  public:
+    /// Return the number of nodes, including the synthetic root.
+    [[nodiscard]] std::uint32_t size() const noexcept;
+    /// Return a node by ID.
+    [[nodiscard]] const Node &node(NodeId id) const;
+    /// Return the descendant counts for a node.
+    [[nodiscard]] Counts counts(NodeId id) const;
+    /// Return a node's native name bytes. Root nodes contain their full path.
+    [[nodiscard]] std::string_view name_bytes(NodeId id) const;
+    /// Return the node extension when it has one.
+    [[nodiscard]] std::optional<std::string_view> ext(NodeId id) const;
+    /// Return a node's resolved owner display name when available.
+    [[nodiscard]] std::optional<std::string_view> owner_name(NodeId id) const;
+    /// Return the contiguous half-open child ID range.
+    [[nodiscard]] std::pair<NodeId, NodeId> children(NodeId id) const;
+    /// Return the parent ID, or no value for the synthetic root.
+    [[nodiscard]] std::optional<NodeId> parent(NodeId id) const;
+    /// Reconstruct the node's native path in O(depth).
+    [[nodiscard]] std::string path_bytes(NodeId id) const;
+    /// Return the node depth below its scan root.
+    [[nodiscard]] std::uint16_t depth(NodeId id) const;
+    /// Find a path after separator normalization and platform case handling.
+    [[nodiscard]] std::optional<NodeId> find_path(std::string_view native_path) const;
+    /// Return the root node IDs.
+    [[nodiscard]] std::span<const NodeId> roots() const;
+    /// Report the bytes reserved by tree-owned storage.
+    [[nodiscard]] MemoryReport memory_usage() const;
+    /// Intern and assign an owner identity.
+    void set_owner(NodeId id, OwnerKey key, std::string_view display);
+    /// Exclude a node and incrementally update totals.
+    void mark_deleted(NodeId id);
+    /// Replace a subtree while preserving the tree invariants.
+    void replace_subtree(NodeId at, const Tree &fresh, NodeId fresh_root);
+    /// Return scan metadata associated with the tree.
+    [[nodiscard]] const ScanMeta &meta() const noexcept;
+
+  private:
+    friend class TreeBuilder;
+    SegVector<Node> nodes_;
+    SegVector<Counts> counts_;
+    NameArena names_;
+    ExtInterner exts_;
+    OwnerTable owners_;
+    std::vector<NodeId> roots_;
+    std::vector<std::string> root_paths_;
+    ScanMeta meta_;
+};
+
+/// Build a tree while preserving parent-before-child IDs and contiguous children.
+class TreeBuilder {
+  public:
+    /// Create the synthetic root and a root node for each full native root path.
+    explicit TreeBuilder(std::vector<std::string> root_paths);
+
+    /// A node specification appended by add_children.
+    struct NewNode {
+        std::string_view name;
+        std::uint16_t flags;
+        std::uint64_t size, alloc;
+        std::uint32_t mtime, btime, atime;
+        std::optional<OwnerKey> owner;
+    };
+
+    /// Append all entries contiguously; a directory may be populated only once.
+    std::pair<NodeId, NodeId> add_children(NodeId dir, std::span<const NewNode> entries);
+    /// Add flags to a node.
+    void mark(NodeId id, std::uint16_t flags);
+    /// Recompute totals for a partially built tree.
+    void aggregate_partial();
+    /// Finalize the tree and release unused tail storage.
+    Tree finish(ScanMeta meta) &&;
+
+  private:
+    Tree tree_;
+    std::vector<bool> populated_;
 };
 
 } // namespace dafree
