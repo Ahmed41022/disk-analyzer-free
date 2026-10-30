@@ -85,6 +85,7 @@ The selected stack and licenses are:
 | platformdirs / Send2Trash / tomli-w | MIT / BSD-3-Clause / MIT | Runtime paths, trash integration, and TOML writing. |
 | PySide6-Essentials / shiboken6 / Qt | LGPL-3.0 | Optional GUI dependency; kept separately replaceable and documented per §8.6. GPL-only Qt modules are excluded. |
 | Babel | BSD-3-Clause | Build-time `.mo` compilation and translation checks; not a runtime dependency. |
+| Unicode 17.0.0 case-fold data | Unicode License V3 | Generated BMP mapping table; source and license are checked in, with no runtime dependency. |
 | pytest / pytest-qt / pytest-timeout | MIT / MIT / MIT | Test-only. |
 | Hypothesis | MPL-2.0 | Test-only. |
 | syrupy / jsonschema / pypdf | MIT / MIT / BSD-3-Clause | Test-only. |
@@ -127,3 +128,27 @@ Reasoning: The built wheel must contain `.mo` files without adding Babel to runt
 Alternatives: Ship precompiled catalogues without a build step, or make Babel a runtime dependency. The former can leave generated translations stale and the latter unnecessarily expands runtime dependencies.
 
 Task: T0.7
+
+## D-0007 — 2026-10-30 — Owner key identity and display
+
+Question: How should the owner table distinguish its UID, SID, and remote-string keys, and what should a duplicate key do when given a different display name?
+
+Choice: Use a tagged key for POSIX UIDs, Windows SID bytes, and remote strings; return the existing ID and retain the first display name for duplicate keys.
+
+Reasoning: The tag prevents identical byte sequences in different identity domains from colliding. Keeping the first display makes an already assigned owner ID stable during a scan.
+
+Alternatives: Use untagged strings, which could merge unrelated identity domains, or replace display names on later calls, which makes display values depend on traversal order.
+
+Task: T1.2
+
+## D-0008 — 2026-10-30 — Unicode simple case folding data
+
+Question: How should extension interning fold non-ASCII BMP letters without adding a runtime library dependency?
+
+Choice: Generate a checked-in lookup table from Unicode 17.0.0 `CaseFolding.txt`, using common and simple one-code-point mappings whose source and target are in the BMP. Keep the source data, generator, and Unicode License V3 with the repository.
+
+Reasoning: The plan requires UTF-8-aware BMP simple folding. A generated table gives deterministic behavior on every supported OS without locale-dependent system calls or a runtime Unicode dependency.
+
+Alternatives: Fold ASCII only, which misses the specified BMP behavior, or add a Unicode runtime library, which adds a dependency outside the plan.
+
+Task: T1.2

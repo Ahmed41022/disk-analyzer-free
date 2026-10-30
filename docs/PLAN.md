@@ -1148,10 +1148,10 @@ Conventions for every task:
   - **Acceptance:** doctest `push_get_across_segments`, `append_returns_contiguous_range`, `shrink_last_reduces_heap_bytes`, `matches_std_vector_random_ops` (10k random ops, seeded).
 
 - [ ] **T1.2 — `NameArena`, `ExtInterner`, `OwnerTable`**
-  - **Files:** C `core/src/model/{names.cpp,intern.cpp}`, `core/tests/test_names.cpp`.
+  - **Files:** C `core/include/dafree/model.hpp`, `core/src/model/{names.cpp,intern.cpp}`, `core/src/model/unicode_fold_table.hpp`, `core/tests/test_names.cpp`, `tools/data/CaseFolding-17.0.0.txt`, `tools/gen_unicode_fold.py`, `LICENSES/Unicode-Data-Files-and-Software-License.txt`.
   - **Behavior:** 1 MiB chunks; names > 65,535 bytes throw `NameTooLong` (scanner records `InvalidName`). Extension = bytes after the last `.` when the name has a non-leading dot, extension ≤ 16 bytes, no spaces; lowercased (ASCII fold + UTF-8 aware simple fold for BMP letters); directories never get an extension.
   - **Depends on:** T1.1
-  - **Acceptance:** doctest `roundtrip_arbitrary_bytes` (incl. `\xFF`, embedded UTF-8 Arabic/CJK/emoji, NFC vs NFD kept distinct), `ext_rules_table` (`a.TXT`→`txt`, `.bashrc`→none, `archive.tar.gz`→`gz`, `noext`→none, `x.verylongextension123`→none, `my file.a b`→none), `owner_table_dedups_keys`.
+  - **Acceptance:** doctest `roundtrip_arbitrary_bytes` (incl. `\xFF`, embedded UTF-8 Arabic/CJK/emoji, NFC vs NFD kept distinct), `ext_rules_table` (`a.TXT`→`txt`, `.bashrc`→none, `archive.tar.gz`→`gz`, `noext`→none, `x.verylongextension123`→none, `my file.a b`→none), `owner_table_dedups_keys`; CI verifies the generated Unicode fold table is current.
 
 - [ ] **T1.3 — `Node`, `Tree`, `TreeBuilder`**
   - **Files:** C `core/src/model/{tree.cpp,builder.cpp}`, M `model.hpp`, `core/tests/test_tree.cpp`.

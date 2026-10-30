@@ -55,6 +55,10 @@ jobs:
           git diff --exit-code src/dafree/_core.pyi
       - name: Translation catalogues are current
         run: python tools/i18n_check.py
+      - name: Unicode fold table is current
+        run: |
+          python tools/gen_unicode_fold.py
+          git diff --exit-code -- core/src/model/unicode_fold_table.hpp
 
   cpp:
     name: C++ build and unit tests (${{ matrix.os }})

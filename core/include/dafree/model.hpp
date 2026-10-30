@@ -10,7 +10,10 @@
 #include <limits>
 #include <memory>
 #include <span>
+#include <string>
+#include <string_view>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -231,6 +234,78 @@ template <class T> class SegVector {
 
     std::vector<Segment> segments_;
     std::uint32_t size_ = 0;
+};
+
+/// Store native filename bytes in 1 MiB chunks without splitting a name.
+class NameArena {
+  public:
+    /// Append bytes and return their 32-bit arena offset and 16-bit byte length.
+    std::pair<std::uint32_t, std::uint16_t> push(std::string_view native_bytes);
+    /// Return a view of bytes previously stored at the given offset and length.
+    [[nodiscard]] std::string_view get(std::uint32_t offset, std::uint16_t length) const;
+    /// Return the bytes reserved by arena chunks.
+    [[nodiscard]] std::size_t heap_bytes() const noexcept;
+
+  private:
+    struct Chunk {
+        std::unique_ptr<char[]> data;
+        std::size_t used = 0;
+    };
+
+    std::vector<Chunk> chunks_;
+};
+
+/// Intern lowercase file extensions; ID zero represents no extension.
+class ExtInterner {
+  public:
+    ExtInterner();
+
+    /// Return the ID for a filename's extension, or zero for directories and invalid extensions.
+    std::uint32_t intern(std::string_view filename, bool is_directory = false);
+    /// Return the extension for an ID; ID zero returns an empty view.
+    [[nodiscard]] std::string_view get(std::uint32_t id) const;
+
+  private:
+    std::vector<std::string> extensions_;
+    std::unordered_map<std::string, std::uint32_t> ids_;
+};
+
+/// Identify an owner without conflating POSIX, Windows, and remote key spaces.
+struct OwnerKey {
+    enum class Kind : std::uint8_t { PosixUid, WindowsSid, Remote };
+
+    Kind kind = Kind::PosixUid;
+    std::uint32_t uid = 0;
+    std::string value;
+
+    /// Build a POSIX UID owner key.
+    static OwnerKey posix_uid(std::uint32_t uid);
+    /// Build a Windows owner key from the SID's binary bytes.
+    static OwnerKey windows_sid(std::string_view sid_bytes);
+    /// Build a remote owner key from its backend-provided string.
+    static OwnerKey remote(std::string_view remote_key);
+
+    /// Compare the identity kind and its corresponding value.
+    bool operator==(const OwnerKey &) const = default;
+};
+
+/// Intern owner identities and keep one display name for each identity.
+class OwnerTable {
+  public:
+    OwnerTable();
+
+    /// Return the stable nonzero ID for a key, inserting its display name on first use.
+    std::uint32_t intern(const OwnerKey &key, std::string_view display);
+    /// Return the display name for an ID; ID zero returns an empty view.
+    [[nodiscard]] std::string_view get(std::uint32_t id) const;
+
+  private:
+    struct Hash {
+        [[nodiscard]] std::size_t operator()(const OwnerKey &key) const noexcept;
+    };
+
+    std::vector<std::string> displays_;
+    std::unordered_map<OwnerKey, std::uint32_t, Hash> ids_;
 };
 
 } // namespace dafree
