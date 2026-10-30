@@ -1168,8 +1168,8 @@ Conventions for every task:
   - **Acceptance:** doctest `aggregate_matches_recursive_oracle` (random trees ≤ 5,000 nodes, 500 seeds), `hardlink_dup_counted_once`, `excluded_not_counted`, `mark_deleted_equals_full_reaggregate`; benchmark `BM_Aggregate/10000000` recorded (CI threshold §6.5).
   - **Recorded benchmark:** 77.54 ms median, Windows MinGW Release build, three repetitions on 2026-10-30. The §6.5 absolute limit is 120 ms on nightly runners.
 
-- [ ] **T1.5 — Units**
-  - **Files:** C `core/include/dafree/units.hpp`, `core/src/units.cpp`, `core/tests/test_units.cpp`.
+- [x] **T1.5 — Units**
+  - **Files:** C `core/include/dafree/units.hpp`, `core/src/units.cpp`, `core/tests/test_units.cpp`, `tests/unit/test_units.py`; M `bindings/src/module.cpp`, `src/dafree/api/__init__.py`, `src/dafree/_core.pyi`, `core/CMakeLists.txt`.
   - **Behavior:** `Auto` with 1 decimal: 0 → `0 B`, 1023 → `1023 B`, 1024 → `1.0 KB`, 1536 → `1.5 KB`; IEC labels `KiB`; SI base 1000 → `1.0 kB`. Decimal separator passed in by the caller (Python supplies it from the locale). `parse_size` accepts `1.5GB`, `500 MiB`, `10k`, case-insensitive; rejects negative/overflow.
   - **Depends on:** T0.1
   - **Acceptance:** doctest `format_table`, `parse_table`, `parse_format_roundtrip_within_rounding` (seeded 10k values); Python `test_units_parity_json` exports the same table for GUI delegates.

@@ -176,3 +176,15 @@ Reasoning: Saturating addition cannot be reversed by subtraction; the recompute 
 Alternatives: Always reaggregate the whole tree after deletion, or subtract from saturated totals and risk incorrect values.
 
 Task: T1.4
+
+## D-0011 — 2026-10-30 — Unit API and Python parity
+
+Question: What are the unspecified C++ `UnitMode` and `UnitStyle` shapes, and how can the required Python JSON parity test exercise the C++ formatter?
+
+Choice: Use `UnitMode` for auto, bytes, and fixed powers; `UnitSystem` for traditional binary labels, IEC, and SI; and `UnitStyle` for the system and caller-supplied decimal separator. Bind these types through nanobind and expose matching Python enums and a frozen style dataclass from `dafree.api`. Parse decimal values with checked integer arithmetic and at most nine fractional digits.
+
+Reasoning: The style object makes locale behavior explicit and deterministic. The Python parity test calls the native formatter and parser through the typed facade, so its JSON table checks the same implementation that GUI delegates will use.
+
+Alternatives: Depend on process locale, use floating-point conversion near `UINT64_MAX`, or keep a separate Python formatter whose output could diverge from C++.
+
+Task: T1.5

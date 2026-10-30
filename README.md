@@ -77,6 +77,16 @@ dafree export / --to html -o report.html
 
 The Python scan API will be documented when the public API is implemented. Its planned entry point is `from dafree.api import scan, ScanRequest`.
 
+Size formatting and parsing are available now:
+
+```python
+from dafree.api import UnitStyle, UnitSystem, format_size, parse_size
+
+format_size(1536)  # "1.5 KB"
+format_size(1500, style=UnitStyle(UnitSystem.SI, ","))  # "1,5 kB"
+parse_size("500 MiB")  # 524288000
+```
+
 ## Windows fast mode
 
 The planned Windows NTFS fast mode reads file-system metadata to avoid opening every file individually. It can require administrator privileges and will fall back to a regular directory walk when unavailable.

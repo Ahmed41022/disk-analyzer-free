@@ -14,3 +14,4 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 - Chunked native-name storage, extension interning, and owner identity interning.
 - Compact tree nodes, contiguous child ranges, native path reconstruction, and platform-aware path lookup.
 - Saturating directory aggregation and incremental deletion updates.
+- Locale-aware size formatting and parsing with traditional, IEC, and SI units.
