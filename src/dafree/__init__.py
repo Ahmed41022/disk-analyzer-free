@@ -5,8 +5,6 @@ import sys
 
 _python_dll_directory = os.add_dll_directory(sys.base_prefix) if sys.platform == "win32" else None
 
-from . import _core as _core  # type: ignore[attr-defined]  # noqa: E402
-
-__version__ = _core.version()
+from .api import __version__  # noqa: E402
 
 __all__ = ["__version__"]
