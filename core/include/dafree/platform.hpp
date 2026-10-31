@@ -90,6 +90,8 @@ std::string to_verbatim(std::string_view path);
 
 /// List direct children without following symbolic links.
 DirListing read_dir(std::string_view dir);
+/// List direct children while explicitly following the final directory link.
+DirListing read_dir_follow(std::string_view dir);
 /// Read metadata for a path without following its final symbolic link.
 RawEntry stat_nofollow(std::string_view path);
 /// Read metadata for the final target of a symbolic link.

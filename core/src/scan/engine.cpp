@@ -4,12 +4,14 @@
 
 #include <algorithm>
 #include <atomic>
+#include <bit>
 #include <condition_variable>
 #include <deque>
 #include <exception>
 #include <limits>
 #include <mutex>
 #include <thread>
+#include <tsl/robin_set.h>
 
 namespace dafree {
 namespace {
@@ -79,8 +81,33 @@ bool path_under(std::string_view path, std::string_view prefix) {
 }
 
 bool is_directory(const RawEntry &entry) {
-    return entry.kind == EntryKind::Dir || entry.kind == EntryKind::MountPoint;
+    return entry.kind == EntryKind::Dir || entry.kind == EntryKind::MountPoint ||
+           entry.kind == EntryKind::Junction;
 }
+
+bool is_link(const RawEntry &entry) {
+    return entry.kind == EntryKind::Symlink || entry.kind == EntryKind::Junction;
+}
+
+struct Identity {
+    std::uint64_t dev, hi, lo;
+    bool operator==(const Identity &) const = default;
+};
+struct IdentityHash {
+    static std::uint64_t mix(std::uint64_t value) noexcept {
+        value = (value ^ (value >> 30u)) * 0xBF58476D1CE4E5B9ULL;
+        value = (value ^ (value >> 27u)) * 0x94D049BB133111EBULL;
+        return value ^ (value >> 31u);
+    }
+    std::size_t operator()(const Identity &id) const noexcept {
+        return static_cast<std::size_t>(mix(id.dev) ^ std::rotl(mix(id.hi), 21) ^
+                                        std::rotl(mix(id.lo), 42));
+    }
+};
+using IdentitySet = tsl::robin_set<Identity, IdentityHash>;
+
+Identity identity(const RawEntry &entry) { return {entry.dev, entry.ino_hi, entry.ino_lo}; }
+bool known_identity(const RawEntry &entry) { return entry.ino_hi != 0 || entry.ino_lo != 0; }
 
 std::uint16_t flags_for(const RawEntry &entry) {
     unsigned flags = 0;
@@ -192,23 +219,29 @@ class ScanEngine {
         backend_mode_ =
             backend_->kind() == BackendKind::Sftp ? ScanModeUsed::Sftp : ScanModeUsed::Walk;
         current_ = input_.options.targets.front();
+        track_directories_ = input_.options.follow_symlinks || input_.options.cross_filesystems;
+        seen_files_.max_load_factor(0.9f);
+        seen_directories_.max_load_factor(0.9f);
         for (std::size_t index = 0; index < input_.roots.size(); ++index) {
             const auto id = static_cast<NodeId>(index + 1);
             const auto &entry = input_.roots[index];
+            const auto traversal = inspect(entry, input_.options.targets[index], std::nullopt);
+            const auto &metadata = traversal.target ? *traversal.target : entry;
             auto &node = builder_.tree_.nodes_[id];
-            node.flags = flags_for(entry);
-            node.size = entry.size;
-            node.alloc = entry.alloc;
-            node.mtime = node_time(entry.mtime);
-            node.btime = node_time(entry.btime);
-            node.atime = node_time(entry.atime);
-            node.ext_id =
-                builder_.tree_.exts_.intern(builder_.tree_.name_bytes(id), is_directory(entry));
-            if (entry.owner && input_.options.owner != OwnerMode::Off)
-                node.owner = builder_.tree_.owners_.intern(*entry.owner, {});
-            count(entry);
-            if (is_directory(entry)) {
-                jobs_.push({id, input_.options.targets[index], index, entry.dev});
+            node.flags = traversal.flags;
+            node.size = traversal.size;
+            node.alloc = traversal.alloc;
+            node.mtime = node_time(metadata.mtime);
+            node.btime = node_time(metadata.btime);
+            node.atime = node_time(metadata.atime);
+            node.ext_id = builder_.tree_.exts_.intern(builder_.tree_.name_bytes(id),
+                                                      (node.flags & kDir) != 0);
+            if (metadata.owner && input_.options.owner != OwnerMode::Off)
+                node.owner = builder_.tree_.owners_.intern(*metadata.owner, {});
+            count(node.flags, node.size, node.alloc);
+            if (traversal.descend) {
+                jobs_.push(
+                    {id, input_.options.targets[index], index, metadata.dev, traversal.follow});
                 ++pending_;
             }
         }
@@ -335,12 +368,87 @@ class ScanEngine {
         std::string path;
         std::size_t root;
         std::uint64_t dev;
+        bool follow = false;
     };
     struct DirResult {
         Job job;
         DirListing listing;
         std::optional<ScanIssue> error;
     };
+
+    struct Traversal {
+        std::optional<RawEntry> target;
+        std::uint16_t flags = 0;
+        std::uint64_t size = 0, alloc = 0;
+        bool descend = false, follow = false;
+    };
+
+    Traversal inspect(const RawEntry &original, std::string_view path,
+                      std::optional<std::uint64_t> parent_device) {
+        Traversal value;
+        unsigned flags = flags_for(original);
+        const bool alias = is_link(original);
+        const bool mount = original.kind == EntryKind::MountPoint;
+        const bool resolve = (alias && input_.options.follow_symlinks && !original.cloud) ||
+                             (mount && (!parent_device || input_.options.cross_filesystems));
+        bool failed = false;
+        if (resolve) {
+            try {
+                value.target = backend_->stat_follow(path);
+                if (is_link(*value.target))
+                    throw IoError(std::string(path), IssueKind::Io,
+                                  "backend did not resolve link target");
+                flags = flags_for(*value.target) |
+                        (flags & (kSymlink | kReparse | kHidden | kSystem | kMountPoint));
+            } catch (const IoError &error) {
+                failed = true;
+                flags |= error.kind() == IssueKind::AccessDenied ? kAccessDenied : kError;
+                issue({std::string(path), error.kind(), error.what()});
+            }
+        }
+        const auto &metadata = value.target ? *value.target : original;
+        const bool directory = (flags & kDir) != 0;
+        const bool unfollowed = alias && (!value.target || failed);
+        if (!directory && !unfollowed) {
+            value.size = metadata.size;
+            value.alloc = metadata.alloc;
+        }
+        value.descend = directory && !unfollowed && !failed;
+        value.follow = value.descend && (alias || mount);
+        if (value.descend && parent_device && !input_.options.cross_filesystems &&
+            (metadata.dev != *parent_device || mount)) {
+            flags |= kMountPoint;
+            value.descend = false;
+        }
+        if (value.descend && track_directories_) {
+            if (known_identity(metadata)) {
+                if (!seen_directories_.insert(identity(metadata)).second) {
+                    value.descend = false;
+                    issue({std::string(path), IssueKind::SymlinkLoop,
+                           "directory identity already visited"});
+                }
+            } else if (alias) {
+                value.descend = false;
+                flags |= kError;
+                issue({std::string(path), IssueKind::Io,
+                       "cannot follow directory without a stable identity"});
+            }
+        }
+        if (original.kind == EntryKind::File && input_.options.hardlinks == HardlinkMode::Dedup &&
+            (platform::windows_paths() || original.nlink > 1)) {
+            if (known_identity(original)) {
+                if (!seen_files_.insert(identity(original)).second)
+                    flags |= kHardlinkDup;
+            } else if (!unknown_identity_notice_) {
+                unknown_identity_notice_ = true;
+                std::lock_guard lock(notice_mutex_);
+                notices_.push_back({Notice::HardlinkDedupDisabled,
+                                    "file identity unavailable; counting logical bytes"});
+            }
+        }
+        value.flags = static_cast<std::uint16_t>(flags);
+        return value;
+    }
 
     static bool terminal(ScanState state) {
         return state == ScanState::Done || state == ScanState::Cancelled ||
@@ -379,7 +487,7 @@ class ScanEngine {
                     break;
                 DirResult result{std::move(*job), {}, {}};
                 try {
-                    result.listing = backend_->read_dir(result.job.path, {});
+                    result.listing = backend_->read_dir(result.job.path, {result.job.follow});
                 } catch (const IoError &error) {
                     result.error = ScanIssue{result.job.path, error.kind(), error.what()};
                 }
@@ -392,13 +500,15 @@ class ScanEngine {
         if (remaining_.fetch_sub(1, std::memory_order_acq_rel) == 1)
             results_.close();
     }
-    void count(const RawEntry &entry) {
-        if (is_directory(entry))
+    void count(std::uint16_t flags, std::uint64_t size, std::uint64_t allocation) {
+        if ((flags & kDir) != 0)
             add_saturated(dirs_, 1);
         else {
             add_saturated(files_, 1);
-            add_saturated(bytes_, entry.size);
-            add_saturated(alloc_, entry.alloc);
+            if ((flags & kHardlinkDup) == 0) {
+                add_saturated(bytes_, size);
+                add_saturated(alloc_, allocation);
+            }
         }
     }
     void issue(ScanIssue value) {
@@ -435,6 +545,7 @@ class ScanEngine {
                 std::size_t index;
                 std::string path;
                 std::uint64_t dev;
+                bool follow;
             };
             std::vector<Child> children;
             nodes.reserve(result.listing.entries.size());
@@ -455,25 +566,33 @@ class ScanEngine {
                 relative.append(entry.name);
                 if (input_.excludes[job.root].excluded(relative, entry.name, entry))
                     continue;
-                nodes.push_back(
-                    {entry.name, flags_for(entry), entry.size, entry.alloc, node_time(entry.mtime),
-                     node_time(entry.btime), node_time(entry.atime),
-                     input_.options.owner == OwnerMode::Off ? std::nullopt : entry.owner});
-                count(entry);
-                if (is_directory(entry)) {
-                    std::string path = job.path;
+                std::string path;
+                if (is_directory(entry) || (is_link(entry) && input_.options.follow_symlinks)) {
+                    path = job.path;
                     const char separator = platform::windows_paths() ? '\\' : '/';
                     if (!path.ends_with(separator))
                         path.push_back(separator);
                     path.append(entry.name);
-                    children.push_back({nodes.size() - 1, std::move(path), entry.dev});
                 }
+                const auto traversal = inspect(
+                    entry, path.empty() ? std::string_view(job.path) : std::string_view(path),
+                    job.dev);
+                const auto &metadata = traversal.target ? *traversal.target : entry;
+                nodes.push_back(
+                    {entry.name, traversal.flags, traversal.size, traversal.alloc,
+                     node_time(metadata.mtime), node_time(metadata.btime),
+                     node_time(metadata.atime),
+                     input_.options.owner == OwnerMode::Off ? std::nullopt : metadata.owner});
+                count(traversal.flags, traversal.size, traversal.alloc);
+                if (traversal.descend)
+                    children.push_back(
+                        {nodes.size() - 1, std::move(path), metadata.dev, traversal.follow});
             }
             const auto range = builder_.add_children(job.dir, nodes);
             for (auto &child : children) {
                 if (!cancelled_.load(std::memory_order_acquire) &&
                     jobs_.push({range.first + static_cast<NodeId>(child.index),
-                                std::move(child.path), job.root, child.dev}))
+                                std::move(child.path), job.root, child.dev, child.follow}))
                     ++pending_;
             }
         }
@@ -551,6 +670,8 @@ class ScanEngine {
                     std::rethrow_exception(failure_);
             }
             phase_.store(ScanState::Finalizing, std::memory_order_release);
+            IdentitySet{}.swap(seen_files_);
+            IdentitySet{}.swap(seen_directories_);
             if (cancelled_.load(std::memory_order_acquire)) {
                 for (NodeId id = 1; id < builder_.tree_.size(); ++id)
                     if ((builder_.tree_.nodes_[id].flags & kDir) != 0 && !builder_.populated_[id])
@@ -622,6 +743,8 @@ class ScanEngine {
     std::int64_t started_at_;
     std::pair<std::string, std::string> identity_;
     bool slow_aggregate_ = false;
+    IdentitySet seen_files_, seen_directories_;
+    bool track_directories_ = false, unknown_identity_notice_ = false;
 };
 
 ScanHandle::~ScanHandle() = default;

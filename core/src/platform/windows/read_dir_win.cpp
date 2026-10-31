@@ -75,9 +75,9 @@ static void append_records(DirListing &listing, const std::array<std::byte, 64 *
     }
 }
 
-DirListing read_dir(std::string_view path) {
+static DirListing list_directory(std::string_view path, bool follow) {
     const auto native = detail::native_path(path);
-    auto handle = open_metadata(native, FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES, false);
+    auto handle = open_metadata(native, FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES, follow);
     if (handle.get() == INVALID_HANDLE_VALUE)
         detail::fail(path, ::GetLastError());
     FILE_ATTRIBUTE_TAG_INFO attributes{};
@@ -120,6 +120,9 @@ DirListing read_dir(std::string_view path) {
     }
     return listing;
 }
+
+DirListing read_dir(std::string_view path) { return list_directory(path, false); }
+DirListing read_dir_follow(std::string_view path) { return list_directory(path, true); }
 
 static RawEntry stat_path(std::string_view path, bool follow) {
     const auto native = detail::native_path(path);

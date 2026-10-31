@@ -82,12 +82,18 @@ TEST_CASE("sparse_alloc_less_than_size") {
 TEST_CASE("symlink_not_followed") {
     TempDir temp;
     REQUIRE(::mkdir((temp.path() + "/target").c_str(), 0700) == 0);
+    std::ofstream(temp.path() + "/target/child", std::ios::binary) << "12345";
     REQUIRE(::symlink("target", (temp.path() + "/link").c_str()) == 0);
     const auto listing = dafree::platform::read_dir(temp.path());
     const auto *link = find_entry(listing, "link");
     REQUIRE(link != nullptr);
     CHECK(link->kind == dafree::EntryKind::Symlink);
     CHECK(dafree::platform::stat_follow(temp.path() + "/link").kind == dafree::EntryKind::Dir);
+    CHECK_THROWS_AS(dafree::platform::read_dir(temp.path() + "/link"), dafree::IoError);
+    const auto followed = dafree::platform::read_dir_follow(temp.path() + "/link");
+    REQUIRE(followed.entries.size() == 1);
+    CHECK(followed.entries[0].size == 5);
+    CHECK(dafree::platform::stat_nofollow(temp.path() + "/link/child").size == 5);
 }
 
 TEST_CASE("access_denied_dir_reports_issue") {

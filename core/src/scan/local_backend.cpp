@@ -8,8 +8,9 @@ class LocalBackend final : public FsBackend {
   public:
     [[nodiscard]] BackendKind kind() const override { return BackendKind::Local; }
     RawEntry stat_root(std::string_view path) override { return platform::stat_nofollow(path); }
-    DirListing read_dir(std::string_view path, const DirHint &) override {
-        return platform::read_dir(path);
+    RawEntry stat_follow(std::string_view path) override { return platform::stat_follow(path); }
+    DirListing read_dir(std::string_view path, const DirHint &hint) override {
+        return hint.follow_symlinks ? platform::read_dir_follow(path) : platform::read_dir(path);
     }
     std::optional<VolumeInfo> volume_info(std::string_view path) override {
         return platform::volume_info(path);

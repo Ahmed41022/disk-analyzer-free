@@ -132,6 +132,9 @@ TEST_CASE("junction_detected_not_followed") {
     CHECK(entry->kind == dafree::EntryKind::Junction);
     CHECK_THROWS_AS(dafree::platform::read_dir(detail::to_wtf8(junction)), dafree::IoError);
     CHECK(dafree::platform::stat_follow(detail::to_wtf8(junction)).kind == dafree::EntryKind::Dir);
+    const auto followed = dafree::platform::read_dir_follow(detail::to_wtf8(junction));
+    REQUIRE(followed.entries.size() == 1);
+    CHECK(followed.entries[0].size == 3);
 }
 
 TEST_CASE("long_path_over_260") {

@@ -14,7 +14,7 @@ namespace dafree {
 
 namespace platform {
 
-int open_directory(std::string_view path);
+int open_parent_directory(std::string_view path);
 #ifdef __linux__
 int statx_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry);
 #endif
@@ -95,7 +95,7 @@ static RawEntry stat_path(std::string_view input, bool follow) {
         separator == std::string::npos
             ? path
             : (separator + 1 == path.size() ? "." : path.substr(separator + 1));
-    const int dirfd = open_directory(parent);
+    const int dirfd = open_parent_directory(parent);
     if (dirfd < 0) {
         const int code = errno;
         throw IoError(path, issue_kind(code), std::strerror(code));

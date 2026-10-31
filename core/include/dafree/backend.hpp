@@ -12,8 +12,10 @@ namespace dafree {
 /// Transport used to access filesystem entries.
 enum class BackendKind : std::uint8_t { Local, Sftp };
 
-/// Optional directory hints, reserved for scan-owned traversal metadata.
-struct DirHint {};
+/// Explicit traversal policy for the final directory component.
+struct DirHint {
+    bool follow_symlinks = false;
+};
 
 struct ScanOptions;
 class FastScanSink;
@@ -26,7 +28,9 @@ class FsBackend {
     [[nodiscard]] virtual BackendKind kind() const = 0;
     /// Read root metadata without following a final link; throw IoError on failure.
     virtual RawEntry stat_root(std::string_view path) = 0;
-    /// Enumerate direct children, preserving native names and not following links.
+    /// Read a followed target when supported; default backends retain no-follow behavior.
+    virtual RawEntry stat_follow(std::string_view path) { return stat_root(path); }
+    /// Enumerate direct children; follow the final directory only when explicitly hinted.
     virtual DirListing read_dir(std::string_view dir, const DirHint &hint) = 0;
     /// Return volume properties if the backend can supply them.
     virtual std::optional<VolumeInfo> volume_info(std::string_view path) = 0;
@@ -51,6 +55,7 @@ struct MockSpec {
     std::chrono::milliseconds delay{0};
     std::optional<VolumeInfo> volume;
     std::unordered_map<std::uint32_t, std::string> owner_names;
+    std::unordered_map<std::string, std::string> symlink_targets{};
 };
 
 /// Thread-safe in-memory local filesystem with injected failures and call counters.
@@ -63,6 +68,8 @@ class MockBackend final : public FsBackend {
     [[nodiscard]] BackendKind kind() const override;
     /// Read synthetic metadata or throw an injected error.
     RawEntry stat_root(std::string_view path) override;
+    /// Resolve synthetic aliases while rejecting loops in the alias chain.
+    RawEntry stat_follow(std::string_view path) override;
     /// Return synthetic direct children and deterministic per-entry issues.
     DirListing read_dir(std::string_view dir, const DirHint &hint) override;
     /// Return the optional synthetic volume information.

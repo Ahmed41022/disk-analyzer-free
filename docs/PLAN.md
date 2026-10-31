@@ -1230,8 +1230,8 @@ Conventions for every task:
   - **Depends on:** T1.4, T1.9, T1.10
   - **Acceptance (MockBackend, deterministic):** doctest `scan_mock_matches_expected`, `cancel_marks_partial_and_returns_tree`, `pause_stops_new_reads` (0 new `read_dir` calls during pause after in-flight ones finish), `read_dir_error_marks_access_denied`, `overlapping_targets_rejected`, `multiple_targets_share_root`, `issue_queue_overflow_counted`; TSan job runs this file clean.
 
-- [ ] **T1.12 — Hard links, symlinks, mount points**
-  - **Files:** M `core/src/scan/engine.cpp`.
+- [x] **T1.12 — Hard links, symlinks, mount points**
+  - **Files:** M `core/src/scan/engine.cpp`, backend/platform traversal helpers, and native engine/platform tests (see D-0019).
   - **Behavior:** §2.4.2: dedup set keyed `(dev, ino_hi, ino_lo)` (POSIX only `nlink > 1`; Windows walk: all files; freed after scan); symlink following with visited-dir set; mount boundary by `dev` change.
   - **Depends on:** T1.11
   - **Acceptance:** covered by T1.14 Python integration tests (real filesystem).

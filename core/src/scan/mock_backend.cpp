@@ -33,6 +33,7 @@ struct MockBackend::Impl {
     std::unordered_map<std::size_t, std::vector<std::size_t>> children;
     std::unordered_map<std::string, IssueKind> errors;
     std::unordered_set<std::string> vanish;
+    std::unordered_map<std::string, std::string> aliases;
     mutable std::mutex vanished_mutex;
     std::unordered_set<std::size_t> vanished;
     std::atomic<std::uint64_t> reads{0}, owners{0};
@@ -82,11 +83,40 @@ struct MockBackend::Impl {
         for (const auto &path : spec.vanish_after_listing)
             vanish.insert(normalized(path));
         spec.vanish_after_listing.clear();
+        for (const auto &[path, target] : spec.symlink_targets)
+            aliases.emplace(normalized(path), normalized(target));
+        spec.symlink_targets.clear();
     }
 
     void pause() const {
         if (spec.delay.count() > 0)
             std::this_thread::sleep_for(spec.delay);
+    }
+
+    std::string resolve(std::string path, bool final) const {
+        if (const auto fault = errors.find(path); fault != errors.end())
+            throw IoError(path, fault->second, "injected mock error");
+        std::unordered_set<std::string> seen;
+        for (;;) {
+            const std::pair<const std::string, std::string> *best = nullptr;
+            for (const auto &alias : aliases) {
+                const bool exact = path == alias.first;
+                const bool ancestor = path.size() > alias.first.size() &&
+                                      path.starts_with(alias.first) &&
+                                      path[alias.first.size()] == '/';
+                if (((final && exact) || ancestor) &&
+                    (best == nullptr || alias.first.size() > best->first.size()))
+                    best = &alias;
+            }
+            if (best == nullptr)
+                return path;
+            if (!seen.insert(best->first).second)
+                throw IoError(path, IssueKind::SymlinkLoop, "mock symlink chain loops");
+            auto suffix = path.substr(best->first.size());
+            if (best->second.ends_with('/') && suffix.starts_with('/'))
+                suffix.erase(0, 1);
+            path = best->second + suffix;
+        }
     }
 
     std::size_t lookup(const std::string &path) const {
@@ -110,14 +140,23 @@ BackendKind MockBackend::kind() const { return BackendKind::Local; }
 
 RawEntry MockBackend::stat_root(std::string_view path) {
     impl_->pause();
-    return impl_->spec.entries[impl_->lookup(normalized(path))].entry;
+    return impl_->spec.entries[impl_->lookup(impl_->resolve(normalized(path), false))].entry;
 }
 
-DirListing MockBackend::read_dir(std::string_view path, const DirHint &) {
+RawEntry MockBackend::stat_follow(std::string_view path) {
+    impl_->pause();
+    const auto key = normalized(path);
+    auto entry = impl_->spec.entries[impl_->lookup(impl_->resolve(key, true))].entry;
+    const auto separator = key.find_last_of('/');
+    entry.name = separator == std::string::npos ? key : key.substr(separator + 1);
+    return entry;
+}
+
+DirListing MockBackend::read_dir(std::string_view path, const DirHint &hint) {
     impl_->reads.fetch_add(1, std::memory_order_relaxed);
     impl_->pause();
     const auto key = normalized(path);
-    const auto id = impl_->lookup(key);
+    const auto id = impl_->lookup(impl_->resolve(key, hint.follow_symlinks));
     if (!directory(impl_->spec.entries[id].entry.kind))
         throw IoError(key, IssueKind::NotFound, "mock entry is not a directory");
     DirListing listing;
@@ -133,14 +172,15 @@ DirListing MockBackend::read_dir(std::string_view path, const DirHint &) {
                 impl_->vanished.insert(child);
             }
             listing.partial = true;
-            listing.issues.push_back(
-                {item.path, IssueKind::NotFound, "mock entry vanished during listing"});
+            listing.issues.push_back({key + "/" + item.entry.name, IssueKind::NotFound,
+                                      "mock entry vanished during listing"});
             continue;
         }
         if (const auto fault = impl_->errors.find(item.path);
             fault != impl_->errors.end() && !directory(item.entry.kind)) {
             listing.partial = true;
-            listing.issues.push_back({item.path, fault->second, "injected mock metadata error"});
+            listing.issues.push_back(
+                {key + "/" + item.entry.name, fault->second, "injected mock metadata error"});
             if (fault->second == IssueKind::AccessDenied) {
                 auto denied = item.entry;
                 denied.size = denied.alloc = 0;
@@ -157,7 +197,7 @@ DirListing MockBackend::read_dir(std::string_view path, const DirHint &) {
 std::optional<VolumeInfo> MockBackend::volume_info(std::string_view path) {
     impl_->pause();
     try {
-        (void)impl_->lookup(normalized(path));
+        (void)impl_->lookup(impl_->resolve(normalized(path), true));
     } catch (const IoError &) {
         return std::nullopt;
     }
@@ -173,7 +213,8 @@ std::optional<std::pair<OwnerKey, std::string>> MockBackend::resolve_owner(std::
         key = *hint;
     else {
         try {
-            key = impl_->spec.entries[impl_->lookup(normalized(path))].entry.owner;
+            key = impl_->spec.entries[impl_->lookup(impl_->resolve(normalized(path), false))]
+                      .entry.owner;
         } catch (const IoError &) {
             return std::nullopt;
         }

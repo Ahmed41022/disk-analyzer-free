@@ -272,3 +272,15 @@ Reasoning: The model retains complete scan options and diagnostics, while the pl
 Alternatives: Duplicate shared types, expose mutable builder storage publicly, let workers append nodes, return views of growing storage, or require a different macOS standard library.
 
 Task: T1.11
+
+## D-0019 — 2026-10-31 — Link traversal and identity accounting
+
+Question: How should the planned `backend.stat_follow` operation and directory-follow hints be represented, and which metadata should linked entries retain?
+
+Choice: Add a safe-default `FsBackend::stat_follow` hook and an explicit `DirHint.follow_symlinks` field. Local backends use separate followed directory enumeration; default enumeration still rejects final directory links. POSIX metadata operations may resolve parent components while retaining no-follow semantics for the final entry. Extend mock inputs with alias targets for deterministic traversal tests. Track file and directory identities by `(dev, ino_hi, ino_lo)` using the already pinned MIT-licensed robin-map dependency, with its flat set at 0.9 load factor; release both identity tables before finalization. Additional hard links retain their logical file metadata and receive `kHardlinkDup` only in dedup mode, so aggregation excludes their byte contribution. Unfollowed symlinks contribute zero bytes as file entries; junctions remain directory entries without descent. Followed directory identities are visited globally, and mount boundaries are pruned unless explicitly crossed.
+
+Reasoning: The walk pseudocode requires followed stats, although the earlier backend signature omitted that hook. Keeping follow behavior explicit preserves the default no-follow policy. Physical identities stop directory cycles even when different paths name the same directory. Unknown file identities are counted with a notice rather than collapsed together; a directory link without a stable identity is not followed. Explicitly selected mount roots establish their own filesystem boundary. Symlinks to files use target metadata when following is requested. Alias directories retain their original path in the visible tree, and cloud placeholders never enter the link-follow path.
+
+Alternatives: Follow every reparse point, deduplicate by path text, zero the logical size of duplicate file nodes, or retain scan-only identity tables after completion.
+
+Task: T1.12

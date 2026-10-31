@@ -25,13 +25,14 @@ int stat_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry);
 std::optional<DirListing> list_getattrlistbulk(int fd, std::string_view path);
 #endif
 
-int open_directory(std::string_view path) {
+static int open_directory_impl(std::string_view path, bool follow) {
     if (path.empty()) {
         errno = ENOENT;
         return -1;
     }
     const std::string owned(path);
-    const int direct = ::open(owned.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    const int direct =
+        ::open(owned.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC | (follow ? 0 : O_NOFOLLOW));
     if (direct >= 0 || errno != ENAMETOOLONG)
         return direct;
 
@@ -53,8 +54,9 @@ int open_directory(std::string_view path) {
         while (next_component < path.size() && path[next_component] == '/')
             ++next_component;
         const bool final = next_component == path.size();
-        const int next = ::openat(current, component.c_str(),
-                                  O_RDONLY | O_DIRECTORY | O_CLOEXEC | (final ? O_NOFOLLOW : 0));
+        const int next =
+            ::openat(current, component.c_str(),
+                     O_RDONLY | O_DIRECTORY | O_CLOEXEC | (final && !follow ? O_NOFOLLOW : 0));
         const int saved = errno;
         guard.reset(next);
         if (next < 0) {
@@ -66,6 +68,8 @@ int open_directory(std::string_view path) {
     }
     return guard.release();
 }
+
+int open_parent_directory(std::string_view path) { return open_directory_impl(path, true); }
 
 static EntryKind kind_from_dtype(unsigned char type) noexcept {
     switch (type) {
@@ -174,8 +178,8 @@ static DirListing list_getdents(int fd, std::string_view path) {
 }
 #endif
 
-DirListing read_dir(std::string_view path) {
-    const int fd = open_directory(path);
+static DirListing list_directory(std::string_view path, bool follow) {
+    const int fd = open_directory_impl(path, follow);
     if (fd < 0) {
         const int code = errno;
         throw IoError(std::string(path), issue_kind(code), std::strerror(code));
@@ -189,7 +193,7 @@ DirListing read_dir(std::string_view path) {
         return std::move(*bulk);
     }
     guard.reset(-1);
-    const int fallback = open_directory(path);
+    const int fallback = open_directory_impl(path, follow);
     if (fallback < 0) {
         const int code = errno;
         throw IoError(std::string(path), issue_kind(code), std::strerror(code));
@@ -201,5 +205,8 @@ DirListing read_dir(std::string_view path) {
 #endif
 #endif
 }
+
+DirListing read_dir(std::string_view path) { return list_directory(path, false); }
+DirListing read_dir_follow(std::string_view path) { return list_directory(path, true); }
 
 } // namespace dafree::platform

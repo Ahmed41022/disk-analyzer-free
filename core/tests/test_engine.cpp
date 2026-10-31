@@ -241,3 +241,184 @@ TEST_CASE("bounded_result_queue_applies_backpressure") {
     CHECK_FALSE(queue.pop().has_value());
     CHECK_FALSE(queue.push(3));
 }
+
+TEST_CASE("engine_hardlinks_dedup_and_count_all") {
+    dafree::MockSpec spec;
+    const auto root = root_path();
+    spec.entries.push_back({root, entry(dafree::EntryKind::Dir)});
+    for (unsigned index = 0; index < 3; ++index) {
+        auto file = entry(dafree::EntryKind::File, 10 * 1024 * 1024);
+        file.dev = 1;
+        file.ino_lo = 77;
+        file.nlink = 3;
+        spec.entries.push_back({root + "/link-" + std::to_string(index), file});
+    }
+    for (const auto mode : {dafree::HardlinkMode::Dedup, dafree::HardlinkMode::CountAll}) {
+        auto opts = options();
+        opts.hardlinks = mode;
+        auto handle = dafree::start_scan(opts, dafree::make_mock_backend(spec));
+        REQUIRE(handle.wait(5s));
+        const auto result = handle.take_result();
+        CHECK(result.summary.files == 3);
+        CHECK(result.summary.bytes ==
+              (mode == dafree::HardlinkMode::Dedup ? 10u : 30u) * 1024u * 1024u);
+        unsigned duplicates = 0;
+        for (dafree::NodeId id = 2; id < result.tree->size(); ++id) {
+            duplicates += (result.tree->node(id).flags & dafree::kHardlinkDup) != 0 ? 1u : 0u;
+            CHECK(result.tree->node(id).size == 10u * 1024u * 1024u);
+        }
+        CHECK(duplicates == (mode == dafree::HardlinkMode::Dedup ? 2u : 0u));
+    }
+}
+
+TEST_CASE("engine_hardlink_identity_and_platform_policy") {
+    dafree::MockSpec spec;
+    const auto root = root_path();
+    spec.entries.push_back({root, entry(dafree::EntryKind::Dir)});
+    for (unsigned index = 0; index < 3; ++index) {
+        auto file = entry(dafree::EntryKind::File, 1);
+        file.dev = index == 2 ? 2 : 1;
+        file.ino_lo = 10;
+        file.ino_hi = index == 1 ? 1 : 0;
+        file.nlink = 2;
+        spec.entries.push_back({root + "/file-" + std::to_string(index), file});
+    }
+    auto handle = dafree::start_scan(options(), dafree::make_mock_backend(spec));
+    REQUIRE(handle.wait(5s));
+    CHECK(handle.take_result().summary.bytes == 3);
+    spec.entries[2].entry = spec.entries[3].entry = spec.entries[1].entry;
+    for (auto &item : spec.entries)
+        item.entry.nlink = 1;
+    auto policy = dafree::start_scan(options(), dafree::make_mock_backend(spec));
+    REQUIRE(policy.wait(5s));
+    CHECK(policy.take_result().summary.bytes == (dafree::platform::windows_paths() ? 1u : 3u));
+}
+
+TEST_CASE("engine_symlink_loop_and_default_policy") {
+    const auto root = root_path();
+    dafree::MockSpec spec;
+    spec.entries = {{root, entry(dafree::EntryKind::Dir)},
+                    {root + "/child", entry(dafree::EntryKind::Dir)},
+                    {root + "/child/back", entry(dafree::EntryKind::Symlink, 99)}};
+    spec.symlink_targets[root + "/child/back"] = root;
+    for (const bool follow : {false, true}) {
+        auto opts = options();
+        opts.follow_symlinks = follow;
+        auto backend = std::make_shared<dafree::MockBackend>(spec);
+        auto handle = dafree::start_scan(opts, backend);
+        REQUIRE(handle.wait(5s));
+        const auto result = handle.take_result();
+        CHECK(result.summary.bytes == 0);
+        CHECK(backend->read_dir_calls() == 2);
+        const auto back = result.tree->find_path(root + "/child/back");
+        REQUIRE(back.has_value());
+        CHECK((result.tree->node(*back).flags & dafree::kSymlink) != 0);
+        CHECK(result.summary.files == (follow ? 0u : 1u));
+        CHECK(result.summary.dirs == (follow ? 3u : 2u));
+        CHECK(result.summary.issues
+                  .counts[static_cast<std::size_t>(dafree::IssueKind::SymlinkLoop)] ==
+              (follow ? 1u : 0u));
+    }
+}
+
+TEST_CASE("engine_follows_directory_alias_only_when_enabled") {
+    const auto root = root_path();
+    const std::string outside = root + "-outside";
+    for (const auto kind : {dafree::EntryKind::Symlink, dafree::EntryKind::Junction}) {
+        dafree::MockSpec spec;
+        spec.entries = {{root, entry(dafree::EntryKind::Dir)},
+                        {root + "/alias", entry(kind, 50)},
+                        {outside, entry(dafree::EntryKind::Dir)},
+                        {outside + "/file", entry(dafree::EntryKind::File, 17)}};
+        spec.symlink_targets[root + "/alias"] = outside;
+        for (const bool follow : {false, true}) {
+            auto opts = options();
+            opts.follow_symlinks = follow;
+            auto handle = dafree::start_scan(opts, dafree::make_mock_backend(spec));
+            REQUIRE(handle.wait(5s));
+            const auto result = handle.take_result();
+            CHECK(result.summary.bytes == (follow ? 17u : 0u));
+            CHECK(result.tree->find_path(root + "/alias/file").has_value() == follow);
+        }
+    }
+}
+
+TEST_CASE("engine_mount_boundaries_follow_option") {
+    const auto root = root_path();
+    dafree::MockSpec spec;
+    auto mount = entry(dafree::EntryKind::MountPoint);
+    mount.dev = 2;
+    auto file = entry(dafree::EntryKind::File, 7);
+    file.dev = 2;
+    spec.entries = {{root, entry(dafree::EntryKind::Dir)},
+                    {root + "/mount", mount},
+                    {root + "/mount/file", file}};
+    for (const bool cross : {false, true}) {
+        auto opts = options();
+        opts.cross_filesystems = cross;
+        auto backend = std::make_shared<dafree::MockBackend>(spec);
+        auto handle = dafree::start_scan(opts, backend);
+        REQUIRE(handle.wait(5s));
+        const auto result = handle.take_result();
+        CHECK(result.summary.bytes == (cross ? 7u : 0u));
+        CHECK(backend->read_dir_calls() == (cross ? 2u : 1u));
+        const auto mounted = result.tree->find_path(root + "/mount");
+        REQUIRE(mounted.has_value());
+        CHECK((result.tree->node(*mounted).flags & dafree::kMountPoint) != 0);
+    }
+}
+
+TEST_CASE("engine_cloud_metadata_is_not_followed") {
+    auto spec = sample();
+    spec.entries[1].entry.cloud = true;
+    spec.symlink_targets[root_path() + "/alpha"] = root_path() + "/missing";
+    auto opts = options();
+    opts.follow_symlinks = true;
+    auto handle = dafree::start_scan(opts, dafree::make_mock_backend(std::move(spec)));
+    REQUIRE(handle.wait(5s));
+    const auto result = handle.take_result();
+    CHECK(result.summary.bytes == 30);
+    CHECK(result.summary.issues.total == 0);
+    const auto cloud = result.tree->find_path(root_path() + "/alpha");
+    REQUIRE(cloud.has_value());
+    CHECK((result.tree->node(*cloud).flags & dafree::kCloudPlaceholder) != 0);
+}
+
+TEST_CASE("engine_explicit_link_root") {
+    const auto root = root_path();
+    const auto outside = root + "-outside";
+    dafree::MockSpec spec;
+    spec.entries = {{root, entry(dafree::EntryKind::Symlink, 50)},
+                    {outside, entry(dafree::EntryKind::Dir)},
+                    {outside + "/file", entry(dafree::EntryKind::File, 17)}};
+    spec.symlink_targets[root] = outside;
+    for (const bool follow : {false, true}) {
+        auto opts = options();
+        opts.follow_symlinks = follow;
+        auto handle = dafree::start_scan(opts, dafree::make_mock_backend(spec));
+        REQUIRE(handle.wait(5s));
+        const auto result = handle.take_result();
+        CHECK(result.summary.bytes == (follow ? 17u : 0u));
+        CHECK(result.tree->find_path(root + "/file").has_value() == follow);
+    }
+    spec.entries[0].entry.kind = dafree::EntryKind::MountPoint;
+    auto mounted = dafree::start_scan(options(), dafree::make_mock_backend(spec));
+    REQUIRE(mounted.wait(5s));
+    CHECK(mounted.take_result().summary.bytes == 17);
+}
+
+TEST_CASE("engine_symlink_chain_loop") {
+    const auto root = root_path();
+    dafree::MockSpec spec;
+    spec.entries = {{root, entry(dafree::EntryKind::Dir)},
+                    {root + "/alias", entry(dafree::EntryKind::Symlink, 50)}};
+    spec.symlink_targets[root + "/alias"] = root + "/alias/sub";
+    auto opts = options();
+    opts.follow_symlinks = true;
+    auto handle = dafree::start_scan(opts, dafree::make_mock_backend(spec));
+    REQUIRE(handle.wait(5s));
+    const auto result = handle.take_result();
+    CHECK(result.summary.bytes == 0);
+    CHECK(result.summary.issues.counts[static_cast<std::size_t>(dafree::IssueKind::SymlinkLoop)] ==
+          1);
+}
