@@ -132,6 +132,28 @@ jobs:
           path: py-junit.xml
           retention-days: 14
 
+  tsan:
+    name: Scan engine ThreadSanitizer
+    needs: lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install build tools
+        run: python -m pip install cmake ninja Babel
+      - name: Configure and build ThreadSanitizer tests
+        run: |
+          cmake --preset dev-tsan -DCMAKE_CXX_COMPILER=clang++
+          cmake --build build/dev-tsan --target dafree_core_tests
+      - name: Exercise scanner concurrency under ThreadSanitizer
+        env:
+          TSAN_OPTIONS: halt_on_error=1
+        run: |
+          ./build/dev-tsan/core/dafree_core_tests --no-colors \
+            --test-case="scan_mock_matches_expected,cancel_marks_partial_and_returns_tree,pause_stops_new_reads,read_dir_error_marks_access_denied,overlapping_targets_rejected,multiple_targets_share_root,issue_queue_overflow_counted,partial_snapshots_remain_immutable,bounded_result_queue_applies_backpressure"
+
   fuzz:
     name: Glob fuzz build and smoke
     needs: lint
@@ -199,7 +221,7 @@ jobs:
   ci-success:
     name: ci-success
     if: always()
-    needs: [lint, cpp, python, fuzz, audit, docs]
+    needs: [lint, cpp, python, tsan, fuzz, audit, docs]
     runs-on: ubuntu-24.04
     steps:
       - name: Check all jobs

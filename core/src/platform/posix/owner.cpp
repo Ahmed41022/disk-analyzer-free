@@ -5,10 +5,18 @@
 #include <pwd.h>
 #include <string>
 #include <sys/types.h>
+#include <sys/utsname.h>
 #include <unistd.h>
 #include <vector>
 
 namespace dafree::platform {
+
+std::pair<std::string, std::string> system_identity() {
+    struct utsname identity{};
+    if (::uname(&identity) != 0)
+        return {"unknown", "POSIX"};
+    return {identity.nodename, identity.sysname};
+}
 
 std::optional<std::string> name_for_uid(std::uint32_t uid) {
     const long recommended = ::sysconf(_SC_GETPW_R_SIZE_MAX);

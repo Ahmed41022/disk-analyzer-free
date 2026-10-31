@@ -9,8 +9,6 @@
 
 namespace dafree {
 
-using VolumeInfo = platform::VolumeInfo;
-
 /// Transport used to access filesystem entries.
 enum class BackendKind : std::uint8_t { Local, Sftp };
 

@@ -6,7 +6,17 @@
 #include <stdexcept>
 #include <winioctl.h>
 
-namespace dafree::platform::detail {
+namespace dafree::platform {
+
+std::pair<std::string, std::string> system_identity() {
+    std::array<wchar_t, MAX_COMPUTERNAME_LENGTH + 1> host{};
+    DWORD size = static_cast<DWORD>(host.size());
+    if (!::GetComputerNameW(host.data(), &size))
+        return {"unknown", "Windows"};
+    return {detail::to_wtf8(std::wstring_view(host.data(), size)), "Windows"};
+}
+
+namespace detail {
 
 std::wstring from_wtf8(std::string_view input) {
     std::wstring output;
@@ -168,4 +178,5 @@ void set_attributes(RawEntry &entry, DWORD attributes, DWORD tag, std::wstring_v
         entry.kind = EntryKind::OtherReparse;
 }
 
-} // namespace dafree::platform::detail
+} // namespace detail
+} // namespace dafree::platform

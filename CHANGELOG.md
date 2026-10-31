@@ -20,3 +20,4 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 - Windows batched directory enumeration, verbatim paths, file identities, reparse-point classification, and volume metadata.
 - Local and deterministic mock filesystem backends with injected errors, delays, and call counters.
 - Compiled path, glob, hidden, and system exclusions with Unicode-aware matching and a sanitizer-backed glob fuzz target.
+- Asynchronous C++ walk scanning with progress, pause/resume, cancellation, immutable partial snapshots, and bounded diagnostic queues.

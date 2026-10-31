@@ -10,36 +10,35 @@ namespace dafree {
 
 /// Base class for recoverable errors reported by the core library.
 class Error : public std::runtime_error {
-public:
+  public:
     /// Construct an error with a human-readable diagnostic.
-    explicit Error(const std::string& message) : std::runtime_error(message) {}
+    explicit Error(const std::string &message) : std::runtime_error(message) {}
 };
 
 /// Raised when an index would exceed the supported node capacity.
 class CapacityError : public Error {
-public:
+  public:
     /// Construct a capacity error.
     CapacityError() : Error("capacity exceeded") {}
 };
 
 /// Raised when a stored name exceeds the supported byte length.
 class NameTooLong : public Error {
-public:
+  public:
     /// Construct a name length error.
     NameTooLong() : Error("name exceeds 65535 bytes") {}
 };
 
 /// Raised when a directory is populated more than once.
 class AlreadyPopulated : public Error {
-public:
+  public:
     /// Construct an already populated error.
     AlreadyPopulated() : Error("directory is already populated") {}
 };
 
 /// A value-or-error result for APIs that report expected failures.
-template <typename T, typename E>
-class Expected {
-public:
+template <typename T, typename E> class Expected {
+  public:
     /// Construct a successful result.
     Expected(T value) : storage_(std::in_place_index<0>, std::move(value)) {}
 
@@ -50,25 +49,24 @@ public:
     [[nodiscard]] bool has_value() const noexcept { return storage_.index() == 0; }
 
     /// Return the contained value.
-    [[nodiscard]] T& value() { return std::get<0>(storage_); }
+    [[nodiscard]] T &value() { return std::get<0>(storage_); }
 
     /// Return the contained value.
-    [[nodiscard]] const T& value() const { return std::get<0>(storage_); }
+    [[nodiscard]] const T &value() const { return std::get<0>(storage_); }
 
     /// Return the contained error.
-    [[nodiscard]] E& error() { return std::get<1>(storage_); }
+    [[nodiscard]] E &error() { return std::get<1>(storage_); }
 
     /// Return the contained error.
-    [[nodiscard]] const E& error() const { return std::get<1>(storage_); }
+    [[nodiscard]] const E &error() const { return std::get<1>(storage_); }
 
-private:
+  private:
     std::variant<T, E> storage_;
 };
 
 /// A value-or-error result for operations that return no value on success.
-template <typename E>
-class Expected<void, E> {
-public:
+template <typename E> class Expected<void, E> {
+  public:
     /// Construct a successful result.
     Expected() = default;
 
@@ -79,13 +77,13 @@ public:
     [[nodiscard]] bool has_value() const noexcept { return !error_.has_value(); }
 
     /// Return the contained error.
-    [[nodiscard]] E& error() { return error_.value(); }
+    [[nodiscard]] E &error() { return error_.value(); }
 
     /// Return the contained error.
-    [[nodiscard]] const E& error() const { return error_.value(); }
+    [[nodiscard]] const E &error() const { return error_.value(); }
 
-private:
+  private:
     std::optional<E> error_;
 };
 
-}  // namespace dafree
+} // namespace dafree

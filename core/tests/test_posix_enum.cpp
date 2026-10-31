@@ -161,6 +161,9 @@ TEST_CASE("posix_volume_and_owner_metadata") {
     REQUIRE(volume.has_value());
     CHECK(volume->total >= volume->free);
     CHECK(volume->cluster_size > 0);
+#ifdef __linux__
+    CHECK(dafree::platform::stat_nofollow(temp.path()).dev == volume->serial);
+#endif
     const auto owner = dafree::platform::owner_of(temp.path());
     REQUIRE(owner.has_value());
     CHECK(owner->first.uid == static_cast<std::uint32_t>(::getuid()));

@@ -23,27 +23,6 @@ enum class EntryKind : std::uint8_t {
     Other
 };
 
-/// Reason a filesystem entry could not be enumerated completely.
-enum class IssueKind : std::uint8_t {
-    AccessDenied,
-    NotFound,
-    PathTooLong,
-    InvalidName,
-    Io,
-    Timeout,
-    SymlinkLoop,
-    Orphaned,
-    Changed,
-    Other
-};
-
-/// A recoverable issue tied to a native path.
-struct ScanIssue {
-    std::string path;
-    IssueKind kind = IssueKind::Other;
-    std::string message;
-};
-
 /// An unrecoverable filesystem operation failure.
 class IoError : public Error {
   public:
@@ -83,17 +62,31 @@ struct DirListing {
 
 namespace platform {
 
+using VolumeInfo = dafree::VolumeInfo;
+
+/// Return the host name and operating system name for scan provenance.
+std::pair<std::string, std::string> system_identity();
+
+/// Report the native separator convention for portable scanner path handling.
+constexpr bool windows_paths() noexcept {
+#ifdef _WIN32
+    return true;
+#else
+    return false;
+#endif
+}
+
+/// Report the planned platform path case policy.
+constexpr bool case_insensitive_paths() noexcept {
+#if defined(_WIN32) || defined(__APPLE__)
+    return true;
+#else
+    return false;
+#endif
+}
+
 /// Convert an absolute Windows drive or UNC path to verbatim form.
 std::string to_verbatim(std::string_view path);
-
-/// Free and total space and scan-relevant properties of one volume.
-struct VolumeInfo {
-    std::string mount, fs_type, label;
-    std::uint64_t serial = 0, total = 0, free = 0;
-    std::uint32_t cluster_size = 0;
-    bool is_network = false, is_removable = false, supports_mft = false;
-    std::optional<bool> is_rotational;
-};
 
 /// List direct children without following symbolic links.
 DirListing read_dir(std::string_view dir);

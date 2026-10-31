@@ -901,6 +901,7 @@ disk-analyzer-free/
 │   ├── include/dafree/
 │   │   ├── model.hpp                  # Node, Counts, SegVector, NameArena, interners, Tree, TreeBuilder
 │   │   ├── scan.hpp                   # ScanOptions, ScanHandle, start_scan, progress/issues/notices
+│   │   ├── scan_types.hpp             # shared options, metadata, progress, issues, and volume records
 │   │   ├── backend.hpp                # FsBackend, RawEntry, DirListing, mock backend
 │   │   ├── view.hpp                   # TreeView, Row, SortKey, FilterSpec
 │   │   ├── analysis.hpp               # top-N, ext/age stats, empty finder
@@ -1222,8 +1223,8 @@ Conventions for every task:
   - **Depends on:** T1.9
   - **Acceptance:** doctest `exclude_semantics_table` (≥ 20 cases: `node_modules` at depth 3, anchored `build/**`, `*.TMP` per OS, hidden per OS), `bad_glob_throws`; fuzz target builds.
 
-- [ ] **T1.11 — `ScanEngine` (builder + workers)**
-  - **Files:** C `core/include/dafree/scan.hpp`, `core/src/scan/{engine.cpp,work_queue.hpp}`, `core/tests/test_engine.cpp`.
+- [x] **T1.11 — `ScanEngine` (builder + workers)**
+  - **Files:** C `core/include/dafree/{scan.hpp,scan_types.hpp}`, `core/src/scan/{engine.cpp,work_queue.hpp}`, `core/tests/test_engine.cpp`; M model/backend/platform headers and platform system-identity helpers (see D-0018).
   - **Interface:** §2.4 (`start_scan`, `ScanHandle`).
   - **Behavior:** §2.4.2 including bounded results queue (4 × workers), progress atomics, `current` path updated at most once per progress interval, bounded issue queue (100k; overflow counted), target validation (duplicates removed, nesting rejected).
   - **Depends on:** T1.4, T1.9, T1.10

@@ -260,3 +260,15 @@ Reasoning: These choices make zero-directory `**/` cases and directory pruning d
 Alternatives: Use platform-dependent filesystem glob APIs, recursively backtrack, compare UTF-8 one byte at a time, or keep excluded directory placeholders in the scan tree.
 
 Task: T1.10
+
+## D-0018 — 2026-10-31 — Scanner types, ownership, and live snapshots
+
+Question: How should the staged model metadata become complete without circular includes, and how should scan threads and snapshots behave on all supported standard libraries?
+
+Choice: Put shared options, enums, issues, volume information, metadata, and progress records in `scan_types.hpp`, included by the model. Preserve `platform::VolumeInfo` as an alias. Grant the single builder engine private access for root metadata and snapshot copies, preserving the planned public tree-builder interface. Use `std::thread` with RAII cancellation and joining because the supported Apple libc++ lacks `std::jthread`. The builder alone mutates nodes; workers submit listings through a queue capped at four times their count. Snapshots are requested asynchronously, copied at most once per second, and held independently from the live builder. Retain the first 1,000 issues in metadata while bounding the independently drained live queue at 100,000.
+
+Reasoning: The model retains complete scan options and diagnostics, while the platform and backend also need those shared types. A separate type header breaks the dependency cycle. Explicit thread ownership lets handle destruction safely join outstanding work, and immutable copies prevent readers from racing with appends. Root targets are normalized, deduplicated, and checked for nesting before I/O. Timestamps use zero when absent/nonpositive and saturate at the node's 32-bit maximum. Linux statx device identities use `makedev` to agree with the stat fallback and volume metadata. Explicit MFT mode remains unavailable until its planned milestone; auto mode currently walks. The whole-repository formatter check also normalized three initial scaffold C++ files without semantic changes.
+
+Alternatives: Duplicate shared types, expose mutable builder storage publicly, let workers append nodes, return views of growing storage, or require a different macOS standard library.
+
+Task: T1.11

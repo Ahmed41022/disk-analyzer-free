@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dafree/error.hpp"
+#include "dafree/scan_types.hpp"
 
 #include <algorithm>
 #include <compare>
@@ -65,9 +66,6 @@ static_assert(std::is_trivially_copyable_v<Node>);
 struct Counts {
     std::uint32_t files = 0, dirs = 0;
 };
-
-/// Scan metadata placeholder expanded by the scan API milestone.
-struct ScanMeta {};
 
 /// Memory usage of tree-owned storage.
 struct MemoryReport {
@@ -420,6 +418,7 @@ class Tree {
 
   private:
     friend class TreeBuilder;
+    friend class ScanEngine;
     SegVector<Node> nodes_;
     SegVector<Counts> counts_;
     NameArena names_;
@@ -455,6 +454,7 @@ class TreeBuilder {
     Tree finish(ScanMeta meta) &&;
 
   private:
+    friend class ScanEngine;
     Tree tree_;
     std::vector<bool> populated_;
 };

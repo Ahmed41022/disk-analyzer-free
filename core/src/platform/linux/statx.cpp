@@ -8,6 +8,7 @@
 #include <linux/stat.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
+#include <sys/sysmacros.h>
 #include <unistd.h>
 
 namespace dafree::platform {
@@ -30,8 +31,7 @@ int statx_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry) {
     entry.atime = metadata.stx_atime.tv_sec;
     if ((metadata.stx_mask & STATX_BTIME) != 0)
         entry.btime = metadata.stx_btime.tv_sec;
-    entry.dev =
-        (static_cast<std::uint64_t>(metadata.stx_dev_major) << 32u) | metadata.stx_dev_minor;
+    entry.dev = static_cast<std::uint64_t>(makedev(metadata.stx_dev_major, metadata.stx_dev_minor));
     entry.ino_lo = metadata.stx_ino;
     entry.nlink =
         std::min<std::uint32_t>(metadata.stx_nlink, std::numeric_limits<std::uint32_t>::max());

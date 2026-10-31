@@ -3,6 +3,7 @@ add_library(dafree_core STATIC src/version.cpp src/units.cpp src/model/aggregate
                                 src/model/tree.cpp)
 target_sources(dafree_core PRIVATE src/scan/local_backend.cpp src/scan/mock_backend.cpp)
 target_sources(dafree_core PRIVATE src/scan/exclude.cpp src/scan/glob.cpp)
+target_sources(dafree_core PRIVATE src/scan/engine.cpp)
 target_sources(dafree_core PRIVATE src/platform/windows/longpath.cpp)
 target_include_directories(dafree_core PUBLIC include)
 target_compile_features(dafree_core PUBLIC cxx_std_20)
@@ -36,7 +37,7 @@ if(DAFREE_BUILD_TESTS)
   add_executable(dafree_core_tests tests/test_smoke.cpp tests/test_names.cpp
                                      tests/test_aggregate.cpp tests/test_segvector.cpp
                                      tests/test_tree.cpp tests/test_units.cpp tests/test_longpath.cpp
-                                     tests/test_backends.cpp tests/test_exclude.cpp)
+                                     tests/test_backends.cpp tests/test_exclude.cpp tests/test_engine.cpp)
   target_link_libraries(dafree_core_tests PRIVATE doctest::doctest_with_main dafree_core)
   if(UNIX)
     target_sources(dafree_core_tests PRIVATE tests/test_posix_enum.cpp)
