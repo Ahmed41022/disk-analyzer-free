@@ -5,6 +5,21 @@
 
 ---
 
+## Product-owner execution override — 2026-10-31
+
+The original task specifications below remain in force; this order supersedes their milestone sequencing:
+
+1. Complete the wheel/CI/documentation prerequisites recorded in DECISIONS.md.
+2. Implement T2.7 only; T2.1–T2.6 follow M4-core. In T2.1 replace the scaffold enum with the single planned `Exit` enum.
+3. Implement M4-core as T4.1–T4.8 and T4.13. Pause M3 until M4-core completes. Defer T4.9–T4.12 and T4.14, while wrapping all new UI strings in `_()`.
+4. One PR per group: `[T2.7]`, `[T4.1]`, `[T4.2–T4.3]`, `[T4.4–T4.5]`, `[T4.6–T4.8]`, `[T4.13]`.
+5. Until M4-core completes, PRs require lint, the full Linux correctness suite, Windows/macOS C++ correctness and GUI smoke. Wide 100k, performance, coverage, and sanitizers run on main/nightly (manual full validation also available). Retain every test threshold and assertion. Report each CI job duration in the PR summary.
+6. M8 deletion/move must use the fd-relative, no-follow C++ remover only; never reuse path-based stat/remove helpers. All original trash/confirmation/dry-run safety rules remain required.
+
+See DECISIONS.md for the pending §7.3 CI inventory and dependency adaptations.
+
+---
+
 ## 0. Project identity, scope and global assumptions
 
 ### 0.1 Name and identifiers

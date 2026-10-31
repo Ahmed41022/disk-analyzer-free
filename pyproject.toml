@@ -55,6 +55,18 @@ cmake.version = ">=3.26"
 cmake.build-type = "Debug"
 sdist.include = ["core/**", "bindings/**", "cmake/**", "src/dafree/i18n/**", "CMakeLists.txt", "CMakePresets.json"]
 
+[tool.cibuildwheel]
+build = "cp312-manylinux* cp312-macosx* cp312-win_amd64"
+archs = ["native"]
+test-command = "python {project}/tools/wheel_smoke.py"
+environment = { CMAKE_BUILD_PARALLEL_LEVEL = "3", SKBUILD_CMAKE_BUILD_TYPE = "Release", SKBUILD_CMAKE_ARGS = "-DDAFREE_BUILD_TESTS=OFF" }
+
+[tool.cibuildwheel.windows]
+environment = { CMAKE_BUILD_PARALLEL_LEVEL = "3", CMAKE_GENERATOR = "Ninja", CC = "cl", CXX = "cl", SKBUILD_CMAKE_BUILD_TYPE = "Release", SKBUILD_CMAKE_ARGS = "-DDAFREE_BUILD_TESTS=OFF;-DDAFREE_REQUIRE_MSVC=ON" }
+
+[tool.cibuildwheel.macos]
+environment = { CMAKE_BUILD_PARALLEL_LEVEL = "3", MACOSX_DEPLOYMENT_TARGET = "13.0", SKBUILD_CMAKE_BUILD_TYPE = "Release", SKBUILD_CMAKE_ARGS = "-DDAFREE_BUILD_TESTS=OFF" }
+
 [tool.ruff]
 extend-exclude = ["PLAN.md", "docs/PLAN.md"]
 line-length = 100
@@ -82,6 +94,7 @@ testpaths = ["tests"]
 markers = [
   "gui: requires the Qt GUI dependencies",
   "slow: long-running tests",
+  "main_only: wide/performance checks routed to main and nightly by product-owner policy",
   "windows_only: Windows-specific behavior",
   "needs_mounts: requires mount privileges",
   "needs_scheduler: requires OS scheduler integration",

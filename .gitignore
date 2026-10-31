@@ -6,9 +6,11 @@ __pycache__/
 .ruff_cache/
 .coverage*
 htmlcov/
+# Persistent native builds (including build/python-dev).
 build/
 dist/
 .venv/
+# Persistent CMake FetchContent cache used by Linux quick setup and CI.
 .deps/
 compile_commands.json
 CMakeUserPresets.json
