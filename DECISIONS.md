@@ -19,7 +19,7 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Question: How should the requested prerequisites fit the new PR groups and Linux setup?
 
-Choice: Put the CI/doc prerequisites in a separate `ci-wheels-and-m4-core-policy` PR before `[T2.7]`. Subsequent task-group PRs may be stacked on their unmerged predecessor, preserving one reviewable diff per group. Do not merge without owner direction. Linux quick setup uses `build/python-dev` and `.deps` inside the repository, both ignored, with the same interpreter path when recreating the environment.
+Choice: Put the CI/doc prerequisites in a separate `ci-wheels-and-m4-core-policy` PR before `[T2.7]`. After each group passes its required PR checks, merge its PR to main, preserving the task commits, and verify main's full CI tier before the next group. This honors the owner's earlier request for main commits together with the new one-PR-per-group requirement. Linux quick setup uses `build/python-dev` and `.deps` inside the repository, both ignored, with the same interpreter path when recreating the environment. CMake explicitly maps the `FETCHCONTENT_BASE_DIR` environment variable to its cache variable when no CMake value was supplied.
 
 Reasoning: Prerequisites must be verifiable before M2. Persistent CMake and FetchContent directories avoid repeated downloads and native compilation after a fresh pip environment. Manual full CI validates the prerequisite branch before T2.7 starts.
 
