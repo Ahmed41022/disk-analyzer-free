@@ -3,6 +3,7 @@
 import click
 
 from dafree import __version__
+from dafree.cli.commands.config import config_command
 
 
 @click.group()
@@ -25,3 +26,6 @@ def gui_command() -> None:
         ) from error
 
     click.get_current_context().exit(exit_code)
+
+
+cli.add_command(config_command)
