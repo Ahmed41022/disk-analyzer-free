@@ -15,6 +15,16 @@ This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when it
 
 Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `coverage` needs cross-OS Python coverage and Codecov upload (T4.13 follow-up); `python` gains GUI scroll performance in T4.5 and SMB/scheduler integration in T9.5–T9.7. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
+## D-0036 — 2026-10-31 — Linux setup and installed catalogue data
+
+Question: Which pip installation mode makes the Linux quick setup work on a clean checkout while keeping native rebuilds incremental?
+
+Choice: Use an ordinary `pip install ".[gui]" --no-build-isolation -Cbuild-dir=build/python-dev`, with FetchContent cached under ignored `.deps`. Repeat the pip command after edits. Preserve the same Python environment path when recreating it. On WSL the Python environment may live on the Linux filesystem; native build and FetchContent paths remain inside the repository. Leave editable catalogue lookup as a documented follow-up for deferred T4.12.
+
+Reasoning: Inspection of a fresh editable installation confirmed gettext resolves `src/dafree/i18n/locales`; a clean checkout has no tracked compiled `.mo` files there. Ordinary installation loads the catalogues produced by the build from the installed package, without copying generated data into the source tree. This changes the setup recipe rather than skipping translation tests. Different interpreter paths can legitimately invalidate scikit-build's native cache.
+
+Task: T0.5 Linux contributor setup follow-up; T4.12 editable catalogue lookup
+
 ## D-0035 — 2026-10-31 — manylinux statx header compatibility
 
 Question: How should Linux wheels retain mount-root detection when manylinux_2_28 headers omit `STATX_ATTR_MOUNT_ROOT`?
