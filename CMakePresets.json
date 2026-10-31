@@ -35,7 +35,7 @@
       "name": "coverage",
       "inherits": "dev",
       "binaryDir": "${sourceDir}/build/coverage",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "DAFREE_COVERAGE": "ON" }
     },
     {
       "name": "fuzz",

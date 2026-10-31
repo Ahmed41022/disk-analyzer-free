@@ -1268,7 +1268,7 @@ Conventions for every task:
   - **Depends on:** T1.13
   - **Acceptance:** `test_owner_current_user_resolves` (POSIX: equals `getpass.getuser()`), `test_unknown_uid_formats_numeric` (MockBackend), `test_lazy_resolves_only_requested`.
 
-- [ ] **T1.16 — Memory budget, benches, fixture generator**
+- [x] **T1.16 — Memory budget, benches, fixture generator**
   - **Files:** C `core/src/testing/counting_alloc.cpp` (global `operator new/delete` replacement compiled only into the `dafree_core_tests` executable), `core/tests/test_memory.cpp`, `core/bench/bench_scan_mock.cpp`, `tools/gen_fixtures.py`, `tools/bench_compare.py`.
   - **Interface:** `python tools/gen_fixtures.py --preset {small,ci_500k,1m,10m,dupes_mix} --out DIR` (deterministic, seeded; realistic depth 3–12, 10% dirs, log-normal sizes via `os.truncate` so disk usage stays low; writes `manifest.json` with `total_size`, `files`, `dirs` and a content hash of the listing); `python tools/bench_compare.py --base BIN --head BIN --fixture DIR --runs 5 --threshold-pct 15 --rss-threshold-pct 10 --gbench-base base.json --gbench-head head.json --summary FILE`.
   - **Behavior:** memory test builds a 1M-node tree through MockBackend (names 8–40 B, 10% dirs) and measures live heap after `take_result()` and peak during scan. `bench_compare.py` alternates base/head runs after one warm-up each, compares medians of wall time and peak RSS (`dafree scan --stats-json`), and compares Google Benchmark JSON entries; exits 1 on regression; writes a Markdown table.

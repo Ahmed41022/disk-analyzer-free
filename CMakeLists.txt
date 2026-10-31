@@ -4,7 +4,16 @@ project(dafree LANGUAGES CXX)
 option(DAFREE_BUILD_TESTS "Build native tests" ON)
 option(DAFREE_BUILD_BENCH "Build benchmarks" OFF)
 option(DAFREE_BUILD_FUZZ "Build fuzz targets" OFF)
+option(DAFREE_COVERAGE "Instrument native test coverage with GCC" OFF)
 set(DAFREE_SANITIZE "" CACHE STRING "Comma-separated sanitizers")
+
+if(DAFREE_COVERAGE)
+  if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    message(FATAL_ERROR "DAFREE_COVERAGE currently requires GCC and gcov")
+  endif()
+  add_compile_options(--coverage -O0 -g)
+  add_link_options(--coverage)
+endif()
 
 # Permit legacy minimums in small, vendored header-only dependencies with CMake 4.
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)

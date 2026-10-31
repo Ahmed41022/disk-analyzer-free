@@ -111,3 +111,13 @@ TEST_CASE("owner_table_fills_unresolved_display_without_reassigning_ids") {
     CHECK(owners.get(id) == "resolved");
     CHECK(owners.key(0) == nullptr);
 }
+
+TEST_CASE("name_arena_validates_ranges_and_empty_names") {
+    dafree::NameArena names;
+    const auto empty = names.push({});
+    CHECK(names.get(empty.first, empty.second).empty());
+    const auto value = names.push("abc");
+    CHECK(names.get(value.first + 1, 2) == "bc");
+    CHECK_THROWS_AS(static_cast<void>(names.get(value.first, 4)), std::out_of_range);
+    CHECK_THROWS_AS(static_cast<void>(names.get(2 * 1024 * 1024, 1)), std::out_of_range);
+}

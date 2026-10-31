@@ -348,3 +348,31 @@ Sources: [File security and access rights](https://learn.microsoft.com/windows/w
 Alternatives: Skip Windows denial coverage, accept a successful read as denial, or make the scanner report access-denied despite successful enumeration.
 
 Task: T1.14
+
+## D-0025 — 2026-10-31 — Memory measurement and performance tooling scope
+
+Question: What belongs in the scanner heap budget, how should allocation instrumentation coexist with runtimes, and which performance-tool behaviors are available before M2?
+
+Choice: Measure requested C++ allocation bytes above a stable, externally held MockBackend baseline, from before start_scan through take_result and handle destruction. Retain the result tree for the steady measurement. Exclude counting headers, allocator bookkeeping, and the mock filesystem input. Add private testing headers for the allocation-counter interface and shared balanced mock input. The default native test executable supplies all standard new/delete replacement forms. MinGW tests use a static C++ runtime; Linux Clang TSan uses its dynamic runtime and an explicit runtime search path, keeping allocation interception and race instrumentation enabled. Both memory assertions remain present and unchanged.
+
+Reasoning: A real filesystem is external input; charging a stored RawEntry description for every mock file would measure the fixture instead of scanner overhead. The same backend remains alive throughout, so subtracting its baseline cannot hide released input storage. MinGW's separately linked C++ runtime allocated strings outside the replacement allocator and caused a heap-corruption exit. Clang's static TSan C++ allocation symbols conflicted with replacement new/delete; dynamic runtime interposition preserves both test instrumentation and sanitizer coverage. No runtime dependencies were added; the existing development compiler/runtime licenses apply.
+
+Choice: Generate only new output trees, rejecting existing paths and link ancestors. Preset node counts include the filesystem root but exclude manifest.json. Manifest totals exclude its own file; the hash covers actual lexical relative-path/kind/size rows. Use sparse zero ranges, fixed-seed log-normal sizes, and a balanced 10%-directory layout. Compare supplied Google Benchmark JSON only in M1, with iteration medians, normalized units, aggregate-median fallback, and failure for missing head benchmarks. CLI binary wall-time/RSS comparison remains explicitly deferred to T2.2 as the plan requires; reserved flags are accepted and documented.
+
+Reasoning: Deterministic relative paths make manifests comparable across output locations and operating systems. Sparse Windows files must be marked through their existing file handle before truncation. A manifest cannot include its own final listing hash without self-reference. New-only outputs avoid overwriting user files. Benchmark medians resist outliers; removed benchmark cases cannot silently vanish from regression checks.
+
+Alternatives: Charge mock input to scanner RAM, omit aligned allocation forms, disable failing tests or sanitizers, overwrite existing fixture trees, write large physical zero files, or implement the future CLI early.
+
+Task: T1.16
+
+## D-0026 — 2026-10-31 — Explicit M1 verification gates
+
+Question: How should the milestone-level Hypothesis, sanitizer, and coverage requirements be enforced beyond individual task checks?
+
+Choice: Add a deterministic 1,000-valid-example Hypothesis property over native mock scans, checking saturated totals, duplicate identities, exclusions, and hidden flags against independent Python accounting. Add a full GCC ASan/UBSan native job with leak detection. Enable GCC/gcov instrumentation through the coverage preset and require at least 85% line coverage for model and scanner separately, including their public headers. Retain HTML/XML/JSON reports as CI artifacts. All new jobs are required by ci-success. Hypothesis and gcovr were already development dependencies.
+
+Reasoning: Final M1 review found these milestone requirements were not yet explicit gates. Initial measured combined coverage was 81.6%, below the unchanged 85% target. New contract tests exercise model-type container iteration and standard algorithms, const access, growth after shrinking, tree accessors and invalid IDs, name-range validation, and actual local owner lookup. These tests increase coverage to 88.2% combined, 88.8% model, and 87.7% scanner. No tests, source files, or valid error paths were excluded to pass the threshold. These checks complete M1 verification and do not implement M2 features.
+
+Alternatives: Rely only on seeded native tests, lower the coverage target, omit public headers, or mark M1 complete based solely on its task checklist.
+
+Task: T1.16 / M1 definition of done

@@ -59,6 +59,35 @@ TEST_CASE("children_contiguous") {
     CHECK(tree.node(6).parent == 2);
 }
 
+TEST_CASE("tree_accessors_and_invalid_ids") {
+    dafree::TreeBuilder builder({"/root"});
+    builder.add_children(
+        1, std::array{dafree::TreeBuilder::NewNode{"file.TXT", 0, 8, 16, 0, 0, 0, std::nullopt}});
+    auto tree = std::move(builder).finish({});
+    CHECK(tree.name_bytes(0).empty());
+    CHECK(tree.path_bytes(0).empty());
+    CHECK_FALSE(tree.parent(0).has_value());
+    CHECK_FALSE(tree.owner_name(2).has_value());
+    CHECK_FALSE(tree.ext(1).has_value());
+    REQUIRE(tree.ext(2).has_value());
+    CHECK(*tree.ext(2) == "txt");
+    CHECK(tree.depth(0) == 0);
+    CHECK(tree.depth(1) == 0);
+    CHECK(tree.depth(2) == 1);
+    CHECK(tree.parent(2) == 1);
+    const auto memory = tree.memory_usage();
+    CHECK(memory.nodes == tree.size() * sizeof(dafree::Node));
+    CHECK(memory.counts == tree.size() * sizeof(dafree::Counts));
+    CHECK(memory.names > 0);
+    CHECK(memory.interners > 0);
+    CHECK_THROWS_AS(static_cast<void>(tree.node(tree.size())), std::out_of_range);
+    CHECK_THROWS_AS(static_cast<void>(tree.counts(tree.size())), std::out_of_range);
+    CHECK_THROWS_AS(static_cast<void>(tree.children(tree.size())), std::out_of_range);
+    CHECK_THROWS_AS(static_cast<void>(tree.parent(tree.size())), std::out_of_range);
+    CHECK_THROWS_AS(static_cast<void>(tree.depth(tree.size())), std::out_of_range);
+    CHECK_THROWS_AS(dafree::TreeHandle(nullptr), std::invalid_argument);
+}
+
 TEST_CASE("parent_less_than_child_random_builds") {
     std::mt19937 random{0xDAF123u};
     for (std::uint32_t build = 0; build < 1000; ++build) {

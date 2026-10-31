@@ -60,6 +60,35 @@ std::string native_path(const std::filesystem::path &path) {
 
 } // namespace
 
+TEST_CASE("local_followed_metadata_and_owner_lookup_contract") {
+    TempDir temporary;
+    const auto file = temporary.root / "owned";
+    {
+        std::ofstream output(file);
+        output << "content";
+    }
+    auto backend = dafree::make_local_backend();
+    const auto path = native_path(file);
+    CHECK(backend->stat_follow(path).kind == dafree::EntryKind::File);
+    const auto listing = backend->read_dir(native_path(temporary.root), dafree::DirHint{true});
+    REQUIRE(listing.entries.size() == 1);
+#ifndef _WIN32
+    REQUIRE(listing.entries[0].owner.has_value());
+    const auto hint = *listing.entries[0].owner;
+    const auto from_hint = backend->resolve_owner(path, &hint);
+    const auto from_path = backend->resolve_owner(path, nullptr);
+    REQUIRE(from_hint.has_value());
+    REQUIRE(from_path.has_value());
+    CHECK(from_hint->first == from_path->first);
+    CHECK(from_hint->second == from_path->second);
+    CHECK_FALSE(from_hint->second.empty());
+    CHECK_FALSE(
+        backend->resolve_owner(native_path(temporary.root / "missing"), nullptr).has_value());
+#else
+    CHECK_FALSE(backend->resolve_owner(path, nullptr).has_value());
+#endif
+}
+
 TEST_CASE("mock_serves_tree") {
     auto spec = sample();
     dafree::VolumeInfo volume;

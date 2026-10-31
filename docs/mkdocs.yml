@@ -22,4 +22,5 @@ markdown_extensions:
 
 nav:
   - Overview: index.md
+  - Performance and fixtures: performance.md
   - Implementation plan: PLAN.md

@@ -12,6 +12,87 @@
 static_assert(std::random_access_iterator<dafree::SegVector<int>::iterator>);
 static_assert(std::random_access_iterator<dafree::SegVector<int>::const_iterator>);
 
+namespace {
+
+template <class T> std::uint64_t field(const T &value) {
+    if constexpr (std::is_same_v<T, dafree::Node>)
+        return value.size;
+    else if constexpr (std::is_same_v<T, dafree::Counts>)
+        return value.files;
+    else
+        return static_cast<std::uint64_t>(value);
+}
+
+template <class T> T item(unsigned value) {
+    T result{};
+    if constexpr (std::is_same_v<T, dafree::Node>)
+        result.size = value;
+    else if constexpr (std::is_same_v<T, dafree::Counts>)
+        result.files = value;
+    else
+        result = static_cast<T>(value);
+    return result;
+}
+
+template <class T> void check_container_contract() {
+    dafree::SegVector<T> actual;
+    std::vector<T> expected;
+    actual.shrink_last();
+    CHECK(actual.begin() == actual.end());
+    CHECK(actual.heap_bytes() == 0);
+    const auto equal = [](const T &a, const T &b) { return field(a) == field(b); };
+    actual.push_back(item<T>(4));
+    actual.push_back(item<T>(1));
+    expected = {item<T>(4), item<T>(1), item<T>(9), item<T>(2)};
+    const std::array addition{item<T>(9), item<T>(2)};
+    CHECK(actual.append(addition) == std::pair<std::uint32_t, std::uint32_t>{2, 4});
+    const auto &constant = actual;
+    CHECK(std::equal(constant.cbegin(), constant.cend(), expected.begin(), equal));
+    CHECK(std::equal(constant.rbegin(), constant.rend(), expected.rbegin(), equal));
+    CHECK(field(constant[2]) == 9);
+    typename dafree::SegVector<T>::iterator cursor;
+    cursor = actual.begin();
+    CHECK(field(*cursor.operator->()) == 4);
+    CHECK(field(*cursor++) == 4);
+    CHECK(field(cursor[1]) == 9);
+    CHECK(field(*(2 + actual.begin())) == 9);
+    CHECK(field(*(actual.end() - 1)) == 2);
+    CHECK(actual.end() - actual.begin() == 4);
+    auto tail = actual.end();
+    CHECK(tail-- == actual.end());
+    CHECK(field(*tail) == 2);
+    typename dafree::SegVector<T>::const_iterator converted(actual.begin());
+    CHECK(converted == constant.begin());
+    CHECK(field(*converted.operator->()) == 4);
+    CHECK(field(*converted++) == 4);
+    CHECK(field(converted[1]) == 9);
+    auto const_tail = constant.end();
+    CHECK(const_tail-- == constant.end());
+    CHECK(field(*const_tail) == 2);
+    const auto less = [](const T &a, const T &b) { return field(a) < field(b); };
+    std::sort(actual.begin(), actual.end(), less);
+    std::sort(expected.begin(), expected.end(), less);
+    CHECK(std::equal(actual.begin(), actual.end(), expected.begin(), equal));
+    actual.shrink_last();
+    actual.shrink_last();
+    CHECK(actual.heap_bytes() == expected.size() * sizeof(T));
+    CHECK(actual.append({}).first == expected.size());
+    actual.push_back(item<T>(7));
+    CHECK(field(actual[4]) == 7);
+    CHECK(field(constant[4]) == 7);
+    CHECK(field(*constant.rbegin()) == 7);
+}
+
+} // namespace
+
+TEST_CASE("segvector_standard_algorithm_contract_for_model_types") {
+    check_container_contract<int>();
+    check_container_contract<std::uint32_t>();
+    check_container_contract<std::uint64_t>();
+    check_container_contract<dafree::Node>();
+    check_container_contract<dafree::Counts>();
+}
+
 TEST_CASE("push_get_across_segments") {
     dafree::SegVector<std::uint32_t> values;
     constexpr std::uint32_t count = 65'536 + 17;

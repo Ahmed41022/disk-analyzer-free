@@ -36,10 +36,24 @@ endif()
 
 if(DAFREE_BUILD_TESTS)
   add_executable(dafree_core_tests tests/test_smoke.cpp tests/test_names.cpp
+                                     tests/test_memory.cpp src/testing/counting_alloc.cpp
                                      tests/test_aggregate.cpp tests/test_segvector.cpp
                                      tests/test_tree.cpp tests/test_units.cpp tests/test_longpath.cpp
                                      tests/test_backends.cpp tests/test_exclude.cpp tests/test_engine.cpp)
   target_link_libraries(dafree_core_tests PRIVATE doctest::doctest_with_main dafree_core)
+  if(MINGW)
+    # Allocation replacements must also cover allocations made inside the C++ runtime.
+    target_link_options(dafree_core_tests PRIVATE -static -static-libgcc -static-libstdc++)
+  endif()
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND DAFREE_SANITIZE STREQUAL "thread"
+     AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # Dynamic TSan permits the executable's counting new/delete replacements to interpose.
+    execute_process(COMMAND "${CMAKE_CXX_COMPILER}" -print-runtime-dir
+                    OUTPUT_VARIABLE _dafree_sanitizer_runtime OUTPUT_STRIP_TRAILING_WHITESPACE
+                    COMMAND_ERROR_IS_FATAL ANY)
+    target_link_options(dafree_core_tests PRIVATE -shared-libsan)
+    set_property(TARGET dafree_core_tests APPEND PROPERTY BUILD_RPATH "${_dafree_sanitizer_runtime}")
+  endif()
   if(UNIX)
     target_sources(dafree_core_tests PRIVATE tests/test_posix_enum.cpp)
   endif()

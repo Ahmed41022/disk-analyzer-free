@@ -9,15 +9,15 @@ Find out what's using your disk space — fast, free and open source.
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 
-> **Project status:** early development. The current build is a tested CLI and GUI scaffold. Scanning and analysis features are being implemented milestone by milestone; packaged releases are not available yet.
+> **Project status:** early development. The Python API supports cross-platform walk scanning, progress controls, link policies, exclusions, and owner resolution. The CLI and GUI are scaffolds; packaged releases are planned.
 
 ## Screenshots
 
 Screenshots of the light and dark interfaces will be added when the GUI milestone is complete.
 
-## Planned features
+## Project scope
 
-The project is being built toward these capabilities:
+The implementation plan stages these capabilities:
 
 - **Scanning:** fast directory walks, Windows NTFS fast mode, progress controls, multiple targets, and safe handling of links and permissions.
 - **Views:** virtualized directory tables, treemaps, charts, file counts, logical size, and allocated size.
@@ -129,6 +129,7 @@ tmpfs mount and always unmount it during cleanup; CI requires these checks to ru
 ## Contributing and support
 
 - [Documentation](docs/index.md)
+- [Memory budgets, benchmarks, and fixture tools](docs/performance.md)
 - [Contributing guide](CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Security policy](SECURITY.md)
