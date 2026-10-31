@@ -12,6 +12,7 @@ def pytest_configure(config: pytest.Config) -> None:
     markers = (
         "gui: requires the Qt GUI dependencies",
         "slow: long-running tests",
+        "main_only: wide/performance checks routed to main and nightly by product-owner policy",
         "windows_only: Windows-specific behavior",
         "needs_mounts: requires mount privileges",
         "needs_scheduler: requires OS scheduler integration",

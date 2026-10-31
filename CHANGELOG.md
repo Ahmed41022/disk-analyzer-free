@@ -6,6 +6,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- Three-platform installed abi3 wheel verification with MSVC on Windows, nightly full CI, explicit PR/full test routing, and incremental Linux contributor setup.
+
 - M1 milestone gates for 1,000 generated scan-accounting examples, full native ASan/UBSan checks, and separate 85% model/scanner line coverage.
 
 - Million-node scanner heap budgets, aligned allocation instrumentation restricted to native tests, mock scan benchmarks, deterministic sparse fixture generation, and Google Benchmark regression comparison.

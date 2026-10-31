@@ -16,6 +16,43 @@ python -m pip install -e ".[gui]"
 
 Editable installs use scikit-build-core to build the C++ extension.
 
+## Linux quick setup (Debian / Ubuntu)
+
+From the repository root, install the compiler and Qt offscreen runtime libraries:
+
+```sh
+sudo apt-get update
+sudo apt-get install --yes build-essential python3-dev python3-venv \
+  libegl1 libgl1 libxkbcommon0 libxkbcommon-x11-0 libfontconfig1 \
+  libdbus-1-3 libxcb-cursor0
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install cmake ninja scikit-build-core
+python -m pip install --require-hashes -r requirements/dev.txt
+export CMAKE_GENERATOR=Ninja
+export FETCHCONTENT_BASE_DIR="$PWD/.deps"
+export CMAKE_BUILD_PARALLEL_LEVEL=4
+python -m pip install -e ".[gui]" --no-build-isolation -Cbuild-dir=build/python-dev
+QT_QPA_PLATFORM=offscreen python -m pytest -m "not slow"
+```
+
+Use Python 3.12+ and GCC 12+. The locked development requirements include the
+nanobind and Babel build requirements. `build/python-dev` keeps the CMake/Ninja
+build and `.deps` keeps FetchContent sources inside the repository; both are in
+`.gitignore`. After recreating `.venv` at the same path, repeat the pip commands
+with these exports to reuse the native build and downloaded dependencies.
+Do not delete either cache to refresh only Python packages. A compiler, Python
+ABI, or build-configuration change can legitimately require recompilation.
+
+## CI tiers through M4-core
+
+PRs run lint, the full Linux correctness suite (including property tests), native
+correctness on all three operating systems, and Windows/macOS GUI smoke. The
+wide 100k fixture, memory budgets and benchmarks, sanitizers, and coverage run
+on main and nightly, plus manual full validation. No test assertions or budgets
+are reduced. Include each job's duration from the current-head Actions run in
+the PR summary. The pending §7.3 inventory is in `DECISIONS.md`.
+
 ## Common checks
 
 ```console

@@ -171,6 +171,7 @@ def wide_fixture(tmp_path: Path) -> Iterator[Fixture]:
 
 
 @pytest.mark.timeout(300, func_only=True)
+@pytest.mark.main_only
 def test_wide_100k_files(wide_fixture: Fixture) -> None:
     """A hundred thousand siblings preserve totals and contiguous child access."""
     _assert_root(wide_fixture)
