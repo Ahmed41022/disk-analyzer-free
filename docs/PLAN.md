@@ -1197,7 +1197,7 @@ Conventions for every task:
   - **Depends on:** T0.4
   - **Acceptance:** `test_fixture_creates_and_cleans_up`, `test_oracle_small_mixed_hand_values` (hand-computed table), run on 3 OSes with `DAFREE_REQUIRE_ALL_CAPS=1`.
 
-- [ ] **T1.7 — POSIX enumeration (Linux, macOS)**
+- [x] **T1.7 — POSIX enumeration (Linux, macOS)**
   - **Files:** C `core/src/platform/posix/{read_dir.cpp,stat.cpp,owner.cpp}`, `core/src/platform/linux/{statx.cpp,volume_linux.cpp}`, `core/src/platform/macos/{getattrlistbulk.cpp,volume_macos.cpp}`, `core/src/platform/common/volume.cpp`, `core/tests/test_posix_enum.cpp`.
   - **Interface:** §2.7.
   - **Behavior:** §2.4.4. `EACCES` opening a dir → `IoError{AccessDenied}`; per-entry `EACCES` → entry with kind from `d_type`, size 0 and access-denied marker; `ENOENT` during stat → omitted + `NotFound` issue; deep paths via component-wise `openat` when `ENAMETOOLONG`.

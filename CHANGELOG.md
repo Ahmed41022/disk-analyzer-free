@@ -16,3 +16,4 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 - Saturating directory aggregation and incremental deletion updates.
 - Locale-aware size formatting and parsing with traditional, IEC, and SI units.
 - Temporary filesystem fixtures and a pure expected-totals oracle for scanner tests.
+- POSIX directory enumeration, native metadata, volume information, and owner lookup.

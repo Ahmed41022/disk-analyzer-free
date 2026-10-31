@@ -200,3 +200,15 @@ Reasoning: The keys can be compared independent of the host OS. The totals refle
 Alternatives: Use absolute platform paths in the oracle, count hidden unreadable children, or silently skip unsupported features in CI; these would make cross-platform assertions or failure diagnosis unreliable.
 
 Task: T1.6
+
+## D-0013 — 2026-10-31 — Platform metadata prerequisites
+
+Question: Where should the platform enumeration types live before the backend and scan tasks introduce their consumers, and how should missing bulk metadata be handled?
+
+Choice: Introduce `platform.hpp` with the planned entry, listing, issue, volume, and platform interfaces needed by T1.7. Add an `access_denied` marker to `RawEntry` for the specified per-entry permission failure. Linux uses `getdents64` and `statx`, with `fstatat` fallback on `ENOSYS`. macOS requests bulk metadata and falls back to `fstatat` for entries with unsupported attributes, or reopens the directory for `readdir` when bulk enumeration is unsupported.
+
+Reasoning: Enumeration needs these shared types before `FsBackend` exists. Keeping one definition avoids incompatible duplicates in later tasks. Optional birth times remain absent when unsupported, and bulk fallback preserves metadata and raw names across filesystems.
+
+Alternatives: Delay the types until T1.9, duplicate them privately, or reject filesystems that do not return every bulk attribute.
+
+Task: T1.7
