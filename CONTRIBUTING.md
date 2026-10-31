@@ -32,7 +32,7 @@ python -m pip install --require-hashes -r requirements/dev.txt
 export CMAKE_GENERATOR=Ninja
 export FETCHCONTENT_BASE_DIR="$PWD/.deps"
 export CMAKE_BUILD_PARALLEL_LEVEL=4
-python -m pip install -e ".[gui]" --no-build-isolation -Cbuild-dir=build/python-dev
+python -m pip install ".[gui]" --no-build-isolation -Cbuild-dir=build/python-dev
 QT_QPA_PLATFORM=offscreen python -m pytest -m "not slow"
 ```
 
@@ -43,6 +43,15 @@ build and `.deps` keeps FetchContent sources inside the repository; both are in
 with these exports to reuse the native build and downloaded dependencies.
 Do not delete either cache to refresh only Python packages. A compiler, Python
 ABI, or build-configuration change can legitimately require recompilation.
+
+This quick setup uses an ordinary package installation so compiled gettext
+catalogues load from the installed package. Repeat the last pip command after
+source edits; unchanged native objects remain incremental. Fresh editable
+installs currently resolve catalogue paths to the source tree, which does not
+contain tracked `.mo` files (see D-0036 in `DECISIONS.md`). On WSL, keeping the
+Python environment on the Linux filesystem avoids slow package extraction on
+Windows mounts; the native build and FetchContent cache still stay inside this
+repository as above.
 
 ## CI tiers through M4-core
 
