@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-30 16:46+0200\n"
+"POT-Creation-Date: 2026-10-31 21:37+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,70 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+#, python-brace-format
+msgid "Cannot access preferences: {error}"
+msgstr ""
+
+msgid "Portable mode is not available yet"
+msgstr ""
+
+msgid "Print a setting as JSON."
+msgstr ""
+
+msgid "Print the preferences file path."
+msgstr ""
+
+msgid "Read and update shared preferences."
+msgstr ""
+
+#, python-brace-format
+msgid "Unsupported settings version: {version}"
+msgstr ""
+
+msgid "Validate and save a setting."
+msgstr ""
+
+msgid "dotted setting name"
+msgstr ""
+
+msgid "existing setting"
+msgstr ""
+
 msgid "file"
 msgid_plural "files"
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "finite number"
+msgstr ""
+
+msgid "list"
+msgstr ""
+
+msgid "non-empty list of unique column IDs"
+msgstr ""
+
+msgid "non-negative dimensions"
+msgstr ""
+
+msgid "non-negative integer"
+msgstr ""
+
+msgid "object"
+msgstr ""
+
+msgid "one character"
+msgstr ""
+
+msgid "positive dimensions"
+msgstr ""
+
+msgid "positive widths and non-negative orders"
+msgstr ""
+
+msgid "user preference (version is managed by migrations)"
+msgstr ""
+
+#, python-brace-format
+msgid "{key}: expected {expected}"
+msgstr ""

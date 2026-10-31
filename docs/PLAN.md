@@ -1387,7 +1387,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T2.1
   - **Acceptance:** `test_completion_scripts_generate` (bash, zsh, fish, powershell non-empty, exit 0); docs build includes every command.
 
-- [ ] **T2.7 — Settings module and `config` command**
+- [x] **T2.7 — Settings module and `config` command**
   - **Files:** C `src/dafree/settings.py`, `src/dafree/paths.py` (portable detection stub; full in T10.2), `src/dafree/cli/commands/config.py`, `tests/unit/test_settings.py`.
   - **Interface:** §2.11; `load_settings(paths: AppPaths) -> Settings`, `save_settings(settings, paths) -> None`, `get_dotted(settings, key) -> Any`, `set_dotted(settings, key, raw: str) -> Settings` (type-checked).
   - **Behavior:** atomic writes, corrupt-file backup, schema migrations; env `DAFREE_CONFIG_DIR` override (tests only, documented).

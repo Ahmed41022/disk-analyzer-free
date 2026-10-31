@@ -9,7 +9,7 @@ Find out what's using your disk space — fast, free and open source.
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 
-> **Project status:** early development. The Python API supports cross-platform walk scanning, progress controls, link policies, exclusions, and owner resolution. The CLI and GUI are scaffolds; packaged releases are planned.
+> **Project status:** early development. The Python API supports cross-platform walk scanning, progress controls, link policies, exclusions, and owner resolution. The CLI provides version and configuration commands; its scan/report commands and the full GUI are still in development. Packaged releases are planned.
 
 ## Screenshots
 
@@ -66,6 +66,17 @@ The CLI version command is:
 dafree --version
 ```
 
+Shared preferences are available now:
+
+```console
+dafree config path
+dafree config get theme
+dafree config set theme dark
+dafree config set default_scan.threads 4
+```
+
+See [configuration commands](docs/cli.md) for typed values, migrations, and storage paths.
+
 The following shows the planned CLI syntax; scan and report commands are not implemented yet:
 
 ```console
@@ -75,7 +86,7 @@ dafree dupes ~/Pictures
 dafree export / --to html -o report.html
 ```
 
-The Python scan API will be documented when the public API is implemented. Its planned entry point is `from dafree.api import scan, ScanRequest`.
+Use `from dafree.api import scan, ScanRequest` for Python scans; see [Python scanning](#python-scanning) below for progress controls and asynchronous usage.
 
 Size formatting and parsing are available now:
 

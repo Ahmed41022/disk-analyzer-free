@@ -15,6 +15,20 @@ This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when it
 
 Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `coverage` needs cross-OS Python coverage and Codecov upload (T4.13 follow-up); `python` gains GUI scroll performance in T4.5 and SMB/scheduler integration in T9.5–T9.7. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
+## D-0037 — 2026-10-31 — T2.7 settings before the CLI framework
+
+Question: How should T2.7 run before deferred T2.1, and what fills the unspecified nested settings and v0 schema?
+
+Choice: Register only `config get/set/path` on the existing Click scaffold; keep its existing exit enum until the single `Exit` replacement in T2.1. Use typed JSON-native dataclasses for columns, scan defaults, duplicate defaults, window state, and treemap options. Column IDs mirror the nine T4.5 columns; owner and extension start hidden. Duplicate filter defaults persist nullable query text, with parsing/evaluation deferred. These models store preferences only and implement no duplicate, treemap, or portable features.
+
+Choice: Treat unversioned/v0 JSON as the same named fields without schema metadata; retain known values, supply typed defaults, and save as v1 on the next explicit write. Reject unknown fields, bool-as-int errors, invalid enum choices, non-finite numbers, invalid native numeric ranges, nonpositive column/window dimensions, duplicate column IDs, and empty column lists. Keep the first ten recent targets. Future schema versions raise without renaming or overwriting their file. Corrupt JSON/UTF-8/type data is renamed to a timestamped backup, adding a suffix if a backup already exists. JSON escapes preserve raw filesystem surrogate characters.
+
+Choice: The portable path detector remains a stub with the planned signature; explicit portable requests fail rather than silently write outside portable storage. The documented test-only `DAFREE_CONFIG_DIR` override contains all application directories. Default paths use platformdirs with `appauthor=False`. No directories are created by detection or `config path`.
+
+Reasoning: The owner explicitly selected T2.7 before T2.1 and deferred the algorithms/portable tasks. A strict shared schema gives CLI and GUI one format without adding another framework. There is no shipped legacy settings format to infer beyond v0's missing version, so the migration avoids invented renames. Atomic sibling-file replacement follows a flush and fsync; failed saves preserve the previous document and remove only the newly created temp file.
+
+Task: T2.7
+
 ## D-0036 — 2026-10-31 — Linux setup and installed catalogue data
 
 Question: Which pip installation mode makes the Linux quick setup work on a clean checkout while keeping native rebuilds incremental?
