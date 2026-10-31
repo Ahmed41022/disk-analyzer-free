@@ -114,6 +114,11 @@ followed by default. Blocking `scan` invokes optional progress callbacks on its
 calling thread; native workers never call Python. Errors derive from
 `dafree.api.errors.DafreeError`, with classified `ScanError` and `ExcludeError` values.
 
+The scanner integration suite creates every fixture in test-owned temporary
+directories. It includes 100,000 siblings, 300 nested levels, a sparse 5 GiB file,
+and paths beyond ordinary platform limits. Linux mount tests use a temporary
+tmpfs mount and always unmount it during cleanup; CI requires these checks to run.
+
 ## Contributing and support
 
 - [Documentation](docs/index.md)

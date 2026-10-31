@@ -146,7 +146,9 @@ class Fixture:
                 "wb",
             )
             if parent_fd is not None
-            else path.open("wb")
+            # CREATE_ALWAYS ("wb") clears the sparse flag just set above on Windows.
+            # Reopen the existing file without recreating it before extending its length.
+            else path.open("r+b" if spec.content == "sparse" and sys.platform == "win32" else "wb")
         )
         if isinstance(spec.content, bytes):
             with output:

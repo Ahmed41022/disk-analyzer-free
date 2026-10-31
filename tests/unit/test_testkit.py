@@ -1,6 +1,7 @@
 """The testkit creates only temporary files and computes independent totals."""
 
 import os
+import stat
 import sys
 from pathlib import Path
 
@@ -77,6 +78,12 @@ def test_sparse_file_and_long_path(tmp_path: Path) -> None:
     with Fixture.create(sparse, tmp_path) as fixture:
         fixture.caps.require("sparse")
         assert (fixture.root / "sparse.bin").stat().st_size == 32 * 1024**2
+        if sys.platform == "win32":
+            attributes = (fixture.root / "sparse.bin").stat().st_file_attributes
+            assert attributes & stat.FILE_ATTRIBUTE_SPARSE_FILE
+        else:
+            info = (fixture.root / "sparse.bin").stat()
+            assert info.st_blocks * 512 < info.st_size
     with Fixture.create(long_paths(), tmp_path) as fixture:
         fixture.caps.require("long_paths")
         leaf = fixture.root

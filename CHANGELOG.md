@@ -7,6 +7,7 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 ### Added
 
 - Typed Python scanning API with asynchronous controls, shared tree ownership, classified exceptions, GIL-free waits, and lossless native paths.
+- Real-filesystem integration coverage for Unicode names, hard links, link cycles, junctions, permissions, mount boundaries, sparse files, deep directories, wide directories, and long paths.
 
 - Initial Python and C++20 package scaffold with a version command and Qt window stub.
 - Cross-platform build, test, lint, type, and dependency-policy checks.

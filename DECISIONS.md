@@ -297,6 +297,20 @@ Alternatives: Expose native types directly, duplicate ScanRequest, resolve links
 
 Task: T1.13
 
+## D-0022 — 2026-10-31 — Filesystem integration execution
+
+Question: How should platform-specific filesystem capabilities and the wide fixture be verified without hiding unsupported CI environments?
+
+Choice: Run the wide 100,000-file fixture in the normal integration suite with a 300-second timeout for the test body; pytest fixture setup and teardown own creation and cleanup. Use the fixture oracle for aggregate totals, and explicit assertions for link policy, flags, and retained diagnostics. Linux mount tests create a tmpfs only beneath their pytest temporary directory and unmount it in a finally block. Missing mount tools or privileges fail in CI; local environments may report an explicit capability skip. Ordinary OS-specific tests run only on their applicable platforms.
+
+Reasoning: The initial wide test passed its scan assertions but hit its 300-second timeout during Windows temporary-file unlink cleanup. Moving creation and cleanup into a yield fixture and using func_only keeps the timeout on the operation under test without interrupting cleanup. The full fixture and all assertions remain intact. Mount checks must not silently disappear from CI. Native file counts describe descendants, while the pure fixture oracle includes the file itself; directory aggregates can be compared directly. No dependencies were added.
+
+Alternatives: Reduce the wide fixture, mark it slow and omit it from CI, or silently skip mount failures in CI.
+
+The Windows sparse integration test also exposed a fixture bug: opening with wb after setting the sparse flag recreates the file and clears that flag. Reopen the existing sparse file with r+b, and assert both its sparse attribute and reduced allocation in regression coverage. The scanner allocation assertion remains unchanged.
+
+Task: T1.14
+
 ## D-0020 — 2026-10-31 — Vendor header warning boundaries
 
 Question: How should warnings-as-errors handle MSVC's intentional-alignment padding warning in the pinned robin-map template?

@@ -1256,7 +1256,7 @@ Conventions for every task:
   - **Depends on:** T1.11
   - **Acceptance:** `test_scan_small_mixed_matches_oracle` (3 OSes), `test_paths_roundtrip_invalid_utf8` (Linux), `test_paths_roundtrip_lone_surrogate` (Windows), `test_scan_errors_map_to_python_exceptions`, `test_wait_releases_gil` (a Python thread increments a counter while `wait()` blocks; counter advances).
 
-- [ ] **T1.14 — Edge-case integration suite (real filesystem)**
+- [x] **T1.14 — Edge-case integration suite (real filesystem)**
   - **Files:** C `tests/integration/test_scan_fixtures.py`.
   - **Behavior:** runs every preset and compares against `oracle`.
   - **Depends on:** T1.6, T1.12, T1.13
