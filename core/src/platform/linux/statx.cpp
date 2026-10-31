@@ -1,4 +1,5 @@
 #include "dafree/platform.hpp"
+#include "statx_compat.hpp"
 
 #include <algorithm>
 #include <cerrno>
@@ -13,6 +14,10 @@
 
 namespace dafree::platform {
 
+#ifdef STATX_ATTR_MOUNT_ROOT
+static_assert(detail::kStatxMountRoot == STATX_ATTR_MOUNT_ROOT);
+#endif
+
 EntryKind kind_from_mode(mode_t mode) noexcept;
 
 int statx_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry) {
@@ -23,7 +28,8 @@ int statx_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry) {
 
     entry.name = name;
     entry.kind = kind_from_mode(metadata.stx_mode);
-    if (entry.kind == EntryKind::Dir && (metadata.stx_attributes & STATX_ATTR_MOUNT_ROOT) != 0)
+    if (entry.kind == EntryKind::Dir &&
+        detail::statx_is_mount_root(metadata.stx_attributes, metadata.stx_attributes_mask))
         entry.kind = EntryKind::MountPoint;
     entry.size = metadata.stx_size;
     entry.alloc = metadata.stx_blocks * 512u;

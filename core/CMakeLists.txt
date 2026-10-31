@@ -39,6 +39,7 @@ if(DAFREE_BUILD_TESTS)
                                      tests/test_memory.cpp src/testing/counting_alloc.cpp
                                      tests/test_aggregate.cpp tests/test_segvector.cpp
                                      tests/test_tree.cpp tests/test_units.cpp tests/test_longpath.cpp
+                                     tests/test_statx_compat.cpp
                                      tests/test_backends.cpp tests/test_exclude.cpp tests/test_engine.cpp)
   target_link_libraries(dafree_core_tests PRIVATE doctest::doctest_with_main dafree_core)
   if(MINGW)
