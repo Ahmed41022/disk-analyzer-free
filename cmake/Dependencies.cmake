@@ -62,3 +62,5 @@ FetchContent_Declare(
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(NB_USE_SUBMODULE_DEPS OFF CACHE BOOL "Use separately pinned robin-map source" FORCE)
 FetchContent_MakeAvailable(robin_map nanobind doctest)
+# Keep project warnings strict while treating the pinned vendor headers as external.
+set_property(TARGET robin_map PROPERTY SYSTEM ON)

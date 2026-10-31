@@ -284,3 +284,15 @@ Reasoning: The walk pseudocode requires followed stats, although the earlier bac
 Alternatives: Follow every reparse point, deduplicate by path text, zero the logical size of duplicate file nodes, or retain scan-only identity tables after completion.
 
 Task: T1.12
+
+## D-0020 — 2026-10-31 — Vendor header warning boundaries
+
+Question: How should warnings-as-errors handle MSVC's intentional-alignment padding warning in the pinned robin-map template?
+
+Choice: Mark the robin-map CMake target as `SYSTEM`, so its interface headers are treated as external by consumers. Retain all project warning flags and warnings-as-errors.
+
+Reasoning: Windows CI reported C4324 in robin-map's aligned bucket storage, rather than in project code. CMake's system-target property applies the compiler's external-header handling without changing dependency sources, disabling tests, or disabling a warning throughout the project.
+
+Alternatives: Disable warnings-as-errors, suppress C4324 for every project source, or patch the pinned vendor's intentional layout.
+
+Task: T1.12
