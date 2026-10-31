@@ -4,9 +4,9 @@
 
 namespace dafree::testing {
 
-/// Requested C++ heap bytes, excluding the counting harness's own bookkeeping.
+/// Requested C++ heap bytes and successful allocation calls, excluding harness bookkeeping.
 struct AllocationSnapshot {
-    std::size_t live, peak;
+    std::size_t live, peak, calls;
 };
 
 /// Reset the high-water mark to current live allocations before an isolated measurement.

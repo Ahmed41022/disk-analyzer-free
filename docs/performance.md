@@ -35,6 +35,11 @@ The virtual tree uses 8–40 byte names, ten children per directory, and 10%
 directories. Both limits run in the ordinary C++ test suite on Windows, Linux,
 and macOS.
 
+The `builder_small_batches_reuse_allocations` regression checks 20,000 one-child
+appends against an allocation-call budget. It reproduced 625 allocations before
+removing repeated exact reserves, and now uses 10. The million-node scans retain
+their two-minute timeout and unchanged memory limits.
+
 The counting `operator new/delete` replacements are linked only into
 `dafree_core_tests`. They cover scalar, array, aligned, sized-delete, and
 nothrow forms. Measurements count requested C++ allocation bytes; instrumentation
@@ -52,8 +57,8 @@ Measured locally on 2026-10-31, Debug builds, four scanner threads:
 
 | Platform | Retained bytes/node | Peak bytes/node | Limits |
 | --- | ---: | ---: | --- |
-| Windows, MinGW | 88.1194 | 125.713 | 100 / 140 |
-| Linux, GCC in WSL | 88.1194 | 92.4717 | 100 / 140 |
+| Windows, MinGW | 88.1194 | 125.664 | 100 / 140 |
+| Linux, GCC in WSL | 88.1194 | 92.4777 | 100 / 140 |
 
 Windows tracks every regular-file identity during deduplication; POSIX tracks
 multiply linked files. This accounts for much of the peak difference.
@@ -90,14 +95,20 @@ Local Windows Release measurements on 2026-10-31, MinGW, 24 logical CPUs:
 
 | Benchmark | Median elapsed time, five repetitions |
 | --- | ---: |
-| Scan 10,000 mock nodes | 13.79 ms |
-| Scan 100,000 mock nodes | 141.10 ms |
-| Scan 1,000,000 mock nodes | 1,210.54 ms |
+| Scan 10,000 mock nodes | 26.36 ms |
+| Scan 100,000 mock nodes | 241.59 ms |
+| Scan 1,000,000 mock nodes | 2,446.72 ms |
 | Aggregate 10,000,000 nodes | 104.42 ms |
 
-The million-node scan median corresponds to approximately 826,000 nodes/second.
+The million-node scan median corresponds to approximately 409,000 nodes/second.
+An additional controlled comparison alternated five old/new runs after a warmup
+for each binary, changing only the builder object. Million-node medians were
+2,433.37 ms before and 2,456.17 ms after (+0.94%, within the 15% regression
+threshold). Earlier measurements under different machine load were faster; they
+are not used as a regression baseline.
+
 These are developer-machine measurements, not performance guarantees. The scan
-million-node elapsed-time coefficient of variation was 6.60%; aggregation was
+million-node elapsed-time coefficient of variation was 14.51%; aggregation was
 noisier at 44.84%. Keep build configuration, machine load, and fixture identical
 when comparing revisions.
 

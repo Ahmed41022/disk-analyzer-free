@@ -388,3 +388,15 @@ Reasoning: The first coverage CI run passed its native tests but gcovr rejected 
 Alternatives: Ignore negative-hit parse errors, drop the affected source, lower thresholds, or serialize scanner tests solely to hide the profiling issue.
 
 Task: T1.16 / M1 CI verification
+
+## D-0028 — 2026-10-31 — Amortized builder growth for small directory batches
+
+Question: How should the builder grow its populated-node bitset without repeated copies during million-node scans?
+
+Choice: Remove the exact reserve(size + next_batch_size) call before each append and let vector manage geometric growth. Extend test-only allocation snapshots with successful allocation-call counts. Add a regression requiring no more than 64 allocations for 20,000 one-child directory appends, plus node/count correctness assertions. Keep the one-million-node tests, two-minute timeout, and 100/140-byte limits unchanged. Add progress counts to timeout diagnostics.
+
+Reasoning: macOS CI passed the other 63 native cases but both million-node memory scans reached the two-minute timeout. Inspection found repeated exact reserve requests, whose reallocation/copy costs differ across standard libraries. The allocation regression fails before the fix with 625 allocations on MinGW and passes afterward with 10. Both Windows and Linux full native suites pass after the change. This removes an algorithmic growth problem rather than relaxing the failing test. macOS must also pass CI before completion.
+
+Alternatives: Increase the timeout, reduce fixture size, mark macOS memory checks ignored, or retain repeated bitset copies.
+
+Task: T1.16 / M1 performance verification

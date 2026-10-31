@@ -8,7 +8,7 @@
 
 namespace {
 
-std::atomic<std::size_t> live{0}, peak{0};
+std::atomic<std::size_t> live{0}, peak{0}, calls{0};
 struct Header {
     void *base;
     std::size_t size;
@@ -27,6 +27,7 @@ void *allocate(std::size_t size, std::size_t alignment) {
     auto *header = reinterpret_cast<Header *>(aligned) - 1;
     header->base = base;
     header->size = size;
+    calls.fetch_add(1, std::memory_order_relaxed);
     const auto now = live.fetch_add(size, std::memory_order_relaxed) + size;
     auto previous = peak.load(std::memory_order_relaxed);
     while (previous < now &&
@@ -50,7 +51,8 @@ void reset_allocation_peak() noexcept {
     peak.store(live.load(std::memory_order_relaxed), std::memory_order_relaxed);
 }
 AllocationSnapshot allocations() noexcept {
-    return {live.load(std::memory_order_relaxed), peak.load(std::memory_order_relaxed)};
+    return {live.load(std::memory_order_relaxed), peak.load(std::memory_order_relaxed),
+            calls.load(std::memory_order_relaxed)};
 }
 } // namespace dafree::testing
 

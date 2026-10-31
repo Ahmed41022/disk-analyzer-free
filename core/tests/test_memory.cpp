@@ -29,8 +29,11 @@ Measurement measure() {
         options.threads = 4;
         auto handle = dafree::start_scan(std::move(options), backend);
         if (!handle.wait(std::chrono::minutes(2))) {
+            const auto progress = handle.progress();
             handle.cancel();
-            throw std::runtime_error("million-node mock scan timed out");
+            throw std::runtime_error(
+                "million-node mock scan timed out after files=" + std::to_string(progress.files) +
+                ", dirs=" + std::to_string(progress.dirs));
         }
         result = handle.take_result();
     }
@@ -52,6 +55,23 @@ TEST_CASE("counting_allocator_handles_alignment_and_arrays") {
     CHECK(during == before + bytes);
     ::operator delete[](memory, std::align_val_t(alignment));
     CHECK(dafree::testing::allocations().live == before);
+}
+
+TEST_CASE("builder_small_batches_reuse_allocations") {
+    constexpr std::uint32_t batches = 20'000;
+    constexpr std::size_t allocation_limit = 64;
+    dafree::TreeBuilder builder({"/root"});
+    const std::array child{dafree::TreeBuilder::NewNode{"child", dafree::kDir, 0, 0, 0, 0, 0, {}}};
+    const auto before = dafree::testing::allocations().calls;
+    dafree::NodeId parent = 1;
+    for (std::uint32_t i = 0; i < batches; ++i)
+        parent = builder.add_children(parent, child).first;
+    const auto allocations = dafree::testing::allocations().calls - before;
+    INFO("allocations while appending one child per directory: ", allocations);
+    CHECK(allocations <= allocation_limit);
+    auto tree = std::move(builder).finish({});
+    CHECK(tree.size() == batches + 2);
+    CHECK(tree.counts(1).dirs == batches);
 }
 
 TEST_CASE("memory_per_node_steady_le_100") {

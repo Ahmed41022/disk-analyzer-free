@@ -57,7 +57,7 @@ std::pair<NodeId, NodeId> TreeBuilder::add_children(NodeId dir, std::span<const 
     }
     populated_[dir] = true;
     const auto first = tree_.nodes_.size();
-    populated_.reserve(populated_.size() + entries.size());
+    // Let vector grow geometrically; reserving each small batch repeatedly copies its bits.
     for (const auto &entry : entries) {
         const auto [offset, length] = tree_.names_.push(entry.name);
         auto child = make_node(dir, entry.flags, offset, length);
