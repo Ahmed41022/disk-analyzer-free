@@ -93,7 +93,26 @@ The planned Windows NTFS fast mode reads file-system metadata to avoid opening e
 
 ## Safety
 
-Destructive operations are planned with safety as a default: confirmation, dry-run support, trash or recycle bin by default, protected paths, and no link following when deleting. The current scaffold does not scan, delete, or move files.
+Destructive operations are planned with safety as a default: confirmation, dry-run support, trash or recycle bin by default, protected paths, and no link following when deleting. Scanning is available through the Python API; deleting and moving files are not implemented.
+
+## Python scanning
+
+```python
+from dafree.api import ScanRequest, scan
+
+result = scan(ScanRequest(["."]))
+print(result.summary.bytes, result.summary.files)
+for node_id in result.tree.children(result.tree.roots()[0]):
+    print(result.tree.name(node_id), result.tree.node(node_id).size)
+```
+
+`start_scan(request)` returns a handle with progress, pause, resume, cancel,
+`wait(timeout_ms)`, partial snapshots, and a once-only `take_result()`. Waiting
+releases the Python GIL. Trees remain usable after their scan handle is discarded.
+Paths preserve POSIX undecodable bytes and Windows lone surrogates. Links are not
+followed by default. Blocking `scan` invokes optional progress callbacks on its
+calling thread; native workers never call Python. Errors derive from
+`dafree.api.errors.DafreeError`, with classified `ScanError` and `ExcludeError` values.
 
 ## Contributing and support
 

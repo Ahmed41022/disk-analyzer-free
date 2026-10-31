@@ -1,3 +1,4 @@
+#include "bindings.hpp"
 #include "dafree/units.hpp"
 
 #include <nanobind/nanobind.h>
@@ -34,4 +35,8 @@ NB_MODULE(_core, module) {
                nb::arg("style"), "Format a byte count.");
     module.def("parse_size", &dafree::parse_size, nb::arg("text"), nb::arg("style"),
                "Parse a byte count.");
+    dafree::bindings::bind_scan_types(module);
+    dafree::bindings::bind_tree(module);
+    dafree::bindings::bind_scan(module);
+    dafree::bindings::bind_testing(module);
 }

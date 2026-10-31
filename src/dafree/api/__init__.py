@@ -4,6 +4,31 @@ from dataclasses import dataclass
 from enum import IntEnum
 
 from dafree import _core
+from dafree.api.errors import DafreeError, ExcludeError, ScanError, ScanErrorCode
+from dafree.api.scan import ScanHandle, ScanResult, scan, start_scan
+from dafree.api.tree import Tree
+from dafree.api.types import (
+    Backend,
+    EntryKind,
+    ExcludeRules,
+    HardlinkMode,
+    IssueKind,
+    IssueSummary,
+    MemoryReport,
+    NodeFlags,
+    NodeInfo,
+    Notice,
+    NoticeKind,
+    OwnerMode,
+    ScanMeta,
+    ScanMode,
+    ScanModeUsed,
+    ScanProgress,
+    ScanRequest,
+    ScanState,
+    ScanSummary,
+    VolumeInfo,
+)
 
 __version__ = _core.version()
 
@@ -61,10 +86,39 @@ def parse_size(text: str, style: UnitStyle = _DEFAULT_STYLE) -> int:
 
 
 __all__ = [
+    "Backend",
+    "DafreeError",
+    "EntryKind",
+    "ExcludeError",
+    "ExcludeRules",
+    "HardlinkMode",
+    "IssueKind",
+    "IssueSummary",
+    "MemoryReport",
+    "NodeFlags",
+    "NodeInfo",
+    "Notice",
+    "NoticeKind",
+    "OwnerMode",
+    "ScanError",
+    "ScanErrorCode",
+    "ScanHandle",
+    "ScanMeta",
+    "ScanMode",
+    "ScanModeUsed",
+    "ScanProgress",
+    "ScanRequest",
+    "ScanResult",
+    "ScanState",
+    "ScanSummary",
+    "Tree",
     "UnitMode",
     "UnitStyle",
     "UnitSystem",
+    "VolumeInfo",
     "__version__",
     "format_size",
     "parse_size",
+    "scan",
+    "start_scan",
 ]

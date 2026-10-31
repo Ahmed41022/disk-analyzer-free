@@ -23,6 +23,10 @@ def main() -> int:
         check=True,
     )
     subprocess.run(  # noqa: S603
+        [sys.executable, "-m", "ruff", "check", "--fix", str(output_file)],
+        check=True,
+    )
+    subprocess.run(  # noqa: S603
         [sys.executable, "-m", "ruff", "format", str(output_file)],
         check=True,
     )

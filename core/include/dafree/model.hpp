@@ -11,6 +11,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <shared_mutex>
 #include <span>
 #include <string>
 #include <string_view>
@@ -457,6 +458,25 @@ class TreeBuilder {
     friend class ScanEngine;
     Tree tree_;
     std::vector<bool> populated_;
+};
+
+/// Shared tree ownership with reader locking for API consumers and later mutations.
+class TreeHandle {
+  public:
+    /// Wrap an engine-owned tree allocated through a mutable backing object.
+    explicit TreeHandle(std::shared_ptr<const Tree> tree) : tree_(std::move(tree)) {
+        if (!tree_)
+            throw std::invalid_argument("tree handle requires a tree");
+    }
+    /// Read a coherent tree snapshot; copy mutable values before returning them.
+    template <class Function> auto read(Function &&function) const {
+        std::shared_lock lock(mutex_);
+        return std::forward<Function>(function)(*tree_);
+    }
+
+  private:
+    std::shared_ptr<const Tree> tree_;
+    mutable std::shared_mutex mutex_;
 };
 
 } // namespace dafree

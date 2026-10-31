@@ -1236,7 +1236,7 @@ Conventions for every task:
   - **Depends on:** T1.11
   - **Acceptance:** covered by T1.14 Python integration tests (real filesystem).
 
-- [ ] **T1.13 — Scan bindings (first slice) and `dafree.api.scan`**
+- [x] **T1.13 — Scan bindings (first slice) and `dafree.api.scan`**
   - **Files:** C `bindings/src/{strings.cpp,scan_bind.cpp,tree_bind.cpp,testing_bind.cpp}`, `src/dafree/api/{types.py,errors.py,scan.py,tree.py}`.
   - **Interface:**
     ```python

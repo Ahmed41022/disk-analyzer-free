@@ -285,6 +285,18 @@ Alternatives: Follow every reparse point, deduplicate by path text, zero the log
 
 Task: T1.12
 
+## D-0021 — 2026-10-31 — Python scan facade and synthetic backend construction
+
+Question: Where should shared Python scan values and mock construction live, and how should relative paths and blocking mock scans behave?
+
+Choice: Define ScanRequest with other public values in api/types.py and re-export it from api/scan.py. Add api/testing.py as the typed constructor for the planned native test backend. Normalize paths lexically with abspath, preserving symlinks and native surrogate characters. Add an optional backend keyword to the blocking scan helper, matching start_scan, so deterministic tests use the same polling path. Wrap native trees with a shared TreeHandle and copy metadata under its reader lock. Native exceptions construct the public Python exception classes, with machine-readable scan codes and preserved paths or glob patterns.
+
+Reasoning: Shared values avoid facade import cycles; a typed mock constructor keeps test configuration independent from private native types. Path.resolve would follow links before traversal policy applies. Both helpers need native-only backends to verify GIL release and injected failures without Python worker callbacks. The additional blocking-helper keyword is backward compatible. No dependencies were added.
+
+Alternatives: Expose native types directly, duplicate ScanRequest, resolve links during input normalization, or implement Python filesystem callbacks.
+
+Task: T1.13
+
 ## D-0020 — 2026-10-31 — Vendor header warning boundaries
 
 Question: How should warnings-as-errors handle MSVC's intentional-alignment padding warning in the pinned robin-map template?
