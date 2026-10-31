@@ -4,6 +4,10 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ## [Unreleased]
 
+### Fixed
+
+- Linux wheel compilation with older manylinux headers retains statx mount-root detection through the stable UAPI flag and its supported-attribute mask.
+
 ### Added
 
 - Three-platform installed abi3 wheel verification with MSVC on Windows, nightly full CI, explicit PR/full test routing, and incremental Linux contributor setup.

@@ -15,6 +15,16 @@ This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when it
 
 Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `coverage` needs cross-OS Python coverage and Codecov upload (T4.13 follow-up); `python` gains GUI scroll performance in T4.5 and SMB/scheduler integration in T9.5–T9.7. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
+## D-0035 — 2026-10-31 — manylinux statx header compatibility
+
+Question: How should Linux wheels retain mount-root detection when manylinux_2_28 headers omit `STATX_ATTR_MOUNT_ROOT`?
+
+Choice: Interpret the stable Linux UAPI mount-root attribute value `0x00002000` through a small private compatibility header, intersecting the attributes with the kernel's supported-attribute mask. Assert agreement with the named constant when newer headers provide it. Add a native regression test that needs no Linux headers and runs on all three OSes. Keep the directory-fd-relative syscall and fstatat fallback unchanged.
+
+Reasoning: The first real manylinux wheel build exposed this missing-header constant; Windows MSVC and macOS wheels already passed installed-wheel testing and ABI audits. Disabling mount detection or raising the Linux baseline would change the plan's behavior. The constant is a public ABI value, not copied implementation code. This is a build compatibility fix, not a change from path-based to fd-relative metadata, so the requested conditional before/after enumeration benchmark does not apply.
+
+Task: T0.5 wheel CI follow-up / T1.7 compatibility
+
 ## D-0034 — 2026-10-31 — Prerequisite PR and persistent Linux builds
 
 Question: How should the requested prerequisites fit the new PR groups and Linux setup?
