@@ -15,7 +15,11 @@ GCC/gcovr coverage enforces at least 85% lines for the model and scanner indepen
 including their public headers. Local results on 2026-10-31 are 88.8% model,
 87.7% scanner, and 88.2% combined. Coverage HTML, XML, and JSON reports are retained
 as the `native-coverage` CI artifact. Branch coverage is reported without a branch
-threshold. The coverage preset enables instrumentation explicitly:
+threshold.
+
+Coverage builds use atomic profiling counters because scanner workers execute the
+same instrumented functions concurrently. Parse errors remain fatal. Enable the
+coverage preset with:
 
 ```console
 cmake --preset coverage -DCMAKE_CXX_COMPILER=g++

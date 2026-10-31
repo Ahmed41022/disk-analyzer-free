@@ -376,3 +376,15 @@ Reasoning: Final M1 review found these milestone requirements were not yet expli
 Alternatives: Rely only on seeded native tests, lower the coverage target, omit public headers, or mark M1 complete based solely on its task checklist.
 
 Task: T1.16 / M1 definition of done
+
+## D-0027 — 2026-10-31 — Atomic coverage counters for scanner workers
+
+Question: How should GCC coverage builds collect valid profiling counts from concurrent scanner workers?
+
+Choice: Compile coverage builds with -fprofile-update=atomic. Keep gcovr parse errors fatal, retain every source file and assertion, and leave both 85% component thresholds unchanged.
+
+Reasoning: The first coverage CI run passed its native tests but gcovr rejected a negative branch hit count in mock_backend.cpp. Scanner functions execute concurrently; non-atomic profiling-counter updates can produce inconsistent counts. Atomic updates address collection at compilation instead of ignoring invalid report data. The change affects coverage instrumentation only.
+
+Alternatives: Ignore negative-hit parse errors, drop the affected source, lower thresholds, or serialize scanner tests solely to hide the profiling issue.
+
+Task: T1.16 / M1 CI verification
