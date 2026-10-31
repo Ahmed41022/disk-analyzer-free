@@ -3,6 +3,7 @@
 
 #include <doctest/doctest.h>
 
+#include <atomic>
 #include <chrono>
 #include <future>
 #include <thread>
@@ -62,6 +63,76 @@ template <class Predicate> bool until(Predicate predicate, std::chrono::millisec
 }
 
 } // namespace
+
+TEST_CASE("owner_resolution_parallel_readers") {
+    auto spec = sample();
+    for (std::size_t i = 0; i < spec.entries.size(); ++i)
+        spec.entries[i].entry.owner =
+            dafree::OwnerKey::posix_uid(static_cast<std::uint32_t>(100 + i));
+    spec.delay = 10ms;
+    auto backend = std::make_shared<dafree::MockBackend>(std::move(spec));
+    auto scan = dafree::start_scan(options(), backend);
+    REQUIRE(scan.wait(5s));
+    auto result = scan.take_result();
+    dafree::TreeHandle tree(result.tree);
+    std::vector<dafree::NodeId> ids;
+    for (dafree::NodeId id = 1; id < result.tree->size(); ++id)
+        ids.push_back(id);
+    std::atomic<bool> stop{false}, inconsistent{false};
+    std::atomic<unsigned> reads{0};
+    std::promise<void> ready;
+    auto started = ready.get_future();
+    std::thread reader([&] {
+        ready.set_value();
+        while (!stop.load()) {
+            tree.read([&](const dafree::Tree &value) {
+                unsigned resolved = 0;
+                for (const auto id : ids) {
+                    const auto owner = value.owner_name(id);
+                    if (owner && !owner->empty())
+                        ++resolved;
+                }
+                if (resolved != 0 && resolved != ids.size())
+                    inconsistent.store(true);
+                reads.fetch_add(1);
+            });
+        }
+    });
+    started.wait();
+    try {
+        auto other =
+            std::async(std::launch::async, [&] { dafree::resolve_owners(tree, ids, *backend); });
+        dafree::resolve_owners(tree, ids, *backend);
+        other.get();
+    } catch (...) {
+        stop.store(true);
+        reader.join();
+        throw;
+    }
+    stop.store(true);
+    reader.join();
+    CHECK(reads.load() > 0);
+    CHECK_FALSE(inconsistent.load());
+    CHECK(backend->owner_resolution_calls() == ids.size());
+    for (const auto id : ids)
+        CHECK(tree.read([&](const dafree::Tree &value) { return !value.owner_name(id)->empty(); }));
+    CHECK_THROWS_AS(dafree::resolve_owners(tree, std::array<dafree::NodeId, 1>{999}, *backend),
+                    std::out_of_range);
+}
+
+TEST_CASE("engine_cancel_skips_eager_owner_lookups") {
+    auto spec = broad(20, 10ms);
+    for (auto &item : spec.entries)
+        item.entry.owner = dafree::OwnerKey::posix_uid(42);
+    auto backend = std::make_shared<dafree::MockBackend>(std::move(spec));
+    auto opts = options();
+    opts.owner = dafree::OwnerMode::Eager;
+    auto handle = dafree::start_scan(std::move(opts), backend);
+    handle.cancel();
+    REQUIRE(handle.wait(5s));
+    CHECK(handle.take_result().summary.cancelled);
+    CHECK(backend->owner_resolution_calls() == 0);
+}
 
 TEST_CASE("scan_mock_matches_expected") {
     auto handle = dafree::start_scan(options(), dafree::make_mock_backend(sample()));

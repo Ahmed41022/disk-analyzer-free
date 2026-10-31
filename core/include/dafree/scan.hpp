@@ -106,4 +106,7 @@ class ScanHandle {
 /// Validate targets and begin a scan using the supplied or local backend.
 ScanHandle start_scan(ScanOptions options, std::shared_ptr<FsBackend> backend = nullptr);
 
+/// Resolve unresolved identities referenced by selected nodes; readers see atomic batches.
+void resolve_owners(TreeHandle &tree, std::span<const NodeId> ids, FsBackend &backend);
+
 } // namespace dafree

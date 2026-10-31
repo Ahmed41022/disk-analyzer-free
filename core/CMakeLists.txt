@@ -3,7 +3,7 @@ add_library(dafree_core STATIC src/version.cpp src/units.cpp src/model/aggregate
                                 src/model/tree.cpp)
 target_sources(dafree_core PRIVATE src/scan/local_backend.cpp src/scan/mock_backend.cpp)
 target_sources(dafree_core PRIVATE src/scan/exclude.cpp src/scan/glob.cpp)
-target_sources(dafree_core PRIVATE src/scan/engine.cpp)
+target_sources(dafree_core PRIVATE src/scan/engine.cpp src/scan/owner_resolve.cpp)
 target_sources(dafree_core PRIVATE src/platform/windows/longpath.cpp)
 target_include_directories(dafree_core PUBLIC include)
 target_compile_features(dafree_core PUBLIC cxx_std_20)

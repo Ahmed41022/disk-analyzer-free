@@ -1262,7 +1262,7 @@ Conventions for every task:
   - **Depends on:** T1.6, T1.12, T1.13
   - **Acceptance:** `test_unicode_names_roundtrip` (each fixture name found exactly via `tree.name`), `test_hardlinks_counted_once` (3 × 10 MB links ⇒ 10 MB, two `HARDLINK_DUP`), `test_hardlink_mode_count_all`, `test_symlink_loop_terminates_with_follow` (< 5 s), `test_symlink_not_followed_default`, `test_junction_not_followed_default` (Windows), `test_mount_point_not_crossed` / `..._crossed_when_enabled` (Linux, `needs_mounts`: CI mounts a tmpfs with `sudo`), `test_permission_denied_flagged_scan_continues`, `test_deep_300_levels`, `test_wide_100k_files`, `test_sparse_alloc_lt_size`, `test_long_paths` (Windows ≥ 400 chars; Linux ≥ 4,200 bytes), `test_empty_target_dir`, `test_target_is_file`, `test_file_vanishes_during_scan` (MockBackend).
 
-- [ ] **T1.15 — POSIX owner resolution (lazy/eager)**
+- [x] **T1.15 — POSIX owner resolution (lazy/eager)**
   - **Files:** C `core/src/scan/owner_resolve.cpp`, M bindings.
   - **Interface:** `void resolve_owners(TreeHandle&, std::span<const NodeId>, FsBackend&)` (parallel lookups, single-writer insertion) exposed as `Tree.resolve_owners(ids)`.
   - **Depends on:** T1.13

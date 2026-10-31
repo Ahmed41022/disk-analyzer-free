@@ -311,6 +311,18 @@ The Windows sparse integration test also exposed a fixture bug: opening with wb 
 
 Task: T1.14
 
+## D-0024 — 2026-10-31 — Owner identity caching and reader synchronization
+
+Question: How should lazy resolution update interned identities without racing readers, and what should eager, off, and cancelled scans do?
+
+Choice: Keep a reverse identity vector in OwnerTable and fill an existing empty display name without changing its stable ID or replacing an already resolved name. Serialize resolution batches per shared TreeHandle. Copy only unresolved requested identities under a reader lock, deduplicate by owner ID, perform at most eight parallel backend lookups outside the tree lock, then insert results under one writer lock. Nodes sharing an identity share the cached display. Eager scans resolve before completion, off scans retain no owner hints, and cancelled scans skip eager resolution. Retain the backend with the Python tree so lazy lookups work after handle destruction. Windows native SID lookup remains in its planned milestone; synthetic UID tests run on all platforms.
+
+Reasoning: Metadata initially interns UID hints with empty names; returning the original empty display forever prevented lazy updates. Stable owner IDs let one successful lookup resolve that identity throughout the tree. Readers continue during slow I/O and observe a complete insertion batch. Repeated and concurrent requests reuse resolved identities. A reverse vector avoids scanning the identity map for each selected node. No dependencies were added.
+
+Alternatives: Resolve every file during enumeration, perform lookups under the tree writer lock, replace owner IDs, or call Python from worker threads.
+
+Task: T1.15
+
 ## D-0020 — 2026-10-31 — Vendor header warning boundaries
 
 Question: How should warnings-as-errors handle MSVC's intentional-alignment padding warning in the pinned robin-map template?

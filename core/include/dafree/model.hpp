@@ -10,6 +10,7 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <shared_mutex>
 #include <span>
@@ -21,6 +22,9 @@
 #include <vector>
 
 namespace dafree {
+
+class FsBackend;
+class TreeHandle;
 
 using NodeId = std::uint32_t;
 inline constexpr NodeId kRoot = 0;
@@ -360,12 +364,15 @@ class OwnerTable {
   public:
     OwnerTable();
 
-    /// Return the stable nonzero ID for a key, inserting its display name on first use.
+    /// Return a stable identity ID; fill an unresolved display name when one becomes available.
     std::uint32_t intern(const OwnerKey &key, std::string_view display);
     /// Return the display name for an ID; ID zero returns an empty view.
     [[nodiscard]] std::string_view get(std::uint32_t id) const;
     /// Return a lower-bound estimate of owner storage bytes.
     [[nodiscard]] std::size_t heap_bytes() const noexcept;
+
+    /// Return an identity by stable owner ID, or nullptr for the absent owner.
+    [[nodiscard]] const OwnerKey *key(std::uint32_t id) const;
 
   private:
     struct Hash {
@@ -373,6 +380,7 @@ class OwnerTable {
     };
 
     std::vector<std::string> displays_;
+    std::vector<OwnerKey> keys_;
     std::unordered_map<OwnerKey, std::uint32_t, Hash> ids_;
 };
 
@@ -420,6 +428,7 @@ class Tree {
   private:
     friend class TreeBuilder;
     friend class ScanEngine;
+    friend void resolve_owners(TreeHandle &, std::span<const NodeId>, FsBackend &);
     SegVector<Node> nodes_;
     SegVector<Counts> counts_;
     NameArena names_;
@@ -475,8 +484,10 @@ class TreeHandle {
     }
 
   private:
+    friend void resolve_owners(TreeHandle &, std::span<const NodeId>, FsBackend &);
     std::shared_ptr<const Tree> tree_;
     mutable std::shared_mutex mutex_;
+    std::mutex owner_resolution_mutex_;
 };
 
 } // namespace dafree

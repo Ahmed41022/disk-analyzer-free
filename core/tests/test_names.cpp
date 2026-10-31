@@ -97,3 +97,17 @@ TEST_CASE("owner_table_dedups_keys") {
     CHECK(owners.get(remote_id) == "remote user");
     CHECK(owners.get(0).empty());
 }
+
+TEST_CASE("owner_table_fills_unresolved_display_without_reassigning_ids") {
+    dafree::OwnerTable owners;
+    const auto key = dafree::OwnerKey::posix_uid(42);
+    const auto id = owners.intern(key, {});
+    CHECK(owners.get(id).empty());
+    REQUIRE(owners.key(id) != nullptr);
+    CHECK(*owners.key(id) == key);
+    CHECK(owners.intern(key, "resolved") == id);
+    CHECK(owners.get(id) == "resolved");
+    CHECK(owners.intern(key, "changed") == id);
+    CHECK(owners.get(id) == "resolved");
+    CHECK(owners.key(0) == nullptr);
+}

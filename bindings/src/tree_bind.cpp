@@ -156,7 +156,14 @@ void bind_tree(nb::module_ &module) {
                 nb::gil_scoped_release release;
                 return self.handle->read([](const Tree &tree) { return tree.memory_usage(); });
             },
-            "Return reserved tree storage bytes.");
+            "Return reserved tree storage bytes.")
+        .def(
+            "resolve_owners",
+            [](BoundTree &self, const std::vector<NodeId> &ids) {
+                nb::gil_scoped_release release;
+                resolve_owners(*self.handle, ids, *self.backend);
+            },
+            nb::arg("ids"), "Resolve requested identities with the GIL released.");
 }
 
 } // namespace dafree::bindings

@@ -152,7 +152,7 @@ jobs:
           TSAN_OPTIONS: halt_on_error=1
         run: |
           ./build/dev-tsan/core/dafree_core_tests --no-colors \
-            --test-case="scan_mock_matches_expected,cancel_marks_partial_and_returns_tree,pause_stops_new_reads,read_dir_error_marks_access_denied,overlapping_targets_rejected,multiple_targets_share_root,issue_queue_overflow_counted,partial_snapshots_remain_immutable,bounded_result_queue_applies_backpressure,engine_*"
+            --test-case="scan_mock_matches_expected,cancel_marks_partial_and_returns_tree,pause_stops_new_reads,read_dir_error_marks_access_denied,overlapping_targets_rejected,multiple_targets_share_root,issue_queue_overflow_counted,partial_snapshots_remain_immutable,bounded_result_queue_applies_backpressure,engine_*,owner_resolution_*"
 
   fuzz:
     name: Glob fuzz build and smoke

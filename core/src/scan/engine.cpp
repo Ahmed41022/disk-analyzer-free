@@ -678,6 +678,14 @@ class ScanEngine {
                         builder_.mark(id, kPartial);
             }
             auto tree = std::make_shared<Tree>(std::move(builder_).finish(metadata()));
+            if (input_.options.owner == OwnerMode::Eager && !tree->meta().cancelled) {
+                std::vector<NodeId> ids;
+                for (NodeId id = 1; id < tree->size(); ++id)
+                    ids.push_back(id);
+                TreeHandle handle(tree);
+                resolve_owners(handle, ids, *backend_);
+                tree->meta_.finished_at = metadata().finished_at;
+            }
             const auto counts = tree->counts(kRoot);
             ScanSummary summary{
                 counts.files,  counts.dirs,    tree->node(kRoot).size, tree->node(kRoot).alloc,

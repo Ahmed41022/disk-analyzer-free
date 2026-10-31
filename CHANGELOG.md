@@ -6,6 +6,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- Parallel POSIX owner resolution with lazy identity caching, eager scan finalization, and coherent reads during owner-name updates.
+
 - Typed Python scanning API with asynchronous controls, shared tree ownership, classified exceptions, GIL-free waits, and lossless native paths.
 - Real-filesystem integration coverage for Unicode names, hard links, link cycles, junctions, permissions, mount boundaries, sparse files, deep directories, wide directories, and long paths.
 

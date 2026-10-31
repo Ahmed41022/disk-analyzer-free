@@ -114,6 +114,13 @@ followed by default. Blocking `scan` invokes optional progress callbacks on its
 calling thread; native workers never call Python. Errors derive from
 `dafree.api.errors.DafreeError`, with classified `ScanError` and `ExcludeError` values.
 
+Owner names are lazy by default: call `tree.resolve_owners(node_ids)` to resolve
+selected identities. Nodes sharing an owner identity reuse its cached display
+name. `ScanRequest(..., owner=OwnerMode.EAGER)` resolves names before completion;
+`OwnerMode.OFF` omits owner identities and lookups. Unknown POSIX UIDs display as
+decimal numbers. A cancelled eager scan skips further owner lookups. Windows SID
+resolution remains scheduled for M3.
+
 The scanner integration suite creates every fixture in test-owned temporary
 directories. It includes 100,000 siblings, 300 nested levels, a sparse 5 GiB file,
 and paths beyond ordinary platform limits. Linux mount tests use a temporary

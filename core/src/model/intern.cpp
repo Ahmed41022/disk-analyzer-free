@@ -179,10 +179,15 @@ OwnerKey OwnerKey::remote(std::string_view remote_key) {
     return {Kind::Remote, 0, std::string(remote_key)};
 }
 
-OwnerTable::OwnerTable() { displays_.emplace_back(); }
+OwnerTable::OwnerTable() {
+    displays_.emplace_back();
+    keys_.emplace_back();
+}
 
 std::uint32_t OwnerTable::intern(const OwnerKey &key, std::string_view display) {
     if (const auto found = ids_.find(key); found != ids_.end()) {
+        if (displays_[found->second].empty() && !display.empty())
+            displays_[found->second] = display;
         return found->second;
     }
     if (displays_.size() > std::numeric_limits<std::uint32_t>::max()) {
@@ -192,12 +197,16 @@ std::uint32_t OwnerTable::intern(const OwnerKey &key, std::string_view display) 
     const auto id = static_cast<std::uint32_t>(displays_.size());
     displays_.emplace_back(display);
     try {
+        keys_.push_back(key);
         const auto [found, inserted] = ids_.emplace(key, id);
         if (!inserted) {
+            keys_.pop_back();
             displays_.pop_back();
             return found->second;
         }
     } catch (...) {
+        if (keys_.size() > id)
+            keys_.pop_back();
         displays_.pop_back();
         throw;
     }
@@ -206,9 +215,15 @@ std::uint32_t OwnerTable::intern(const OwnerKey &key, std::string_view display) 
 
 std::string_view OwnerTable::get(std::uint32_t id) const { return displays_.at(id); }
 
+const OwnerKey *OwnerTable::key(std::uint32_t id) const {
+    return id == 0 ? nullptr : &keys_.at(id);
+}
+
 std::size_t OwnerTable::heap_bytes() const noexcept {
-    std::size_t bytes =
-        displays_.capacity() * sizeof(std::string) + ids_.bucket_count() * sizeof(void *);
+    std::size_t bytes = displays_.capacity() * sizeof(std::string) +
+                        keys_.capacity() * sizeof(OwnerKey) + ids_.bucket_count() * sizeof(void *);
+    for (const auto &key : keys_)
+        bytes += key.value.capacity();
     for (const auto &display : displays_) {
         bytes += display.capacity();
     }

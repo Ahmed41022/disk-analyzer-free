@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Sequence
 
 from dafree import _core
 from dafree.api.types import MemoryReport, NodeFlags, NodeInfo, ScanMeta, _absolute, _meta
@@ -73,3 +74,7 @@ class Tree:
         """Return reserved storage bytes owned by the tree."""
         value = self._native.memory_usage()
         return MemoryReport(value.nodes, value.counts, value.names, value.interners)
+
+    def resolve_owners(self, ids: Sequence[int]) -> None:
+        """Resolve requested identities; nodes sharing an identity share its cached name."""
+        self._native.resolve_owners([self._id(node_id) for node_id in ids])

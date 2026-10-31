@@ -423,6 +423,9 @@ class Tree:
     def memory_usage(self) -> MemoryReport:
         """Return reserved tree storage bytes."""
 
+    def resolve_owners(self, ids: Sequence[int]) -> None:
+        """Resolve requested identities with the GIL released."""
+
 class ScanResult:
     """An immutable tree and final scan summary."""
 
