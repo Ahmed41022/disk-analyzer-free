@@ -30,6 +30,7 @@ from tests.testkit import (
     unicode_zoo,
     wide,
 )
+from tests.testkit.windows_token import without_backup_privileges
 
 LINK_BYTES = 10_000_000
 DUPLICATE_LINKS = 2
@@ -146,7 +147,8 @@ def test_permission_denied_flagged_scan_continues(tmp_path: Path) -> None:
     spec = Dir(spec.name, (*spec.children, File("accessible", ACCESSIBLE_BYTES)))
     with Fixture.create(spec, tmp_path) as fixture:
         fixture.caps.require("permission_denied")
-        result = scan(ScanRequest([fixture.root]))
+        with without_backup_privileges():
+            result = scan(ScanRequest([fixture.root]))
         node_id = result.tree.find_path(fixture.root / "private")
         assert node_id is not None
         assert result.tree.node(node_id).flags & NodeFlags.ACCESS_DENIED

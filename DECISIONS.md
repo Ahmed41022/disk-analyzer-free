@@ -322,3 +322,17 @@ Reasoning: Windows CI reported C4324 in robin-map's aligned bucket storage, rath
 Alternatives: Disable warnings-as-errors, suppress C4324 for every project source, or patch the pinned vendor's intentional layout.
 
 Task: T1.12
+
+## D-0023 — 2026-10-31 — Permission checks on privileged Windows CI
+
+Question: How should a real denied-directory integration test behave when the Windows runner can bypass its fixture ACL?
+
+Choice: Temporarily disable SeBackupPrivilege and SeRestorePrivilege on the test process token only while the permission test scans. Save the exact prior token privilege state, restore it in a finally block, and close the token handle. Keep the real ACL fixture, all denied flags and issue assertions, and the accessible-sibling byte assertion unchanged. Product privilege handling is unchanged.
+
+Reasoning: Windows CI enumerated the ACL-denied directory while the ordinary local process was denied. Windows directory handles require FILE_FLAG_BACKUP_SEMANTICS; enabled backup privileges can override file security checks. The test must exercise ordinary denied access even on an elevated runner. Missing token privileges are already disabled and need no grant; the helper only disables existing privileges. This is test infrastructure, adds no dependencies, and preserves cleanup under the restored original token.
+
+Sources: [File security and access rights](https://learn.microsoft.com/windows/win32/fileio/file-security-and-access-rights), [AdjustTokenPrivileges](https://learn.microsoft.com/windows/win32/api/securitybaseapi/nf-securitybaseapi-adjusttokenprivileges).
+
+Alternatives: Skip Windows denial coverage, accept a successful read as denial, or make the scanner report access-denied despite successful enumeration.
+
+Task: T1.14
