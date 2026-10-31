@@ -236,3 +236,15 @@ Reasoning: The plan specifies behavior but not these type layouts. A precomputed
 Alternatives: Rebuild directory contents by scanning every mock path on each call, depend on real filesystem failures, or introduce later scan implementations early.
 
 Task: T1.9
+
+## D-0016 — 2026-10-31 — macOS thread-library availability
+
+Question: How should concurrency tests run on the supported macOS runner when its Apple libc++ does not expose `std::jthread`?
+
+Choice: Use `std::thread` and explicit joins in the backend counter test. Retain the same concurrent operations and assertions. Apply explicit RAII joining if the scanner needs a compatibility implementation on this standard library.
+
+Reasoning: The CI compile logs show that the supported Apple toolchain accepts C++20 but lacks `std::jthread`. This test needs concurrent reads and completed workers, without stop-token behavior. Explicit joins provide those semantics on all three operating systems.
+
+Alternatives: Disable the macOS test, require a different standard library, or omit concurrent coverage.
+
+Task: T1.9

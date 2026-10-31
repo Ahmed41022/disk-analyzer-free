@@ -167,13 +167,15 @@ TEST_CASE("mock_delay_counters_and_owners") {
     CHECK(backend.resolve_owner("/mock/alpha", &unknown)->second == "99999");
     CHECK(backend.owner_resolution_calls() == 2);
     {
-        std::vector<std::jthread> threads;
+        std::vector<std::thread> threads;
         for (unsigned worker = 0; worker < 4; ++worker) {
             threads.emplace_back([&backend] {
                 for (unsigned call = 0; call < 4; ++call)
                     (void)backend.read_dir("/mock", {});
             });
         }
+        for (auto &thread : threads)
+            thread.join();
     }
     CHECK(backend.read_dir_calls() == 17);
 }
