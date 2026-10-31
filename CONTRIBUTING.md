@@ -32,6 +32,8 @@ The GUI tests run offscreen in CI. Set `QT_QPA_PLATFORM=offscreen` when running 
 
 Filesystem tests can describe a tree with `tests.testkit.spec`, create it under pytest's `tmp_path` with `Fixture.create`, and compare logical totals with `oracle`. Keep each fixture inside the test's temporary directory. Call `fixture.caps.require("feature")` before relying on an optional OS feature; CI sets `DAFREE_REQUIRE_ALL_CAPS=1` so an unexpected missing capability fails the test.
 
+On Linux with Clang and libFuzzer installed, build the glob fuzz target with `cmake --preset fuzz -DCMAKE_CXX_COMPILER=clang++` and `cmake --build build/fuzz --target fuzz_glob`. Run it with a corpus directory created for that test, for example `build/fuzz/core/fuzz_glob /path/to/temporary/corpus -runs=10000`. CI builds the target and runs a smoke campaign with address and undefined-behavior sanitizers.
+
 ## Project boundaries
 
 - The Python package owns orchestration and the user interface; the C++20 core owns work over file-system entries.

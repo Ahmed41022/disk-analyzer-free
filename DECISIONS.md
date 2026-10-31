@@ -248,3 +248,15 @@ Reasoning: The CI compile logs show that the supported Apple toolchain accepts C
 Alternatives: Disable the macOS test, require a different standard library, or omit concurrent coverage.
 
 Task: T1.9
+
+## D-0017 — 2026-10-31 — Glob semantics and bounded matching
+
+Question: Which unspecified gitignore-style details should exclusion globs support, and how should matching avoid recursive backtracking?
+
+Choice: Match `*` and `?` within a path component, `**` across separators, and `**/` across zero or more directory prefixes. Support negated character classes and backslash escapes. Leading `/` anchors a glob to the scan root; trailing `/` limits it to directories. A trailing `/**` also prunes its directory prefix. Use Unicode code points with the existing BMP simple-fold table on Windows and macOS, preserve invalid native bytes, and leave POSIX byte names unnormalized. Compile patterns once and evaluate an iterative state machine with stack storage for ordinary patterns and linear heap storage for longer ones. Excluded absolute paths match complete subtrees by component boundaries.
+
+Reasoning: These choices make zero-directory `**/` cases and directory pruning deterministic. Iterative matching bounds work by pattern length times input length instead of exponential backtracking and avoids per-entry allocations for ordinary patterns. `scan.hpp` introduces exclusion types before the engine task because the planned class needs them. The development-only fuzz target uses Clang/libFuzzer (Apache-2.0 WITH LLVM-exception), with address and undefined-behavior sanitizers; no runtime dependency is added.
+
+Alternatives: Use platform-dependent filesystem glob APIs, recursively backtrack, compare UTF-8 one byte at a time, or keep excluded directory placeholders in the scan tree.
+
+Task: T1.10

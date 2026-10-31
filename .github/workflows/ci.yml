@@ -132,6 +132,25 @@ jobs:
           path: py-junit.xml
           retention-days: 14
 
+  fuzz:
+    name: Glob fuzz build and smoke
+    needs: lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install build tools
+        run: python -m pip install cmake ninja Babel
+      - name: Configure Clang fuzz target
+        run: cmake --preset fuzz -DCMAKE_CXX_COMPILER=clang++
+      - name: Build and exercise glob fuzzer
+        run: |
+          cmake --build build/fuzz --target fuzz_glob
+          corpus=$(mktemp -d)
+          ./build/fuzz/core/fuzz_glob "$corpus" -runs=1000 -max_len=4096 -artifact_prefix="$corpus/"
+
   audit:
     name: Security and dependency licenses
     runs-on: ubuntu-24.04
@@ -180,7 +199,7 @@ jobs:
   ci-success:
     name: ci-success
     if: always()
-    needs: [lint, cpp, python, audit, docs]
+    needs: [lint, cpp, python, fuzz, audit, docs]
     runs-on: ubuntu-24.04
     steps:
       - name: Check all jobs

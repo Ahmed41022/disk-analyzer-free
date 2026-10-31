@@ -1216,7 +1216,7 @@ Conventions for every task:
   - **Depends on:** T1.7, T1.8
   - **Acceptance:** doctest `mock_serves_tree`, `mock_injects_errors`, `local_matches_platform_read_dir`.
 
-- [ ] **T1.10 — Exclusions and glob matching**
+- [x] **T1.10 — Exclusions and glob matching**
   - **Files:** C `core/src/scan/{exclude.cpp,glob.cpp}`, `core/tests/test_exclude.cpp`, `core/fuzz/fuzz_glob.cpp`.
   - **Interface:** `class CompiledExcludes { public: static CompiledExcludes compile(const ExcludeRules&, std::string_view root); bool excluded(std::string_view rel_path, std::string_view name, const RawEntry&) const; };` glob syntax: `*`, `?`, `[...]`, `**`; case-insensitive on Windows/macOS; invalid glob → `ExcludeError{pattern, message}`.
   - **Depends on:** T1.9
