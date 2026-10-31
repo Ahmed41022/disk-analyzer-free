@@ -224,3 +224,15 @@ Reasoning: Legacy records lack the extended reparse tag. The fallback reads meta
 Alternatives: Open every file for metadata, follow reparse points to classify them, or retain serials across mount changes.
 
 Task: T1.8
+
+## D-0015 — 2026-10-31 — Mock filesystem shape and staged backend hooks
+
+Question: What concrete shape should the unspecified `MockSpec` and `DirHint` types use, and what does a vanish-after-listing fault represent?
+
+Choice: Represent mock entries as native paths plus `RawEntry` metadata. Index direct children once, assign deterministic file identities when omitted, and keep faults and owner names in explicit tables. A vanish fault omits the affected child with a `NotFound` issue during its parent's listing and makes later stats fail, modeling disappearance between OS enumeration and metadata lookup. Count every attempted directory read atomically and apply the configured delay to each operation. Keep `DirHint` empty until traversal hints are needed; forward-declare fast-scan types. The mock reports local semantics. Local Windows owner resolution returns no value until the SID implementation in T3.6.
+
+Reasoning: The plan specifies behavior but not these type layouts. A precomputed child index avoids repeatedly searching the whole mock tree, and immutable metadata plus synchronized vanish state supports concurrent scanner workers. The staged hooks preserve the planned backend signatures without introducing later scan or MFT features.
+
+Alternatives: Rebuild directory contents by scanning every mock path on each call, depend on real filesystem failures, or introduce later scan implementations early.
+
+Task: T1.9

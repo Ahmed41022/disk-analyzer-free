@@ -1210,7 +1210,7 @@ Conventions for every task:
   - **Depends on:** T0.1
   - **Acceptance:** `verbatim_conversion_table` (all OSes: `C:\x`→`\\?\C:\x`, `\\srv\sh\x`→`\\?\UNC\srv\sh\x`, verbatim unchanged, relative → throws); Windows-only: `lists_files_with_sizes`, `junction_detected_not_followed`, `long_path_over_260`, `hidden_system_attrs`.
 
-- [ ] **T1.9 — `FsBackend`, `LocalBackend`, `MockBackend`**
+- [x] **T1.9 — `FsBackend`, `LocalBackend`, `MockBackend`**
   - **Files:** C `core/include/dafree/backend.hpp`, `core/src/scan/{local_backend.cpp,mock_backend.cpp}`, `core/tests/test_backends.cpp`.
   - **Interface:** §2.4.1. `MockSpec` = in-memory tree description + per-path injected errors (`AccessDenied`, `Io`, vanish-after-listing) + per-call delay; counts `read_dir` calls (for pause tests).
   - **Depends on:** T1.7, T1.8

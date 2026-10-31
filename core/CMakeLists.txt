@@ -1,9 +1,12 @@
 add_library(dafree_core STATIC src/version.cpp src/units.cpp src/model/aggregate.cpp src/model/builder.cpp
                                 src/model/intern.cpp src/model/names.cpp src/model/segvector.cpp
                                 src/model/tree.cpp)
+target_sources(dafree_core PRIVATE src/scan/local_backend.cpp src/scan/mock_backend.cpp)
 target_sources(dafree_core PRIVATE src/platform/windows/longpath.cpp)
 target_include_directories(dafree_core PUBLIC include)
 target_compile_features(dafree_core PUBLIC cxx_std_20)
+find_package(Threads REQUIRED)
+target_link_libraries(dafree_core PUBLIC Threads::Threads)
 set_target_properties(dafree_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(dafree_core PUBLIC DAFREE_VERSION="${DAFREE_VERSION}")
 dafree_enable_warnings(dafree_core)
@@ -31,7 +34,8 @@ endif()
 if(DAFREE_BUILD_TESTS)
   add_executable(dafree_core_tests tests/test_smoke.cpp tests/test_names.cpp
                                      tests/test_aggregate.cpp tests/test_segvector.cpp
-                                     tests/test_tree.cpp tests/test_units.cpp tests/test_longpath.cpp)
+                                     tests/test_tree.cpp tests/test_units.cpp tests/test_longpath.cpp
+                                     tests/test_backends.cpp)
   target_link_libraries(dafree_core_tests PRIVATE doctest::doctest_with_main dafree_core)
   if(UNIX)
     target_sources(dafree_core_tests PRIVATE tests/test_posix_enum.cpp)

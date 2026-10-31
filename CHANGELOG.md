@@ -18,3 +18,4 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 - Temporary filesystem fixtures and a pure expected-totals oracle for scanner tests.
 - POSIX directory enumeration, native metadata, volume information, and owner lookup.
 - Windows batched directory enumeration, verbatim paths, file identities, reparse-point classification, and volume metadata.
+- Local and deterministic mock filesystem backends with injected errors, delays, and call counters.
