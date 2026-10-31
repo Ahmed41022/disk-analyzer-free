@@ -12,9 +12,6 @@
 
 namespace dafree {
 
-IoError::IoError(std::string path, IssueKind kind, std::string message)
-    : Error(message), path_(std::move(path)), kind_(kind) {}
-
 namespace platform {
 
 int open_directory(std::string_view path);

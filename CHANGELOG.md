@@ -17,3 +17,4 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 - Locale-aware size formatting and parsing with traditional, IEC, and SI units.
 - Temporary filesystem fixtures and a pure expected-totals oracle for scanner tests.
 - POSIX directory enumeration, native metadata, volume information, and owner lookup.
+- Windows batched directory enumeration, verbatim paths, file identities, reparse-point classification, and volume metadata.

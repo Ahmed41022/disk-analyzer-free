@@ -1204,7 +1204,7 @@ Conventions for every task:
   - **Depends on:** T0.1
   - **Acceptance (doctest, using temp dirs created in C++):** `lists_files_with_sizes`, `sparse_alloc_less_than_size`, `symlink_not_followed`, `access_denied_dir_reports_issue` (skipped when euid == 0), `deep_path_beyond_path_max` (Linux), `btime_optional_no_crash`.
 
-- [ ] **T1.8 — Windows walk enumeration (minimal for M1)**
+- [x] **T1.8 — Windows walk enumeration (minimal for M1)**
   - **Files:** C `core/src/platform/windows/{read_dir_win.cpp,longpath.cpp,fileid.cpp,volume_win.cpp}`, `core/tests/test_windows_enum.cpp`, `core/tests/test_longpath.cpp`.
   - **Behavior:** §2.4.4 Windows row. Reparse tags: `IO_REPARSE_TAG_MOUNT_POINT` → Junction (MountPoint if target is a `\??\Volume{GUID}` path), `IO_REPARSE_TAG_SYMLINK` → Symlink, `IO_REPARSE_TAG_CLOUD*` → File with `cloud=true`. `dev` = volume serial from `GetFileInformationByHandleEx(FileIdInfo)` on the directory handle (cached per volume). `longpath.cpp` is pure string code compiled on every OS.
   - **Depends on:** T0.1

@@ -212,3 +212,15 @@ Reasoning: Enumeration needs these shared types before `FsBackend` exists. Keepi
 Alternatives: Delay the types until T1.9, duplicate them privately, or reject filesystems that do not return every bulk attribute.
 
 Task: T1.7
+
+## D-0014 — 2026-10-31 — Windows metadata and serial lifetime
+
+Question: How should Windows walk mode obtain reparse tags on the legacy listing fallback and retain volume identities without stale mount information?
+
+Choice: Use extended directory records normally and legacy records when the filesystem rejects the extended class. Query legacy reparse tags with `FindFirstFileW` only for reparse entries. Inspect mount-point reparse data through a no-follow handle to distinguish volume mounts from junctions; cloud entries never take that path. Query the directory handle's volume serial once per listing and reuse it for every returned entry, rather than keeping a process-wide per-volume serial cache. Preserve UTF-16 names through explicit WTF-8 conversion, including lone surrogates.
+
+Reasoning: Legacy records lack the extended reparse tag. The fallback reads metadata without opening ordinary files or cloud data. Scoping the serial to the live directory handle avoids stale identities after a volume is remounted and keeps the per-file loop free of serial queries. Native tests clean up their own temporary trees with verbatim Windows APIs because MinGW filesystem cleanup hangs on paths beyond MAX_PATH.
+
+Alternatives: Open every file for metadata, follow reparse points to classify them, or retain serials across mount changes.
+
+Task: T1.8

@@ -48,7 +48,8 @@ struct ScanIssue {
 class IoError : public Error {
   public:
     /// Construct an error for a path and a classified OS failure.
-    IoError(std::string path, IssueKind kind, std::string message);
+    IoError(std::string path, IssueKind kind, std::string message)
+        : Error(message), path_(std::move(path)), kind_(kind) {}
     /// Return the path whose operation failed.
     [[nodiscard]] const std::string &path() const noexcept { return path_; }
     /// Return the classified reason.
@@ -81,6 +82,9 @@ struct DirListing {
 };
 
 namespace platform {
+
+/// Convert an absolute Windows drive or UNC path to verbatim form.
+std::string to_verbatim(std::string_view path);
 
 /// Free and total space and scan-relevant properties of one volume.
 struct VolumeInfo {
