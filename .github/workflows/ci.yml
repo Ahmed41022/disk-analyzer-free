@@ -149,7 +149,7 @@ jobs:
           python -m pip install --no-deps --force-reinstall ".[gui]" -Cbuild-dir=build/gui-scroll-release
           python -m pytest tests/perf/test_tree_scroll.py -m slow -s -o junit_family=xunit1 --junitxml=scroll-junit.xml
       - name: Retain every GUI repaint sample
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always() && env.DAFREE_FULL_CI == 'true' && ((runner.os == 'Linux' && matrix.python == '3.12') || (github.event_name == 'schedule' && runner.os != 'Linux'))
         with:
           name: gui-scroll-${{ matrix.os }}-${{ matrix.python }}
@@ -158,7 +158,7 @@ jobs:
       - name: Summary
         if: always()
         run: python tools/junit_summary.py py-junit.xml >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: python-reports-${{ matrix.os }}-${{ matrix.python }}
@@ -247,7 +247,7 @@ jobs:
           python -m coverage report --include="src/dafree/gui/*" --fail-under=70
           python -m coverage report --skip-covered >> "$GITHUB_STEP_SUMMARY"
       - name: Retain Python coverage reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: python-coverage-${{ matrix.os }}
@@ -277,7 +277,7 @@ jobs:
           gcovr --root . --add-tracefile build/coverage-data.json \
             --filter 'core/(src/scan/|include/dafree/(scan|scan_types|backend)\.hpp$)' \
             --print-summary --fail-under-line 85
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always() && runner.os == 'Linux'
         with:
           name: native-coverage
@@ -354,7 +354,7 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
       - uses: pypa/cibuildwheel@v4.3.5
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheel-${{ matrix.os }}
           path: wheelhouse/*.whl
@@ -431,7 +431,7 @@ jobs:
             --benchmark_min_time=0.2s --benchmark_repetitions=5 \
             --benchmark_out=build/view-bench.json --benchmark_out_format=json
           python -m tools.view_bench_check build/view-bench.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: view-benchmarks
