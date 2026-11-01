@@ -37,6 +37,7 @@ NB_MODULE(_core, module) {
                "Parse a byte count.");
     dafree::bindings::bind_scan_types(module);
     dafree::bindings::bind_tree(module);
+    dafree::bindings::bind_view(module);
     dafree::bindings::bind_scan(module);
     dafree::bindings::bind_testing(module);
 }

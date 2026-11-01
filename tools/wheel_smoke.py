@@ -7,7 +7,16 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from dafree.api import ScanRequest, format_size, parse_size, scan
+from dafree.api import (
+    FilterKind,
+    FilterSpec,
+    ScanRequest,
+    TreeView,
+    ViewOptions,
+    format_size,
+    parse_size,
+    scan,
+)
 
 
 def main() -> None:
@@ -20,6 +29,11 @@ def main() -> None:
         raise RuntimeError("Native extension is missing")
     if not Path(spec.origin).resolve().is_relative_to(Path(sys.prefix).resolve()):
         raise RuntimeError("Native extension must come from the installed wheel")
+    license_path = Path(spec.origin).parent / "licenses" / "PCRE2.txt"
+    if not license_path.is_file() or "Redistribution" not in license_path.read_text(
+        encoding="utf-8"
+    ):
+        raise RuntimeError("Installed wheel must include the linked PCRE2 license")
     with TemporaryDirectory(prefix="dafree-wheel-") as directory:
         root = Path(directory)
         payload = b"wheel verification"
@@ -29,6 +43,15 @@ def main() -> None:
         node = tree.node(tree.roots()[0])
         if node.size != len(payload) or node.files != 1 or tree.find_path(sample) is None:
             raise RuntimeError("Installed wheel scan returned incorrect totals or paths")
+        view = TreeView(tree, ViewOptions(filter=FilterSpec(FilterKind.REGEX, regex=r"\.bin$")))
+        rows = view.rows(1, 1)
+        expected_rows = 2  # One target root and one matching file.
+        if (
+            view.row_count != expected_rows
+            or len(rows) != 1
+            or rows[0][4:6] != (sample.name, len(payload))
+        ):
+            raise RuntimeError("Installed wheel native regex view returned incorrect rows")
     sample_size = 512
     if parse_size(format_size(sample_size)) != sample_size:
         raise RuntimeError("Installed wheel unit conversion failed")

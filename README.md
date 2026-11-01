@@ -77,6 +77,23 @@ dafree config set default_scan.threads 4
 
 See [configuration commands](docs/cli.md) for typed values, migrations, and storage paths.
 
+The Python API can scan and page sorted tree rows without walking entries in Python:
+
+```python
+from dafree.api import ScanRequest, SortKey, TreeView, ViewOptions, scan
+
+tree = scan(ScanRequest(["."])).tree
+view = TreeView(tree, ViewOptions(sort=SortKey.SIZE, descending=True))
+for row in view.rows(0, 100):  # at most 500 rows per call
+    node_id, depth, _, _, name, size, *_ = row
+    print("  " * depth + name, size)
+```
+
+`expand(id)`, `collapse(id)`, and `expand_to(id)` control visible paths. `FilterSpec`
+expressions evaluate in C++; query-text parsing remains planned. Rows are copied
+15-field tuples, documented in the API and native stub. Extension category IDs
+currently report `Other`; classification arrives with the deferred analysis task.
+
 The following shows the planned CLI syntax; scan and report commands are not implemented yet:
 
 ```console

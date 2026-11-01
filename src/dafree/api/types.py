@@ -10,6 +10,29 @@ from enum import IntEnum, IntFlag
 from dafree import _core
 
 
+class TimeField(IntEnum):
+    """Timestamp selected by a view filter."""
+
+    MODIFIED = 0
+    CREATED = 1
+    ACCESSED = 2
+
+
+class ExtCategory(IntEnum):
+    """Stable extension category identifiers; classification arrives in T2.5."""
+
+    IMAGE = 0
+    VIDEO = 1
+    AUDIO = 2
+    ARCHIVE = 3
+    DOCUMENT = 4
+    CODE = 5
+    EXECUTABLE = 6
+    DISK_IMAGE = 7
+    SYSTEM = 8
+    OTHER = 9
+
+
 class ScanMode(IntEnum):
     """Requested enumeration strategy."""
 

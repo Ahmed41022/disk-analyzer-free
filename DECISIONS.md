@@ -4,16 +4,67 @@ Entries are newest-first. Product-owner overrides take precedence over earlier c
 
 ## Pending CI jobs
 
-This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when its job lands. Existing jobs: `lint`, `cpp`, `python`, `coverage`, `wheels`, `audit`, `docs`, `ci-success`; the sanitizer work is currently split across `asan`, `tsan`, and `fuzz`.
+This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when its job lands. Existing jobs: `lint`, `cpp`, `python`, `sanitizers`, `coverage`, `wheels`, `audit`, `docs`, `ci-success`; additional `tsan`, `fuzz`, and `view-perf` jobs retain their separate required gates.
 
 | Missing §7.3 job | Task that will add it | Remaining prerequisite / scope |
 | --- | --- | --- |
-| `sanitizers` (consolidated job) | T4.1 sanitizer follow-up; T6.7 extends duplicate coverage | Preserve current native ASan/UBSan/TSan/fuzz gates; add Python suite against the instrumented extension, then consolidate job names. |
 | `frozen-smoke` | T10.1, using T4.14's deferred self-test hook | Build the actual frozen bundle, verify CLI/GUI fixture totals and bundle size. |
 | `bench` | T2.2, after M4-core | Add executable CLI wall-time/RSS comparison to existing `bench_compare`; run on main/nightly under D-0030 until M4-core completes. |
 | `pr-title` | T0.5 follow-up after these prerequisites | Enforce Conventional Commits on PR titles; no feature prerequisite. |
 
 Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `coverage` needs cross-OS Python coverage and Codecov upload (T4.13 follow-up); `python` gains GUI scroll performance in T4.5 and SMB/scheduler integration in T9.5–T9.7. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
+
+## D-0041 — 2026-11-01 — Enforce the owner's main/nightly-only heavy tier
+
+Question: Should manual branch or merge-queue runs inherit all heavy jobs just because they are not PR events?
+
+Choice: No. Until M4-core completes, full CI is enabled only when the ref is `refs/heads/main` or the event is the nightly schedule. Main manual runs are full; manual branch and merge-queue runs use the same light tier as PRs. Keep lint, the full Linux correctness suite, cross-platform C++ correctness, and Windows/macOS GUI smoke required on that tier. Retain every heavy job, wide fixture, performance threshold, and sanitizer assertion on main/nightly. The aggregation gate permits only the named full-tier skips when the full-tier flag is false; a skipped job on main/nightly still fails the gate.
+
+Reasoning: D-0030's broad non-PR guard also enabled manual branch validation, exceeding the owner's explicit main/nightly-only instruction. Two one-off T4.1 branch runs exposed the D-0040 fixes, but do not justify changing that instruction for later groups. Correct both workflow routing and the decision log rather than treating the earlier assumption as authorization. This entry supersedes D-0030's manual-branch and merge-queue full-tier exceptions.
+
+Task: T4.1 CI verification / owner-requested temporary policy
+
+## D-0040 — 2026-11-01 — T4.1 full-CI fixture and build corrections
+
+Question: How should full validation exercise invalid native names on macOS and build the sanitizer extension on a fresh runner?
+
+Choice: APFS rejects the invalid UTF-8 filename used by the view codec test (`EILSEQ`). Keep the same row, option-roundtrip, glob, and regex assertions on every OS. On macOS supply that name through the native MockBackend, representing an imported or remote tree; retain real filesystem creation/scanning on Linux and Windows. This fixes an incorrect test-fixture assumption without skipping or weakening a test.
+
+Choice: Let pip install the build requirements declared in `pyproject.toml` in its normal isolated build environment for the CI sanitizer extension. Its previous `--no-build-isolation` command failed because the dev lock does not install scikit-build-core. Keep the instrumented native build directory inside the repo and retain every sanitizer test and option. No new runtime dependency is added.
+
+Reasoning: The first full branch run exposed these two issues after the PR-tier checks passed. A filesystem's filename restrictions do not limit which lossless names the native view can receive. Honoring declared build requirements makes a fresh CI build reproducible without assuming a contributor's existing environment.
+
+Task: T4.1 CI verification
+
+## D-0039 — 2026-11-01 — PCRE2 activation and view verification
+
+Question: How should native regex filters meet their compilation limit and run against lossless filenames?
+
+Choice: Activate the already pinned **PCRE2 10.46**, **BSD-3-Clause WITH PCRE2-exception**, for the view evaluator. This is the exact SPDX expression in its upstream `LICENCE.md`; correct the earlier abbreviated dependency label and allow only this exact expression in the license checker. Link only the static 8-bit library with Unicode support, three-byte internal links, PIC, and JIT disabled. Keep upstream tools, archives, headers, and manuals out of application wheels; install that license as `dafree/licenses/PCRE2.txt`. No new dependency is introduced beyond the plan's declared dependency.
+
+Choice: Limit the pattern and live compilation allocations to 1 MiB, including compiler workspace; use case-insensitive UTF/UCP matching with invalid-subject-UTF support so valid filename fragments remain matchable around native invalid bytes or lone surrogates. Invalid patterns and exhausted compilation/match budgets raise explicitly. Matching has bounded heap and step counts. Each filter worker reuses its match and long-glob workspace; the scanner's existing glob interface remains unchanged.
+
+Choice: The `sanitizers` job retains the full native GCC ASan/UBSan suite with leak detection, and adds Python unit/integration suites against a Clang-instrumented extension with its matching ASan runtime preloaded. CPython leak detection is disabled as specified in §7.3. The Qt pytest plugin is disabled for those non-GUI suites; no test is deselected for that reason. Existing TSan and fuzz gates remain required; TSan now also runs the view suite. A separate release `view-perf` job enforces the unchanged strict 150 ms and 2 ms budgets on main/nightly, with five repetitions and reports retained as artifacts. Heavy jobs stay off PRs under D-0030.
+
+Reasoning: PCRE2 is the planned permissively licensed native regex engine. Explicit resource failures avoid silently hiding matching files. Real cold-cache expansion and a tail window in exactly ten million visible rows exercise the acceptance criteria without timing fixture generation or warming the sibling cache. The full CLI comparison `bench` job remains pending T2.2.
+
+Task: T4.1 / assigned sanitizer follow-up
+
+## D-0038 — 2026-11-01 — Tree-view ownership and reordered analysis prerequisites
+
+Question: How should T4.1 expose lazy owners and row categories before deferred analysis and GUI tasks?
+
+Choice: Preserve the planned immutable-snapshot `TreeView(tree, options)` constructor, whose owner names come from cached metadata. Add an overload taking the original `TreeHandle` and backend; Python always uses this overload, retaining coherent reader locks and lazy owner context after the original facade is dropped. Add a copying `options()` accessor (Python property) so later sort handlers preserve filters and unrelated options. These additions are reflected in §2.5. Do not mutate a genuinely const tree through the snapshot constructor or create a separate lock for an existing mutable owner context.
+
+Choice: Stage only the shared `TimeField` and `ExtCategory` declarations in `analysis.hpp`/API types. Extension categorization and other T2.5 algorithms remain deferred; row category is `Other` until that task. No query-text parser or GUI feature is included. Filters match names against the target basename and path globs against its full path. Unknown times fail ordered comparisons and may be selected by `Eq 0`. Registered owners with empty unresolved placeholders display as `None`; only cheap-predicate candidates force owner lookup.
+
+Choice: Keep expansion preferences when collapsing or changing filters. Eligible ancestor rows are retained but filtering does not automatically expand paths. Store visible references in indexed blocks of 512 with an implicit treap and direct node-to-block mapping, avoiding shifts of every subsequent visible row on expansion. Cache sibling sorts in the planned 256-entry LRU. Use the shared analysis `ThreadPool` singleton (one worker per logical CPU) with disjoint-word filter writes; small filters run inline. Every binding that can block releases the GIL, and `rows()` constructs the planned 15-field tuples directly in C++.
+
+Choice: Register native worker shutdown with Python's `atexit` before DLL unloading. Joining live workers from a Windows DLL static destructor can deadlock under the loader lock; a subprocess regression must complete both filtering and interpreter exit. Native-only programs retain ordinary RAII shutdown.
+
+Reasoning: Owner resolution already mutates through the scan's `TreeHandle`; retaining that handle prevents competing reader locks and stale ownership lifetimes. The accessor avoids Python duplicating mutable option state. Staging required value types supports the owner-approved order without implementing deferred analysis. Indexed blocks make deep scrolling and local expansion independent of the length of the visible tail.
+
+Task: T4.1
 
 ## D-0037 — 2026-10-31 — T2.7 settings before the CLI framework
 
