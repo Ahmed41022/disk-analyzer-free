@@ -13,7 +13,14 @@ from PySide6.QtWidgets import (
 )
 
 from dafree import api
-from dafree.gui.delegates import display_text, paint_background, paint_focus, paint_text
+from dafree.gui.delegates import (
+    display_text,
+    paint_background,
+    paint_context,
+    paint_focus,
+    paint_state,
+    paint_text,
+)
 from dafree.gui.models.tree_model import TreeTableModel
 
 _INDENT = 18
@@ -83,38 +90,40 @@ class NameDelegate(QStyledItemDelegate):
         index: QModelIndex | QPersistentModelIndex,
     ) -> None:
         """Paint a mirrored chevron, type icon, and end-elided native display name."""
-        model = index.model()
+        frame = paint_context(option)
+        model = frame.model if frame is not None else index.model()
         if not isinstance(model, TreeTableModel):
             return
-        value = model.row_data(index.row())
+        value = frame.row if frame is not None else model.row_data(index.row())
         item = option
-        state = option.state.value
-        text = display_text(index)
+        rect = frame.rect if frame is not None else option.rect
+        direction = frame.direction if frame is not None else option.direction
+        state = paint_state(option)
+        text = display_text(index, option)
         style = item.widget.style() if item.widget else QApplication.style()
         painter.save()
-        painter.setClipRect(item.rect)
+        painter.setClipRect(rect)
         paint_background(painter, item, state)
         if value[2]:
             arrow = QStyleOption()
             arrow.rect = self.chevron_rect(item, value[1])
-            arrow.direction, arrow.palette, arrow.state = item.direction, item.palette, item.state
+            arrow.direction, arrow.palette, arrow.state = direction, item.palette, item.state
             style.drawPrimitive(
-                self.chevron_element(value[3], item.direction), arrow, painter, item.widget
+                self.chevron_element(value[3], direction), arrow, painter, item.widget
             )
-        icon_x = item.rect.left() + 3 + (value[1] + 1) * _INDENT
-        icon_rect = QRect(icon_x, item.rect.center().y() - _ICON // 2, _ICON, _ICON)
-        icon_rect = QStyle.visualRect(item.direction, item.rect, icon_rect)
+        icon_x = rect.left() + 3 + (value[1] + 1) * _INDENT
+        icon_rect = QRect(icon_x, rect.center().y() - _ICON // 2, _ICON, _ICON)
+        icon_rect = QStyle.visualRect(direction, rect, icon_rect)
         icon = (
             style.standardIcon(QStyle.StandardPixmap.SP_DirIcon)
             if value[13] & _DIRECTORY
             else self._category_icon(value[14])
         )
         icon.paint(painter, icon_rect)
-        logical = item.rect.adjusted(3 + (value[1] + 1) * _INDENT + _ICON + 5, 0, -4, 0)
-        text_rect = QStyle.visualRect(item.direction, item.rect, logical)
-        text = item.fontMetrics.elidedText(
-            text, Qt.TextElideMode.ElideRight, max(0, text_rect.width())
-        )
+        logical = rect.adjusted(3 + (value[1] + 1) * _INDENT + _ICON + 5, 0, -4, 0)
+        text_rect = QStyle.visualRect(direction, rect, logical)
+        metrics = frame.metrics if frame is not None else item.fontMetrics
+        text = metrics.elidedText(text, Qt.TextElideMode.ElideRight, max(0, text_rect.width()))
         paint_text(painter, item, text_rect, text, state=state)
         paint_focus(painter, item, state)
         painter.restore()

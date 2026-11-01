@@ -304,14 +304,14 @@ def main(argv: list[str] | None = None) -> int:
         window.showMaximized()
 
     def activate(arguments: list[str]) -> None:
-        window._pending_launch_arguments = arguments.copy()
+        window.receive_arguments(arguments)
         window.setWindowState(window.windowState() & ~Qt.WindowState.WindowMinimized)
         window.show()
         window.raise_()
         window.activateWindow()
 
     guard.argumentsReceived.connect(activate)
-    window._pending_launch_arguments = arguments.copy()
+    window.receive_arguments(arguments)
     window.show()
     try:
         return QApplication.exec()

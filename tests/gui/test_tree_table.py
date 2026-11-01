@@ -377,3 +377,21 @@ def test_virtual_paint_covers_visible_cells_only(
     assert image.pixelColor(10, viewport.bottom() - 2) == table.palette().color(
         QPalette.ColorRole.Base
     )
+
+
+def test_frame_fetches_metadata_once_per_visible_row(make_table: TableFactory, monkeypatch) -> None:
+    """All delegates share the current native tuple without repeated Qt model lookups."""
+    table = make_table()
+    QApplication.processEvents()
+    calls: list[int] = []
+    original = table.tree_model.row_data
+
+    def fetch(row):
+        calls.append(row)
+        return original(row)
+
+    monkeypatch.setattr(table.tree_model, "row_data", fetch)
+    table.viewport().repaint()
+    viewport = table.viewport().rect()
+    first, last = table.rowAt(0), table.rowAt(viewport.bottom())
+    assert calls == list(range(first, last + 1))

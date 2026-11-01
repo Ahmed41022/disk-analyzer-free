@@ -7,6 +7,7 @@ from dataclasses import replace
 from PySide6.QtCore import QPoint, QRect, Qt, QTimer, Signal
 from PySide6.QtGui import QCloseEvent, QFont, QKeyEvent, QPainter, QPaintEvent, QPalette
 from PySide6.QtWidgets import (
+    QAbstractItemDelegate,
     QAbstractItemView,
     QHeaderView,
     QMenu,
@@ -17,7 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from dafree import api
-from dafree.gui.delegates import DisplayDelegate
+from dafree.gui.delegates import DisplayDelegate, PaintContext
 from dafree.gui.delegates.name_delegate import NameDelegate
 from dafree.gui.delegates.percent_delegate import PercentDelegate
 from dafree.gui.delegates.size_delegate import SizeDelegate
@@ -39,6 +40,7 @@ class _PaintOption(QStyleOptionViewItem):
 
     _dafree_frame_font: QFont
     _dafree_row_background: bool
+    _dafree_context: PaintContext
 
 
 class TreeTableView(QTableView):
@@ -226,6 +228,35 @@ class TreeTableView(QTableView):
             if parent_row is not None:
                 self.setCurrentIndex(self.tree_model.index(parent_row, column))
 
+    def _visible_columns(self, rect: QRect) -> list[tuple[int, int, int, QAbstractItemDelegate]]:
+        header = self.horizontalHeader()
+        columns = []
+        for visual in range(header.count()):
+            logical = header.logicalIndex(visual)
+            if self.isColumnHidden(logical):
+                continue
+            x, width = header.sectionViewportPosition(logical), header.sectionSize(logical)
+            if x + width <= rect.left() or x > rect.right():
+                continue
+            delegate = self.itemDelegateForColumn(logical) or self.itemDelegate()
+            columns.append((logical, x, width, delegate))
+        return columns
+
+    def _frame_context(self, option: _PaintOption, first: int) -> PaintContext:
+        context = PaintContext(
+            self.tree_model,
+            QFont(option.font),
+            option.fontMetrics,
+            option.direction,
+            self.tree_model.row_data(first),
+            option.palette.color(QPalette.ColorRole.Text),
+            QRect(),
+        )
+        option._dafree_context = context
+        option._dafree_frame_font = context.font
+        option._dafree_row_background = True
+        return context
+
     def paintEvent(self, event: QPaintEvent) -> None:
         """Paint only the viewport, avoiding per-cell native/Python index-count callbacks.
 
@@ -242,24 +273,12 @@ class TreeTableView(QTableView):
             last = self.rowAt(event.rect().bottom())
             if last < 0:
                 last = self.tree_model.rowCount() - 1
-            header = self.horizontalHeader()
-            columns = []
-            for visual in range(header.count()):
-                logical = header.logicalIndex(visual)
-                if self.isColumnHidden(logical):
-                    continue
-                x, width = header.sectionViewportPosition(logical), header.sectionSize(logical)
-                if x + width <= event.rect().left() or x > event.rect().right():
-                    continue
-                delegate = self.itemDelegateForColumn(logical) or self.itemDelegate()
-                columns.append((logical, x, width, delegate))
+            columns = self._visible_columns(event.rect())
             option = _PaintOption()
             self.initViewItemOption(option)
             option.widget = self
-            font = QFont(option.font)
-            option._dafree_frame_font = font
-            option._dafree_row_background = True
-            painter.setFont(font)
+            context = self._frame_context(option, first)
+            painter.setFont(context.font)
             palette = option.palette
             alternate_brush = palette.brush(QPalette.ColorRole.AlternateBase)
             selection_brush = palette.brush(QPalette.ColorRole.Highlight)
@@ -269,9 +288,19 @@ class TreeTableView(QTableView):
             base_features = option.features.value & ~_ALTERNATE
             current = self.currentIndex()
             focused = self.hasFocus() or self.viewport().hasFocus()
+            previous_state: int | None = None
             for row in range(first, last + 1):
+                if row != first:
+                    context.row = self.tree_model.row_data(row)
                 selected = self._tree_selection.isRowSelected(row)
                 state = base_state | (_SELECTED if selected else 0)
+                context.text_color = palette.color(
+                    QPalette.ColorGroup.Disabled
+                    if not self.isEnabled()
+                    else palette.currentColorGroup(),
+                    QPalette.ColorRole.HighlightedText if selected else QPalette.ColorRole.Text,
+                )
+                painter.setPen(context.text_color)
                 option.features = QStyleOptionViewItem.ViewItemFeature(
                     base_features | (_ALTERNATE if self.alternatingRowColors() and row % 2 else 0)
                 )
@@ -282,15 +311,17 @@ class TreeTableView(QTableView):
                         selection_brush if selected else alternate_brush,
                     )
                 for logical, x, width, delegate in columns:
-                    option.state = QStyle.StateFlag(
-                        state
-                        | (
-                            _FOCUSED
-                            if focused and current.row() == row and current.column() == logical
-                            else 0
-                        )
+                    cell_state = state | (
+                        _FOCUSED
+                        if focused and current.row() == row and current.column() == logical
+                        else 0
                     )
-                    option.rect = QRect(x, y, width, height)
+                    if cell_state != previous_state:
+                        option.state = QStyle.StateFlag(cell_state)
+                        previous_state = cell_state
+                    context.state = cell_state
+                    context.column = self.tree_model.columns[logical]
+                    option.rect = context.rect = QRect(x, y, width, height)
                     index = self.tree_model.createIndex(row, logical)
                     option.index = index
                     delegate.paint(painter, option, index)

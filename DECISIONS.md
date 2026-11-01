@@ -14,6 +14,32 @@ This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when it
 
 Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `coverage` needs cross-OS Python coverage and Codecov upload (T4.13 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance lands in T4.5. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
+## D-0049 — 2026-11-01 — Repaint performance after scan-dialog integration
+
+Question: How should T4.7 handle a repaint failure discovered when running the performance test after the full GUI suite?
+
+Choice: Keep the original ten-million-row fixture, 1280×720 viewport, all 60 jumps, actual paint checks, and 16.7/33 ms limits unchanged. The combined Windows run failed at 20.94 ms median / 36.60 ms p95 even though a fresh-process run passed. A four-second idle wait also reproduced substantial slowdown without a scan. Diagnostic measurements found painting dominated elapsed time; no preceding GUI widgets remained, and event processing/GC accounted for little of it. Do not claim a specific operating-system cause from these observations.
+
+Choice: Reduce production painting work rather than changing measurement conditions. Supply one bounded `PaintContext` per frame with owned font/metrics, the current native row, column, primitive state, rectangle, and text colour. Fetch metadata once per visible row and share it across delegates. Reuse row text setup, avoid redundant numeric painter-state saves, and compare a frame's owned font once per delegate. Ordinary Qt delegate calls retain their complete independent path, including borrowed-font ownership handling. Update state only when it changes, preserving Qt option values for custom delegates. A regression verifies one row fetch per painted row; existing selected/alternate-colour, focus, RTL, geometry, and font-lifetime assertions remain intact.
+
+Reasoning: Performance after normal preceding UI work matters. Reducing repeated Qt/Python property conversions and metadata callbacks improves that path without dropping samples, warming pages, disabling GC, or weakening tests. The GUI-plus-performance run then passed at 14.18 ms median / 26.17 ms p95; final full-suite figures are reported with the PR.
+
+Task: T4.7
+
+## D-0048 — 2026-11-01 — Scan-dialog validation and deferred Windows controls
+
+Question: How should T4.7 validate typed roots and present Windows-only choices before paused M3 supplies its engine and elevation services?
+
+Choice: Normalize target paths lexically to absolute paths and check directory metadata in the background runner. Do not resolve symlinks on Qt's thread. Reject missing roots and ordinary files in the picker, deduplicate selected roots, and disable Start while checks are pending. Native scan startup remains authoritative for permissions, overlapping roots, and changes after validation. Folder/volume picks, recent targets, and launch arguments open one modal selection dialog; only explicit acceptance starts the scan. Launch arguments remain raw Python strings.
+
+Choice: Show MFT only on Windows, disabled while T3.1–T3.6 are paused. Preserve Auto/Walk as functional choices, falling back to Auto when a saved default requested unavailable MFT. Show the administrator-restart control when Windows elevation is unknown/not elevated, disabled in the current build; do not fabricate a privilege check or implement T3.7 early. A callable platform seam tests forwarding current targets and quitting only after a successful relaunch; T3.7 must supply the actual default service and enablement. No OS relaunch occurs now.
+
+Choice: Persist defaults only on acceptance, saving an independent snapshot before changing shared settings. Preserve unexposed owner/hardlink/ADS/NTFS policies. The thread control has zero decimal places and exactly represents the full uint32 settings range. Exclusion editors use one glob/path per line for edits; unchanged stored values retain their original raw strings, including surrogate code points and embedded newlines. Target list metadata likewise retains raw paths instead of reading escaped display text. Escape rejects without changing preferences; Enter accepts validated roots through the default Start action.
+
+Reasoning: Metadata can block on a network path and must not freeze Qt. Dialog validation is advisory because the filesystem can change before the native engine starts. Staged, disabled Windows controls honor the owner's reordered milestones without claiming unavailable features work. An atomic preference save must succeed before the dialog launches a scan.
+
+Task: T4.7
+
 ## D-0047 — 2026-11-01 — Main-window integration with paused platform features
 
 Question: How should the selected main-window task expose mounted volumes and scan results while Windows privileges, analysis views, and settings actions remain deferred?

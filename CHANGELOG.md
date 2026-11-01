@@ -10,6 +10,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- Scan dialog with multiple folder/volume targets, asynchronous directory validation, traversal/exclusion options, atomic saved defaults, and explicit acceptance of forwarded launch targets.
+
 - Main window with lazy Tree/Issues views, background native volume discovery, capacity bars, recent targets, breadcrumbs, live status, and asynchronous scan shutdown.
 
 - Virtual tree table with RTL chevrons, depth percentage bars, original category icons, row navigation, debounced column preferences, and a strict 60-jump repaint budget on ten million native rows.
