@@ -24,7 +24,7 @@ From the repository root, install the compiler and Qt offscreen runtime librarie
 sudo apt-get update
 sudo apt-get install --yes build-essential python3-dev python3-venv \
   libegl1 libgl1 libxkbcommon0 libxkbcommon-x11-0 libfontconfig1 \
-  libdbus-1-3 libxcb-cursor0
+  libdbus-1-3 libxcb-cursor0 fonts-dejavu-core
 python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install cmake ninja scikit-build-core
@@ -58,7 +58,7 @@ repository as above.
 PRs run lint, the full Linux correctness suite (including property tests), native
 correctness on all three operating systems, and Windows/macOS GUI smoke. The
 wide 100k fixture, memory budgets and benchmarks, sanitizers, and coverage run
-on main and nightly, plus manual full validation. No test assertions or budgets
+on main and nightly, plus manual full validation on main. No test assertions or budgets
 are reduced. Include each job's duration from the current-head Actions run in
 the PR summary. The pending §7.3 inventory is in `DECISIONS.md`.
 
@@ -75,6 +75,22 @@ ctest --preset dev --output-on-failure
 ```
 
 The GUI tests run offscreen in CI. Set `QT_QPA_PLATFORM=offscreen` when running them in a headless environment. If Qt is installed, the smoke test opens and closes the window; CI sets `DAFREE_REQUIRE_GUI=1` so a missing Qt installation fails instead of silently skipping the test.
+
+The GUI repaint benchmark runs in Release, with real system fonts, exactly ten
+million native rows, and 60 viewport jumps. It retains every sample and enforces
+median ≤16.7 ms and p95 ≤33 ms. CI runs it on Linux main and all three OSes nightly;
+it is outside the PR tier. For local Linux verification, reuse the repo's caches:
+
+```sh
+SKBUILD_CMAKE_BUILD_TYPE=Release python -m pip install ".[gui]" --no-build-isolation -Cbuild-dir=build/gui-scroll-release
+QT_QPA_PLATFORM=offscreen python -m pytest tests/perf/test_tree_scroll.py -m slow -s
+```
+
+Windows offscreen tests read installed fonts from `SYSTEMROOT/Fonts` unless
+`QT_QPA_FONTDIR` is already set. No fonts are bundled. Official Windows CI and
+wheels use MSVC. The optional local MinGW GCC 15.1.0 fallback disables Release
+binding LTO to avoid an observed compiler crash; other optimization and all
+supported toolchains remain unchanged (D-0046).
 
 Filesystem tests can describe a tree with `tests.testkit.spec`, create it under pytest's `tmp_path` with `Fixture.create`, and compare logical totals with `oracle`. Keep each fixture inside the test's temporary directory. Call `fixture.caps.require("feature")` before relying on an optional OS feature; CI sets `DAFREE_REQUIRE_ALL_CAPS=1` so an unexpected missing capability fails the test.
 

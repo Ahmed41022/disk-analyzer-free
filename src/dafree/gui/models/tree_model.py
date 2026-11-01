@@ -25,6 +25,7 @@ from dafree.settings import ColumnId
 
 _PAGE_SIZE = 200
 _MAX_PAGES = 50
+_ALLOC_UNRELIABLE = int(api.NodeFlags.ALLOC_UNRELIABLE)
 _SORT_KEYS = {
     ColumnId.NAME: api.SortKey.NAME,
     ColumnId.SIZE: api.SortKey.SIZE,
@@ -37,17 +38,23 @@ _SORT_KEYS = {
     ColumnId.EXT: api.SortKey.EXT,
 }
 _EMPTY = QModelIndex()
+_DISPLAY_ROLE = int(Qt.ItemDataRole.DisplayRole)
+_TOOLTIP_ROLE = int(Qt.ItemDataRole.ToolTipRole)
+_ACCESSIBLE_ROLE = int(Qt.ItemDataRole.AccessibleTextRole)
+_ROW_ROLE = int(Qt.ItemDataRole.UserRole) + 1
+_SUPPORTED_ROLES = frozenset((_DISPLAY_ROLE, _TOOLTIP_ROLE, _ACCESSIBLE_ROLE, _ROW_ROLE))
 type Index = QModelIndex | QPersistentModelIndex
 
 
 class TreeTableModel(QAbstractTableModel):
     """Cache at most fifty 200-row pages and notify Qt around structural changes."""
 
-    ROW_ROLE = int(Qt.ItemDataRole.UserRole) + 1
+    ROW_ROLE = _ROW_ROLE
 
     def __init__(self, view: api.TreeView, columns: Sequence[ColumnId]) -> None:
         super().__init__()
         self.view = view
+        self._row_count = view.row_count
         self.columns = tuple(columns)
         self._pages: OrderedDict[int, list[api.Row]] = OrderedDict()
         self._selection: ReferenceType[QItemSelectionModel] | None = None
@@ -60,14 +67,14 @@ class TreeTableModel(QAbstractTableModel):
 
     def rowCount(self, parent: Index = _EMPTY) -> int:
         """Expose visible rows only at the flat model's root."""
-        return 0 if parent.isValid() else self.view.row_count
+        return 0 if parent.isValid() else self._row_count
 
     def columnCount(self, parent: Index = _EMPTY) -> int:
         """Expose the requested stable logical columns."""
         return 0 if parent.isValid() else len(self.columns)
 
     def _row(self, row: int) -> api.Row:
-        if not 0 <= row < self.rowCount():
+        if not 0 <= row < self._row_count:
             raise IndexError(row)
         page = row // _PAGE_SIZE
         if page not in self._pages:
@@ -79,31 +86,26 @@ class TreeTableModel(QAbstractTableModel):
 
     def data(self, index: Index, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
         """Answer supported roles only; Qt's other paint probes never fetch a page."""
-        if (
-            role
-            not in (
-                Qt.ItemDataRole.DisplayRole,
-                Qt.ItemDataRole.ToolTipRole,
-                Qt.ItemDataRole.AccessibleTextRole,
-                self.ROW_ROLE,
-            )
-            or not index.isValid()
-            or not self.checkIndex(index, self.CheckIndexOption.IndexIsValid)
+        if role not in _SUPPORTED_ROLES or not index.isValid():
+            return None
+        position, column = index.row(), index.column()
+        if index.model() is not self or not (
+            0 <= position < self._row_count and 0 <= column < len(self.columns)
         ):
             return None
-        row = self._row(index.row())
-        if role == self.ROW_ROLE:
+        row = self._row(position)
+        if role == _ROW_ROLE:
             return row
-        if role == Qt.ItemDataRole.ToolTipRole:
+        if role == _TOOLTIP_ROLE:
             return _display_text(self.view.tree.path(row[0]))
-        if role == Qt.ItemDataRole.AccessibleTextRole:
+        if role == _ACCESSIBLE_ROLE:
             return _("{name}, {kind}, {size}, {percent} of parent").format(
                 name=_display_text(row[4]),
                 kind=_("folder") if row[13] & api.NodeFlags.DIR else _("file"),
                 size=api.format_size(row[5]),
                 percent=self._percent(row[7]),
             )
-        return self._display(row, self.columns[index.column()])
+        return self._display(row, self.columns[column])
 
     @staticmethod
     def _percent(value: float) -> str:
@@ -114,7 +116,7 @@ class TreeTableModel(QAbstractTableModel):
             case ColumnId.NAME:
                 return _display_text(row[4])
             case ColumnId.SIZE | ColumnId.ALLOC:
-                approximate = column == ColumnId.ALLOC and row[13] & api.NodeFlags.ALLOC_UNRELIABLE
+                approximate = column == ColumnId.ALLOC and row[13] & _ALLOC_UNRELIABLE
                 return ("≈" if approximate else "") + api.format_size(
                     row[6] if column == ColumnId.ALLOC else row[5]
                 )
@@ -161,6 +163,14 @@ class TreeTableModel(QAbstractTableModel):
         """Map one visible row to its stable native node ID."""
         return self._row(row)[0]
 
+    def row_data(self, row: int) -> api.Row:
+        """Read a cached visible tuple directly for Python delegates, avoiding QVariant copies."""
+        return self._row(row)
+
+    def display_value(self, row: api.Row, column: ColumnId) -> str:
+        """Share column formatting between Qt roles and the visible-cell paint path."""
+        return self._display(row, column)
+
     def row_of(self, node: int) -> int | None:
         """Locate a visible node without walking or materializing the tree."""
         return self.view.index_of(node)
@@ -177,11 +187,13 @@ class TreeTableModel(QAbstractTableModel):
         if value[3]:
             self.beginRemoveRows(_EMPTY, row + 1, row + count)
             self.view.collapse(node)
+            self._row_count = self.view.row_count
             self._pages.clear()
             self.endRemoveRows()
         else:
             self.beginInsertRows(_EMPTY, row + 1, row + count)
             self.view.expand(node)
+            self._row_count = self.view.row_count
             self._pages.clear()
             self.endInsertRows()
         self.dataChanged.emit(self.index(row, 0), self.index(row, len(self.columns) - 1))
@@ -197,6 +209,7 @@ class TreeTableModel(QAbstractTableModel):
         try:
             operation()
         finally:
+            self._row_count = self.view.row_count
             self._pages.clear()
             self.endResetModel()
             if selection:
@@ -226,10 +239,10 @@ class TreeTableModel(QAbstractTableModel):
     def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
         """Delegate each column's sort to the native view, preserving other options."""
         if 0 <= column < len(self.columns):
-            self.set_options(
-                replace(
-                    self.view.options,
-                    sort=_SORT_KEYS[self.columns[column]],
-                    descending=order == Qt.SortOrder.DescendingOrder,
-                )
+            options = replace(
+                self.view.options,
+                sort=_SORT_KEYS[self.columns[column]],
+                descending=order == Qt.SortOrder.DescendingOrder,
             )
+            if options != self.view.options:
+                self.set_options(options)

@@ -1,0 +1,50 @@
+"""Depth-coloured, direction-aware percentage bars behind localized numbers."""
+
+from PySide6.QtCore import QModelIndex, QObject, QPersistentModelIndex, Qt
+from PySide6.QtGui import QColor, QPainter
+from PySide6.QtWidgets import QStyle, QStyledItemDelegate, QStyleOptionViewItem
+
+from dafree.gui.delegates import TextCache, display_text, paint_background, paint_focus
+from dafree.gui.models.tree_model import TreeTableModel
+
+_ALIGN_RIGHT = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+
+
+class PercentDelegate(QStyledItemDelegate):
+    """Paint one inexpensive bar per visible percentage cell."""
+
+    def __init__(self, parent: QObject | None = None) -> None:
+        super().__init__(parent)
+        self._texts = TextCache()
+
+    def paint(
+        self,
+        painter: QPainter,
+        option: QStyleOptionViewItem,
+        index: QModelIndex | QPersistentModelIndex,
+    ) -> None:
+        """Keep selection contrast, depth colour, and RTL bar origin consistent."""
+        model = index.model()
+        if not isinstance(model, TreeTableModel):
+            return
+        value = model.row_data(index.row())
+        item = option
+        state = option.state.value
+        text = display_text(index)
+        painter.save()
+        painter.setClipRect(item.rect)
+        paint_background(painter, item, state)
+        bar = item.rect.adjusted(4, 5, -4, -5)
+        bar.setWidth(round(bar.width() * min(1.0, max(0.0, value[7]))))
+        bar = QStyle.visualRect(item.direction, item.rect, bar)
+        color = QColor.fromHsv((210 + value[1] * 29) % 360, 150, 190, 75)
+        painter.fillRect(bar, color)
+        self._texts.draw(
+            painter,
+            item,
+            item.rect.adjusted(4, 0, -4, 0),
+            text,
+            _ALIGN_RIGHT,
+        )
+        paint_focus(painter, item, state)
+        painter.restore()
