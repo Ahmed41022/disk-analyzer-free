@@ -22,6 +22,15 @@ with the later main-window actions; the bootstrap retains the arguments.
 Background callables run through a four-worker `TaskRunner`. Results and failures
 arrive on the GUI thread, so waiting for native work does not block GUI events.
 
+`ScanController` snapshots a scan request and validates its roots in a worker.
+It polls progress, issues, and notices every 250 ms, requests partial native trees
+every fourth tick (at most once per second), and collects final results in a
+worker. Pause, resume, and cancel can be requested while startup is pending.
+Cancellation keeps polling until a partial result arrives. A controller owns one
+scan at a time; an explicit `failed` signal reports asynchronous failures and
+leaves it ready for another scan. Final progress and diagnostics arrive before
+the `finished` signal. Main-window scan buttons are part of the next UI tasks.
+
 Unhandled Python exceptions are logged and displayed in a dialog with **Copy
 details**. Native surrogate characters appear as escaped diagnostic text, so Qt
 does not silently truncate the error. Forwarded target arguments retain their

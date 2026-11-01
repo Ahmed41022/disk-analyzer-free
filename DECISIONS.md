@@ -14,6 +14,22 @@ This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when it
 
 Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `coverage` needs cross-OS Python coverage and Codecov upload (T4.13 follow-up); `python` gains GUI scroll performance in T4.5 and SMB/scheduler integration in T9.5–T9.7. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
+## D-0043 — 2026-11-01 — Scan-controller startup, failures, and partial trees
+
+Question: How should the selected polling interface avoid GUI blocking and report failures before deferred settings/main-window tasks?
+
+Choice: Run native `start_scan` as well as `take_result` through `TaskRunner`. Inspection found root `stat_root` and volume discovery are synchronous in the native constructor; releasing the GIL alone would still block Qt's event loop. Snapshot the request before submission, retain pause/resume/cancel requests made during startup, and reject a second start while startup, scanning, or final collection is pending. Final result consumption and failure cleanup wait/join only in a worker.
+
+Choice: Add `failed = Signal(str)` to the planned controller interface and update T4.3's plan declaration. Startup and result errors cannot be represented as `ScanResult` without weakening the typed `finished` contract. Reset to idle before emitting either terminal signal, so a listener may start another scan. Distinguish this controller's generations/jobs when using a shared runner. Injection of the existing native `Backend` and an optional shared runner is a constructor/testing seam, not a Python filesystem backend.
+
+Choice: Poll every 250 ms, drain at most 1,000 live issues per tick, forward notices, and request partial trees every fourth tick with a monotonic one-second lower bound. `partialTreeReady` carries the existing public `api.Tree` facade over its shared native handle; do not add a second Python TreeHandle class. Deliver terminal progress and a final diagnostic drain after background result collection and before `finished`, covering diagnostics that arrived at the completion boundary. Unexpected polling failure cancels/consumes the handle in a worker before releasing it.
+
+Choice: Use one active scan per controller, with one controller intended per window. The persisted settings schema defines no parallel-scan switch, and its dialog remains deferred, so do not invent that setting now. Main-window buttons/actions remain later M4-core tasks. Extend the existing GUI smoke file with bootstrap plus one real test-owned temporary-file scan so Windows/macOS PR checks exercise the new path without running heavy fixtures. Native delayed mocks cover the named progress/cancel/pause acceptance tests. Tests explicitly flush Qt DeferredDelete events when disposing controllers, preventing test-owned backends from surviving until native binding shutdown; no leak warning is suppressed.
+
+Reasoning: These additions fill the interface's missing asynchronous failure path and preserve the owner-approved milestone order. All tree enumeration stays in C++; the controller only polls the public API and passes shared snapshots onward. The one-second bound covers timer jitter as well as nominal four-tick scheduling.
+
+Task: T4.3
+
 ## D-0042 — 2026-11-01 — Bootstrap before deferred GUI settings and actions
 
 Question: What should application startup implement before the deferred settings/RTL tasks and later main-window actions?
