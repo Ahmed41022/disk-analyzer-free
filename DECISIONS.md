@@ -16,6 +16,32 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0059 — 2026-11-01 — Correct the MSVC debug-container allocation oracle
+
+Question: Why did T3.3's Windows native CI fail two allocation assertions while all parser values, Linux/macOS tests and sanitizer jobs passed?
+
+Choice: The failing run `41347197640` measured three allocations for an empty successful result and four for a nonempty result, instead of the test's assumed zero/one. Microsoft's [vector source](https://github.com/microsoft/STL/blob/main/stl/inc/vector) allocates checked-iterator proxies during default and move construction; its [hardening documentation](https://github.com/microsoft/STL/wiki/STL-Hardening/93f55c7d1064a03150338f5df76120c61baeabfa) explicitly describes dynamic allocations for iterator debugging. Returning the planned `Expected<vector<Run>, MftError>` inherently includes that vendor bookkeeping. No local MSVC toolchain is installed; the hosted MSVC CI run remains the platform judge.
+
+Choice: Correct the test's cross-platform assumption with an independent empty standard-result factory, containing no decoder, parser work, reserve or element allocation. Measure that same construction/move path's baseline without hard-coded OS allowances. Require the decoder's empty result to have zero capacity and add no allocations above that baseline; require a populated result to add exactly one output-buffer allocation and have capacity equal to its size. Preserve literal decoded-value tests, all malformed-input and over-budget zero-allocation assertions, every existing input vector/seed, and the 64 MiB output limit. Keep MSVC iterator debugging enabled; do not relax compiler checks or disable tests.
+
+Reasoning: Counting required library debug instrumentation as parser/output storage made the original test wrong. The independent baseline still catches extra temporaries, parser allocations, copied payload buffers and repeated vector growth. This corrects the oracle rather than accepting extra output-storage allocations. Production decoding is unchanged.
+
+Task: T3.3 CI validation follow-up
+
+## D-0058 — 2026-11-01 — Checked mapping pairs and a bounded decoder allocation
+
+Question: Which malformed-input, arithmetic, allocation and fuzz-smoke policies complete T3.3's run-list interface?
+
+Choice: Preserve `Run{optional<int64_t> lcn, uint64_t clusters}` and `decode_runlist(span<const byte>)`. Decode little-endian unsigned cluster counts and signed physical-LCN deltas from one to eight bytes. A zero offset width denotes a sparse extent and leaves the previous physical LCN unchanged; physical LCN zero remains valid. Require a zero terminator, ignoring later attribute padding. Reject missing/truncated fields, invalid widths, zero counts, negative physical starts and signed-LCN/cumulative-VCN overflow as OutOfBounds. Volume extents and byte-offset limits belong to the later volume reader.
+
+Choice: Validate/count without allocation in a first pass, then reserve exactly once and decode into the result. Reject decoded output above 64 MiB as Unsupported before allocating, using sizeof(Run) rather than assuming its layout. Empty output needs no run storage and malformed encodings allocate nothing. D-0059 corrects the original zero-total-allocation assumption for empty success: MSVC Debug's standard return container has checked-iterator bookkeeping, measured independently from parser/output storage. This supplies a concrete resource policy for the fuzz target explicitly included in T3.3 and the plan's 64 MiB parser budget; it adds no arbitrary input-size limit to the decoder. Allocation failure for otherwise valid input remains a normal system resource exception.
+
+Choice: Add the planned original run-list fuzzer and a separate temporary seeded corpus to the existing full-CI fuzz smoke job. Compile the decoder itself with libFuzzer/ASan/UBSan, run 1,000 mutations, and cap fuzz inputs at 1 MiB to bound individual smoke iterations. The 300-second nightly campaign and remaining fuzz targets stay assigned to T3.8. Native acceptance uses independent byte vectors plus a test-only encoder across 1,000 deterministic seeds, including signed deltas and sparse extents.
+
+Reasoning: Explicit sign extension and overflow checks prevent undefined arithmetic and invalid disk offsets. Preflight avoids speculative allocations on malformed input and caps successful output without a vector-growth peak above the budget. Sparse encoding and the physical-zero distinction follow mapping-pair fields; no third-party implementation is copied and no dependency is added.
+
+Task: T3.3
+
 ## D-0057 — 2026-11-01 — Attribute iterator ownership and bounded optional headers
 
 Question: What constructor, marker fields, view lifetime and validation rules complete T3.2's partial interface without adding disk I/O or later parsers?

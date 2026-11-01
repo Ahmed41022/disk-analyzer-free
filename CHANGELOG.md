@@ -14,6 +14,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- NTFS mapping-pair decoding with signed-delta and sparse-extent checks, exact bounded output allocation, 1,000 roundtrip seeds and a sanitizer-backed run-list fuzzer.
+
 - Bounded NTFS attribute iteration for timestamps, raw UTF-16 filenames, resident and nonresident streams, sparse/compressed allocation and attribute markers; no parser heap allocations.
 
 - Bounds-checked NTFS v3 record headers and all-or-nothing sector fixups, with synthesized golden records and malformed/unaligned-input tests on every OS.

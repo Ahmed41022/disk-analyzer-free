@@ -9,6 +9,7 @@
 #include <span>
 #include <string_view>
 #include <variant>
+#include <vector>
 
 namespace dafree {
 
@@ -100,5 +101,19 @@ class AttrIterator {
 
 /// Convert unsigned 100 ns ticks since 1601 to Unix seconds, flooring subsecond times.
 std::int64_t filetime_to_unix(std::uint64_t filetime);
+
+/// A cluster extent; no LCN denotes a sparse run, and clusters is nonzero.
+struct Run {
+    std::optional<std::int64_t> lcn;
+    std::uint64_t clusters;
+};
+
+/// Decode zero-terminated mapping pairs with checked lengths, deltas and VCN totals.
+///
+/// Sparse runs do not change the previous physical LCN; physical cluster zero is
+/// valid. Malformed/overflowing encodings return OutOfBounds. Output above 64 MiB
+/// returns Unsupported before allocation; valid output uses one exact reservation.
+/// Standard-library checked-iterator bookkeeping is separate from run storage.
+Expected<std::vector<Run>, MftError> decode_runlist(std::span<const std::byte> bytes);
 
 } // namespace dafree

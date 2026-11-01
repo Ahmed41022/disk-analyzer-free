@@ -7,7 +7,8 @@ target_sources(dafree_core PRIVATE src/scan/engine.cpp src/scan/owner_resolve.cp
 target_sources(dafree_core PRIVATE src/view/tree_view.cpp src/view/sort.cpp
                                   src/view/filter.cpp src/view/natural_compare.cpp)
 
-target_sources(dafree_core PRIVATE src/mft/record.cpp src/mft/fixup.cpp src/mft/attr.cpp)
+target_sources(dafree_core PRIVATE src/mft/record.cpp src/mft/fixup.cpp src/mft/attr.cpp
+                                  src/mft/runlist.cpp)
 target_sources(dafree_core PRIVATE src/platform/windows/longpath.cpp)
 target_include_directories(dafree_core PUBLIC include)
 target_compile_features(dafree_core PUBLIC cxx_std_20)
@@ -47,6 +48,7 @@ if(DAFREE_BUILD_TESTS)
                                      tests/test_statx_compat.cpp
                                      tests/test_mft_record.cpp
                                      tests/test_mft_attr.cpp
+                                     tests/test_runlist.cpp
                                      tests/test_view.cpp
                                      tests/test_backends.cpp tests/test_exclude.cpp tests/test_engine.cpp)
   target_link_libraries(dafree_core_tests PRIVATE doctest::doctest_with_main dafree_core)
@@ -89,4 +91,12 @@ if(DAFREE_BUILD_FUZZ)
   dafree_enable_warnings(fuzz_glob)
   target_compile_options(fuzz_glob PRIVATE -fsanitize=fuzzer,address,undefined -fno-omit-frame-pointer)
   target_link_options(fuzz_glob PRIVATE -fsanitize=fuzzer,address,undefined)
+
+  add_executable(fuzz_runlist fuzz/fuzz_runlist.cpp src/mft/runlist.cpp)
+  target_include_directories(fuzz_runlist PRIVATE include)
+  target_compile_features(fuzz_runlist PRIVATE cxx_std_20)
+  dafree_enable_warnings(fuzz_runlist)
+  target_compile_options(fuzz_runlist PRIVATE -fsanitize=fuzzer,address,undefined
+                                              -fno-omit-frame-pointer)
+  target_link_options(fuzz_runlist PRIVATE -fsanitize=fuzzer,address,undefined)
 endif()

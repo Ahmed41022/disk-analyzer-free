@@ -1432,9 +1432,10 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T3.1
   - **Acceptance:** doctest `std_info_times`, `filename_namespaces`, `data_resident_size`, `data_nonresident_sparse_alloc`, `named_stream_detected`, `filetime_table`; UBSan clean.
 
-- [ ] **T3.3 — Run-list decoding (pure C++)**
-  - **Files:** C `core/src/mft/runlist.cpp`, `core/tests/test_runlist.cpp`, `core/fuzz/fuzz_runlist.cpp`.
+- [x] **T3.3 — Run-list decoding (pure C++)**
+  - **Files:** C `core/src/mft/runlist.cpp`, `core/tests/test_runlist.cpp`, `core/fuzz/fuzz_runlist.cpp`; M `core/include/dafree/mft.hpp`, CMake and fuzz smoke CI integration (D-0058).
   - **Interface:** `struct Run { std::optional<std::int64_t> lcn; std::uint64_t clusters; }; Expected<std::vector<Run>, MftError> decode_runlist(std::span<const std::byte>);`
+  - **Behavior:** D-0058 defines checked mapping-pair fields, sparse/physical-zero semantics, termination/errors and a 64 MiB decoded-output bound with exact allocation. The short fuzz smoke lands here; T3.8 retains the longer nightly campaign.
   - **Depends on:** T3.1
   - **Acceptance:** doctest `runlist_table` (≥ 10 vectors incl. negative deltas and sparse runs), `encode_decode_roundtrip` (test-only encoder, 1,000 seeds).
 

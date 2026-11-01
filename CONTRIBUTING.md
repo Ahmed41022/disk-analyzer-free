@@ -94,7 +94,16 @@ supported toolchains remain unchanged (D-0046).
 
 Filesystem tests can describe a tree with `tests.testkit.spec`, create it under pytest's `tmp_path` with `Fixture.create`, and compare logical totals with `oracle`. Keep each fixture inside the test's temporary directory. Call `fixture.caps.require("feature")` before relying on an optional OS feature; CI sets `DAFREE_REQUIRE_ALL_CAPS=1` so an unexpected missing capability fails the test.
 
-On Linux with Clang and libFuzzer installed, build the glob fuzz target with `cmake --preset fuzz -DCMAKE_CXX_COMPILER=clang++` and `cmake --build build/fuzz --target fuzz_glob`. Run it with a corpus directory created for that test, for example `build/fuzz/core/fuzz_glob /path/to/temporary/corpus -runs=10000`. CI builds the target and runs a smoke campaign with address and undefined-behavior sanitizers.
+On Linux with Clang and libFuzzer installed, configure with
+`cmake --preset fuzz -DCMAKE_CXX_COMPILER=clang++` and build with
+`cmake --build build/fuzz --target fuzz_glob fuzz_runlist`. Give each target a
+separate temporary corpus, for example
+`build/fuzz/core/fuzz_runlist /path/to/temporary/corpus -runs=10000 -max_len=1048576`.
+CI runs 1,000 smoke mutations for each with address and undefined-behavior
+sanitizers. The run-list harness accepts inputs up to 1 MiB; the decoder itself
+has no input-size cap and independently rejects output above 64 MiB before
+allocation. Native tests also exercise larger encoded input for that limit.
+The longer nightly campaigns remain assigned to T3.8.
 
 The Linux scanner concurrency gate uses `cmake --preset dev-tsan -DCMAKE_CXX_COMPILER=clang++` and `cmake --build build/dev-tsan --target dafree_core_tests`. Run the scanner cases with `TSAN_OPTIONS=halt_on_error=1`; the CI workflow lists their doctest names explicitly.
 
