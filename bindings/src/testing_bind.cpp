@@ -1,12 +1,66 @@
 #include "bindings.hpp"
 
+#include <algorithm>
+#include <array>
+#include <charconv>
+#include <limits>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/vector.h>
 
 namespace dafree::bindings {
+namespace {
+
+struct TestingNamespace {};
+struct FixtureTreeBuilder {};
+
+std::shared_ptr<BoundTree> flat_tree(std::string root, std::uint32_t visible_rows) {
+    if (visible_rows == 0 || visible_rows == std::numeric_limits<std::uint32_t>::max())
+        throw std::invalid_argument("visible row count must be between 1 and 4294967294");
+    dafree::TreeBuilder builder({std::move(root)});
+    {
+        const auto count = visible_rows - 1; // The target root is visible too.
+        std::vector<std::array<char, 24>> names(count);
+        std::vector<dafree::TreeBuilder::NewNode> entries;
+        entries.reserve(count);
+        for (std::uint32_t i = 0; i < count; ++i) {
+            auto &name = names[i];
+            std::copy_n("file", 4, name.data());
+            auto end = std::to_chars(name.data() + 4, name.data() + 20, i).ptr;
+            std::copy_n(".bin", 4, end);
+            const auto size = count - i;
+            entries.push_back(
+                {std::string_view(name.data(), static_cast<std::size_t>(end + 4 - name.data())),
+                 0,
+                 size,
+                 size,
+                 0,
+                 0,
+                 0,
+                 {}});
+        }
+        builder.add_children(1, entries);
+    }
+    return std::make_shared<BoundTree>(std::make_shared<Tree>(std::move(builder).finish({})),
+                                       make_local_backend());
+}
+
+} // namespace
 
 void bind_testing(nb::module_ &module) {
+    auto testing =
+        nb::class_<TestingNamespace>(module, "testing", "Native test fixture namespace.");
+    nb::class_<FixtureTreeBuilder>(testing, "TreeBuilder", "MockBackend-free synthetic trees.")
+        .def_static(
+            "flat",
+            [](nb::str root, std::uint32_t visible_rows) {
+                auto path = encode_native(root);
+                nb::gil_scoped_release release;
+                return flat_tree(std::move(path), visible_rows);
+            },
+            nb::arg("root"), nb::arg("visible_rows"),
+            "Build exactly visible_rows rows entirely in native memory; never read the "
+            "filesystem.");
     nb::class_<RawEntry>(module, "RawEntry", nb::is_final(), "Synthetic native entry metadata.")
         .def(nb::init<>())
         .def_rw("kind", &RawEntry::kind)

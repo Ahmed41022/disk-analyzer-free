@@ -52,5 +52,28 @@ Tooltips display the full path, and screen-reader text includes type, size, and
 percentage of parent. Displayed surrogate characters use explicit escaped text,
 while the row metadata and native source paths remain lossless.
 
-The table widget, scan controls, and file actions are still being built.
+The virtual table provides Name, Size, % of Parent, Allocated, Files, Folders,
+Last Modified, Owner, and Extension columns. Owner and Extension start hidden.
+Right-click a header to show/hide columns; drag headers to reorder and resize
+them. Hidden columns keep their widths. Changes update shared preferences and,
+when the table has application paths, save after a short debounce or on close.
+Allocated values prefixed with **≈** carry unreliable allocation metadata.
+Dates and percentages follow the current Qt locale. File category icons use
+original geometric artwork; classification remains deferred to T2.5.
+
+The table paints only cells intersecting Qt's visible geometry, retaining Qt's
+scrolling, header, selection, and accessibility behavior. Delegates share native
+pages and bounded prepared text layouts; they create no items for hidden rows.
+Showing Owner enables lazy native owner resolution for fetched pages. Hiding it
+restores the caller's initial owner-resolution policy.
+
+Use Up/Down, Page Up/Page Down, Home/End for row navigation. Right expands the
+current directory or moves to its first child; Left collapses it or moves to its
+parent. `*` expands immediate child directories. Enter requests properties and
+Menu requests the row context menu; their application actions are connected in
+later tasks. Clicking a chevron also toggles expansion, with mirrored controls
+and hit regions in RTL. Accessible row descriptions include type, size, and
+percentage without exposing internal numeric IDs.
+
+Main-window integration, scan controls, and file actions are still being built.
 Configuration storage paths are described in [configuration commands](cli.md).

@@ -1,10 +1,18 @@
 """Shared pytest configuration."""
 
 import os
+import sys
+from pathlib import Path
 
 import pytest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+if sys.platform == "win32" and os.environ["QT_QPA_PLATFORM"] == "offscreen":
+    # The offscreen plugin does not use the Windows platform plugin's font discovery.
+    # Read existing OS fonts rather than timing/rendering with missing-font boxes.
+    os.environ.setdefault(
+        "QT_QPA_FONTDIR", str(Path(os.environ.get("SYSTEMROOT", "C:/Windows")) / "Fonts")
+    )
 
 
 def pytest_configure(config: pytest.Config) -> None:

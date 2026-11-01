@@ -6,7 +6,19 @@ import os
 from dataclasses import dataclass, field
 
 from dafree import _core
+from dafree.api.tree import Tree
 from dafree.api.types import Backend, EntryKind, IssueKind, _absolute
+
+
+class TreeBuilder:
+    """Construct large in-memory native fixtures without Python loops or MockBackend."""
+
+    @staticmethod
+    def flat(root: str | os.PathLike[str], visible_rows: int) -> Tree:
+        """Build a target root and descending-size files, making exactly this many rows."""
+        if not 1 <= visible_rows < (1 << 32) - 1:
+            raise ValueError("visible row count must be between 1 and 4294967294")
+        return Tree(_core.testing.TreeBuilder.flat(_absolute(root), visible_rows))
 
 
 @dataclass

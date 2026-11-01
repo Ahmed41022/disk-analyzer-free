@@ -677,6 +677,18 @@ class ScanHandle:
 def start_scan(options: ScanOptions, backend: Backend | None = None) -> ScanHandle:
     """Start an asynchronous scan."""
 
+class testing:
+    """Native test fixture namespace."""
+
+    class TreeBuilder:
+        """MockBackend-free synthetic trees."""
+
+        @staticmethod
+        def flat(root: str, visible_rows: int) -> Tree:
+            """
+            Build exactly visible_rows rows entirely in native memory; never read the filesystem.
+            """
+
 class RawEntry:
     """Synthetic native entry metadata."""
 

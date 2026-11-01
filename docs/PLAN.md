@@ -13,7 +13,7 @@ The original task specifications below remain in force; this order supersedes th
 2. Implement T2.7 only; T2.1–T2.6 follow M4-core. In T2.1 replace the scaffold enum with the single planned `Exit` enum.
 3. Implement M4-core as T4.1–T4.8 and T4.13. Pause M3 until M4-core completes. Defer T4.9–T4.12 and T4.14, while wrapping all new UI strings in `_()`.
 4. One PR per group: `[T2.7]`, `[T4.1]`, `[T4.2–T4.3]`, `[T4.4–T4.5]`, `[T4.6–T4.8]`, `[T4.13]`.
-5. Until M4-core completes, PRs require lint, the full Linux correctness suite, Windows/macOS C++ correctness and GUI smoke. Wide 100k, performance, coverage, and sanitizers run on main/nightly (manual full validation also available). Retain every test threshold and assertion. Report each CI job duration in the PR summary.
+5. Until M4-core completes, PRs require lint, the full Linux correctness suite, Windows/macOS C++ correctness and GUI smoke. Wide 100k, performance, coverage, and sanitizers run on main/nightly (manual full validation on main). Retain every test threshold and assertion. Report each CI job duration in the PR summary.
 6. M8 deletion/move must use the fd-relative, no-follow C++ remover only; never reuse path-based stat/remove helpers. All original trash/confirmation/dry-run safety rules remain required.
 
 See DECISIONS.md for the pending §7.3 CI inventory and dependency adaptations.
@@ -1526,12 +1526,14 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
         def node_at(self, row: int) -> int: ...
         def row_of(self, node: int) -> int | None: ...
         def bind_selection_model(self, selection: QItemSelectionModel) -> None: ... # D-0044
+        def row_data(self, row: int) -> api.Row: ...       # D-0046: cached tuple for delegates
+        def display_value(self, row: api.Row, column: ColumnId) -> str: ... # shared formatting
     ```
   - **Behavior:** pages of 200 rows, LRU 50 pages, invalidated on structural change; `data()` serves only `DisplayRole`, `ToolTipRole`, `AccessibleTextRole`, `ROW_ROLE`; `headerData` localized; `sort()` delegates to C++ via `set_options`.
   - **Depends on:** T4.1, T4.2
   - **Acceptance:** `test_model_row_count_matches_view`, `test_toggle_inserts_and_removes_rows` (uses `QAbstractItemModelTester` in strict mode), `test_page_cache_limits_calls` (≤ 1 `rows()` call per 200 consecutive rows), `test_sort_by_every_column`.
 
-- [ ] **T4.5 — Tree table view and delegates**
+- [x] **T4.5 — Tree table view and delegates**
   - **Files:** C `src/dafree/gui/widgets/tree_table.py`, `src/dafree/gui/delegates/{name_delegate.py,percent_delegate.py,size_delegate.py}`, `tests/gui/test_tree_table.py`, `tests/perf/test_tree_scroll.py`.
   - **Behavior:** columns Name (indent, chevron mirrored in RTL, type icon by ext category, elided), Size, % of Parent (bar coloured by depth + number), Allocated (`≈` prefix when `ALLOC_UNRELIABLE`), Files, Folders, Last Modified (locale date), Owner (hidden by default), Extension (hidden by default). Header context menu shows/hides columns; drag to reorder; widths persisted. Keyboard: ↑/↓/PgUp/PgDn/Home/End; → expands or moves to first child; ← collapses or moves to parent; `*` expands children one level; Enter opens properties; Menu key opens context menu. Accessible names per row ("Documents, folder, 12.3 GB, 41% of parent").
   - **Depends on:** T4.4

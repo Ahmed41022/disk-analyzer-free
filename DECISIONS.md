@@ -12,7 +12,43 @@ This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when it
 | `bench` | T2.2, after M4-core | Add executable CLI wall-time/RSS comparison to existing `bench_compare`; run on main/nightly under D-0030 until M4-core completes. |
 | `pr-title` | T0.5 follow-up after these prerequisites | Enforce Conventional Commits on PR titles; no feature prerequisite. |
 
-Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `coverage` needs cross-OS Python coverage and Codecov upload (T4.13 follow-up); `python` gains GUI scroll performance in T4.5 and SMB/scheduler integration in T9.5–T9.7. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
+Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `coverage` needs cross-OS Python coverage and Codecov upload (T4.13 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance lands in T4.5. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
+
+## D-0046 — 2026-11-01 — Repaint profiling and local Release compiler correction
+
+Question: How should the table meet the unchanged repaint budget, and how should local Windows Release validation handle an observed compiler crash?
+
+Choice: Profile the actual ten-million-row viewport without reducing its size, jumps, or thresholds. Avoid generic unsupported-role probes and QVariant round trips in Python delegates by sharing the model's bounded tuple pages and display formatting directly. Cache the model's notified row count, keeping strict Qt before/after notifications. Add `row_data` and `display_value` as documented GUI model helpers. Iterate only the viewport's row and column ranges in `TreeTable.paintEvent`, using Qt's own geometry and delegates directly. Qt continues to own scrolling, selection, headers, navigation, and accessibility. Test complete visible-cell coverage and exact Qt rectangles in both directions, plus clearing after collapse.
+
+Choice: Paint supplied palette backgrounds/text directly, retaining the native focus primitive, mirrored chevrons, depth bars, and icons. Prepare the frame font and row backgrounds once, avoiding redundant per-cell font setup and fills; standalone delegates retain their complete paint path. Normalize style-state masks to primitive integers in the paint path, avoiding repeated Python flag allocations. Bound prepared plain-text layouts to 256 per delegate; invalidate them on font change and key them by text, width, and direction. Keep an owned font copy: the font wrapper borrowed from a style option expires after painting. Tests cover that lifetime, cache bounds, selected/alternate colours, focus, and lazy owner resolution when its column is shown. No garbage collection is disabled or excluded from measured frames.
+
+Choice: Correct the performance test's duplicate widget disposal: it manually closes/deletes the table, so do not also register it for pytest-qt deletion. Configure the Windows offscreen Qt plugin to read existing system fonts from `SystemRoot/Fonts`; require a nonempty Qt font database in the performance test on every OS, avoiding a measurement with missing-font boxes. No font is copied or bundled. Retain every assertion and require a real paint event for every measured jump. Record paint counts as well as all durations; no samples are dropped. Explain these fixture corrections in the task commit.
+
+Choice: Local MinGW GCC 15.1.0 crashes in its LTO alias pass on nanobind's `wrap_move` during Release linking. Disable only `_core`'s Release IPO for that exact optional compiler/version combination, preserving Release optimization. All supported compilers, including Windows MSVC and its wheel jobs, retain LTO. The same cached local Release build succeeds after this narrow workaround. No compiler or dependency is changed.
+
+Choice: Make Linux QA fonts explicit with the existing system package `fonts-dejavu-core` (upstream DejaVu 2.37; observed Ubuntu package 2.37-8). Its installed copyright declares the Bitstream Vera font license and public-domain DejaVu changes. It supplies real glyphs to offscreen tests; no font is copied into the repository or redistributed in application artifacts. Windows/macOS use their existing OS fonts. This is a test-system prerequisite, not an application dependency.
+
+Reasoning: Profiling exposed repeated native/Python callbacks in generic cell painting, not a scanner bottleneck. Reusing bounded pages and painting only Qt's visible geometry removes those callbacks while preserving behavior. Owned Qt values avoid invalid borrowed wrappers in caches. A toolchain internal compiler error warrants a narrowly identified build workaround, not a test skip or a lower performance threshold.
+
+Task: T4.5
+
+## D-0045 — 2026-11-01 — Virtual table ownership, preferences, and repaint measurement
+
+Question: How should the table persist columns and expose navigation/actions before deferred settings, file actions, and analysis, and how should the required large-tree repaint test run?
+
+Choice: Use `TreeTable(model, settings, parent=None, *, paths=None)`. Own an otherwise unparented model and retain the table's Python selection-model wrapper so its weak model registration survives resets. Use fixed global row height and per-item scrolling, without resizing, moving, hiding, or allocating individual vertical-header sections. Enabling header sorting preserves the existing native sort; an unchanged sort is a no-op instead of rebuilding millions of rows.
+
+Choice: Header visibility, width, and order update the shared `Settings.columns`, retaining widths while hidden and preserving preferences absent from a subset model. Debounce atomic application-settings writes for 250 ms when paths are supplied, and flush pending changes on close. Without paths, update shared preferences without creating files; the owning main window can persist them. A dirty flag covers timer callbacks, whose single-shot timer is already inactive when it fires. Do not write configuration on every drag movement.
+
+Choice: Implement the specified physical Right/Left expansion/parent navigation, one-level `*`, and ordinary row/page keys. Qt's table default Home/End moves between columns, so override them to reach first/last rows. Enter and Menu emit node-ID action requests for later properties/context wiring; they do not implement deferred file actions. Use Python-object signals for unsigned node IDs. Draw category icons from original geometric code, mirror chevrons and hit regions in RTL, and keep numeric selection contrast. Categories remain `Other` until T2.5; no classification algorithm is brought forward.
+
+Choice: Add `_core.testing.TreeBuilder.flat(root, visible_rows)` in a native testing namespace, exposed through `api.testing.TreeBuilder`. The namespace is a nested binding class so generated abi3 stubs retain its exact typed path without adding a Python package under the extension. The builder creates an exactly sized flat tree in C++ memory with contiguous temporary names and descending file sizes; it uses no MockBackend, Python per-node loop, or filesystem enumeration. The supplied synthetic root is inside each test's temporary directory. Normal tests verify shape, aggregate size, invalid counts, and no filesystem changes.
+
+Choice: The slow performance test uses the actual Fusion bootstrap/stylesheet, 1280×720 table, exactly ten million visible rows, and 60 distinct jumps including both ends. Each measured interval includes scrolling, synchronous viewport repaint, and pending Qt events. Require an actual paint event in every sample. Record all 60 durations, median, and nearest-rank p95 in JUnit; retain the unchanged median ≤16.7 ms and p95 ≤33 ms assertions. Build a Release extension before the explicit CI performance step: Linux Python 3.12 on main, plus Windows/macOS on nightly. PRs never run it; heavy checks remain main/nightly only. No new dependency is introduced.
+
+Reasoning: Explicit ownership avoids Qt wrapper lifetime surprises, and stable row geometry keeps viewport work independent of total row count. Debounced application-owned persistence keeps UI interaction responsive. Measuring actual paint delivery prevents a hidden/offscreen no-op from passing the budget. The fixture namespace is testing infrastructure required by the plan, separate from production scanning and future analysis.
+
+Task: T4.5
 
 ## D-0044 — 2026-11-01 — Native structural previews and Qt model selection
 
