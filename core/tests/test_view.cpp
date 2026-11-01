@@ -50,6 +50,42 @@ dafree::ViewOptions name_options() {
 
 TEST_SUITE("view") {
 
+    TEST_CASE("structural_previews_are_pure_and_match_changes") {
+        dafree::TreeView view(sample_tree(), name_options());
+        const auto before = ids(view);
+        CHECK(view.expansion_count(2) == 3);
+        CHECK(view.expansion_count(2) == 3);
+        CHECK(view.expansion_count(0) == 0);
+        CHECK(view.expansion_count(4) == 0);
+        CHECK(view.expansion_count(5) == 0); // Hidden directory, no visible insertions.
+        CHECK(ids(view) == before);
+        const auto inserted = view.expand(2);
+        CHECK(inserted == view.collapse_count(2));
+        view.expand(5);
+        const auto expanded = ids(view);
+        CHECK(view.collapse_count(2) == 4);
+        CHECK(ids(view) == expanded);
+        CHECK(view.collapse(2) == 4);
+        CHECK(view.expansion_count(2) == 4); // Includes remembered nested expansion.
+        view.expand(2);
+        view.collapse(5);
+        view.expand_children(1);
+        CHECK(view.index_of(5).has_value());
+        CHECK_FALSE(view.index_of(8).has_value()); // Only immediate child directories.
+        view.expand_children(2);
+        CHECK(view.index_of(8).has_value());
+        CHECK_THROWS_AS(static_cast<void>(view.expansion_count(999)), std::out_of_range);
+        CHECK_THROWS_AS(static_cast<void>(view.collapse_count(999)), std::out_of_range);
+        CHECK_THROWS_AS(view.expand_children(999), std::out_of_range);
+        auto options = name_options();
+        options.show_files = false;
+        view.set_options(options);
+        view.collapse(2);
+        CHECK(view.expansion_count(2) == 1);
+        CHECK(view.expand(2) == 1);
+        CHECK(view.collapse_count(2) == 1);
+    }
+
     TEST_CASE("expand_inserts_sorted_children") {
         auto tree = sample_tree();
         dafree::TreeView view(tree, name_options());

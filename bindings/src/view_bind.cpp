@@ -125,6 +125,12 @@ void bind_view(nb::module_ &module) {
             "(id, depth, has_children, expanded, name, size, alloc, pct,\n"
             " files, dirs, mtime, owner, ext, flags, ext_cat).")
         .def("expand", &TreeView::expand, nb::arg("id"), nb::call_guard<nb::gil_scoped_release>())
+        .def("expansion_count", &TreeView::expansion_count, nb::arg("id"),
+             nb::call_guard<nb::gil_scoped_release>())
+        .def("collapse_count", &TreeView::collapse_count, nb::arg("id"),
+             nb::call_guard<nb::gil_scoped_release>())
+        .def("expand_children", &TreeView::expand_children, nb::arg("id"),
+             nb::call_guard<nb::gil_scoped_release>())
         .def("collapse", &TreeView::collapse, nb::arg("id"),
              nb::call_guard<nb::gil_scoped_release>())
         .def("expand_to", &TreeView::expand_to, nb::arg("id"),

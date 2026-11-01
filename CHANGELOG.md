@@ -10,6 +10,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- A bounded, paged Qt tree table model with correct structural notifications, native column sorting, accessible row descriptions, and selection restoration by node ID.
+
 - A Qt scan controller with asynchronous root validation and result collection, 250 ms progress/diagnostic polling, throttled partial trees, queued startup controls, and recoverable failures.
 
 - Desktop bootstrap with initial Fusion palettes, locale/Qt translator setup, acknowledged single-instance argument forwarding, bounded background tasks, and dated diagnostic logs with copyable error details.

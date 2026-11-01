@@ -41,5 +41,16 @@ only to generated application diagnostics. Links and unrelated files are left
 alone, and a link at today's log path is rejected. Scan targets are never touched
 by logging or instance housekeeping.
 
-The full directory table, scan controls, and file actions are still being built.
+The tree table model reads native tuples in pages of 200, keeping at most 50
+pages. Expansion/removal notifications bracket the actual native mutation; pure
+native count previews supply Qt's required before-change ranges. Sorting and
+filtering clear cached pages, preserve expanded paths, and restore registered
+table selections by stable node ID. Hidden selections are dropped. The native
+view retains its public source `tree` for individual path and parent lookups.
+One-level child expansion also stays in C++; Python does not enumerate the tree.
+Tooltips display the full path, and screen-reader text includes type, size, and
+percentage of parent. Displayed surrogate characters use explicit escaped text,
+while the row metadata and native source paths remain lossless.
+
+The table widget, scan controls, and file actions are still being built.
 Configuration storage paths are described in [configuration commands](cli.md).

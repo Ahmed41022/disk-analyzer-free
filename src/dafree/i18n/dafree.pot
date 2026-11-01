@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-01 03:34+0200\n"
+"POT-Creation-Date: 2026-11-01 04:05+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,10 +17,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+#, python-format
+msgid "% of Parent"
+msgstr ""
+
 msgid "A background thread terminated unexpectedly."
 msgstr ""
 
 msgid "A scan is already running."
+msgstr ""
+
+msgid "Allocated"
 msgstr ""
 
 msgid "An unexpected error occurred. Details were saved to the application log."
@@ -39,6 +46,24 @@ msgstr ""
 msgid "Disk Analyzer Free"
 msgstr ""
 
+msgid "Extension"
+msgstr ""
+
+msgid "Files"
+msgstr ""
+
+msgid "Folders"
+msgstr ""
+
+msgid "Last Modified"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Owner"
+msgstr ""
+
 msgid "Portable mode is not available yet"
 msgstr ""
 
@@ -49,6 +74,9 @@ msgid "Print the preferences file path."
 msgstr ""
 
 msgid "Read and update shared preferences."
+msgstr ""
+
+msgid "Size"
 msgstr ""
 
 msgid "Unexpected error"
@@ -73,6 +101,9 @@ msgstr[0] ""
 msgstr[1] ""
 
 msgid "finite number"
+msgstr ""
+
+msgid "folder"
 msgstr ""
 
 msgid "list"
@@ -104,4 +135,8 @@ msgstr ""
 
 #, python-brace-format
 msgid "{key}: expected {expected}"
+msgstr ""
+
+#, python-brace-format
+msgid "{name}, {kind}, {size}, {percent} of parent"
 msgstr ""
