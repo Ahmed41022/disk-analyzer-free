@@ -1489,7 +1489,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T0.4, T2.7
   - **Acceptance:** `test_app_applies_dark_palette`, `test_task_runner_emits_finished`, `test_task_runner_emits_failed_on_exception`, `test_single_instance_lock`.
 
-- [ ] **T4.3 — Scan controller (polling)**
+- [x] **T4.3 — Scan controller (polling)**
   - **Files:** C `src/dafree/gui/controllers/scan_controller.py`, `tests/gui/test_scan_controller.py`.
   - **Interface:**
     ```python
@@ -1498,8 +1498,9 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
         progressChanged = Signal(object)    # ScanProgress
         issuesAdded = Signal(list)          # list[ScanIssue]
         noticeReceived = Signal(object)     # Notice
-        partialTreeReady = Signal(object)   # TreeHandle (≤ 1/s)
+        partialTreeReady = Signal(object)   # api.Tree over shared native TreeHandle (≤ 1/s)
         finished = Signal(object)           # ScanResult
+        failed = Signal(str)                # D-0043: asynchronous startup/result failure
         def start(self, req: ScanRequest) -> None: ...
         def pause(self) -> None: ...; def resume(self) -> None: ...; def cancel(self) -> None: ...
         @property
