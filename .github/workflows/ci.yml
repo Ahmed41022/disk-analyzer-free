@@ -42,7 +42,7 @@ jobs:
           cache-dependency-path: |
             requirements/*.txt
             pyproject.toml
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .deps
           key: deps-${{ runner.os }}-${{ hashFiles('cmake/Dependencies.cmake') }}
