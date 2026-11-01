@@ -60,6 +60,10 @@ dafree --version
 dafree gui
 ```
 
+The scaffold now applies shared theme/locale settings, forwards repeat launches
+to the first instance, and records diagnostic logs with an error-details dialog.
+See [desktop bootstrap](docs/gui.md) for the current behavior and remaining UI work.
+
 The CLI version command is:
 
 ```console

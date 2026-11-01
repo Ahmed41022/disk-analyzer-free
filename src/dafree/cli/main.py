@@ -19,7 +19,7 @@ def gui_command() -> None:
         # Keep the optional Qt dependency out of CLI startup unless requested.
         from dafree.gui.app import main  # noqa: PLC0415
 
-        exit_code = main()
+        exit_code = main([])
     except ImportError as error:
         raise click.UsageError(
             'GUI dependencies are not installed. Install "disk-analyzer-free[gui]".'

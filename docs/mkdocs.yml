@@ -23,5 +23,6 @@ markdown_extensions:
 nav:
   - Overview: index.md
   - Configuration commands: cli.md
+  - Desktop bootstrap: gui.md
   - Performance and fixtures: performance.md
   - Implementation plan: PLAN.md
