@@ -511,12 +511,14 @@ struct Row {   // what one table row needs; returned in pages
 class TreeView {
 public:
     TreeView(std::shared_ptr<const Tree>, ViewOptions);     // roots expanded one level
+    TreeView(std::shared_ptr<TreeHandle>, std::shared_ptr<FsBackend>, ViewOptions); // D-0038: live owner context
     std::uint32_t row_count() const;
     std::vector<Row> rows(std::uint32_t start, std::uint32_t count) const;  // count ≤ 500
     std::uint32_t expand(NodeId);        // returns number of inserted rows (for beginInsertRows); O(k log k)
     std::uint32_t collapse(NodeId);      // returns number of removed rows
     std::uint32_t expand_to(NodeId);     // expands ancestors, returns row index
     void set_options(ViewOptions);       // re-sorts/re-filters, keeps expanded paths
+    ViewOptions options() const;         // copied policy, preserving unrelated settings when sorting
     std::optional<std::uint32_t> index_of(NodeId) const;
 };
 ```
@@ -1465,7 +1467,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
 
 ### M4 — GUI shell and tree view (PySide6)
 
-- [ ] **T4.1 — View core in C++ (`TreeView`, sorting, filter evaluation)**
+- [x] **T4.1 — View core in C++ (`TreeView`, sorting, filter evaluation)**
   - **Files:** C `core/include/dafree/view.hpp`, `core/src/view/{tree_view.cpp,sort.cpp,filter.cpp,natural_compare.cpp}`, `core/tests/test_view.cpp`, `core/bench/bench_view.cpp`, M `bindings/src/view_bind.cpp`.
   - **Interface:** §2.5. Bindings: `TreeView.rows(start, count)` returns a list of tuples `(id, depth, has_children, expanded, name, size, alloc, pct, files, dirs, mtime, owner, ext, flags, ext_cat)` (tuples are ~2× faster to build and unpack than objects; documented in the stub).
   - **Behavior:** `pct_parent = size/parent.size` (0 if parent size 0); `count` capped at 500; owner resolved lazily for returned rows when `resolve_owner`.

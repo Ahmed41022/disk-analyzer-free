@@ -124,16 +124,21 @@ CompiledGlob CompiledGlob::compile(std::string_view pattern, bool ignore_case) {
 }
 
 bool CompiledGlob::matches(std::string_view input, bool windows_path) const {
+    Workspace workspace;
+    return matches(input, windows_path, workspace);
+}
+
+bool CompiledGlob::matches(std::string_view input, bool windows_path, Workspace &workspace) const {
     constexpr std::size_t stack_capacity = 257;
     std::array<std::uint8_t, stack_capacity> stack_current{}, stack_next{};
     const std::size_t states = tokens_.size() + 1;
-    std::vector<std::uint8_t> heap_current, heap_next;
     if (states > stack_capacity) {
-        heap_current.resize(states);
-        heap_next.resize(states);
+        workspace.current.resize(states);
+        workspace.next.resize(states);
+        std::fill_n(workspace.current.data(), states, std::uint8_t{0});
     }
-    auto *current = states <= stack_capacity ? stack_current.data() : heap_current.data();
-    auto *next = states <= stack_capacity ? stack_next.data() : heap_next.data();
+    auto *current = states <= stack_capacity ? stack_current.data() : workspace.current.data();
+    auto *next = states <= stack_capacity ? stack_next.data() : workspace.next.data();
     const auto closure = [&](std::uint8_t *active, bool boundary) {
         for (std::size_t index = 0; index < tokens_.size(); ++index) {
             const auto kind = tokens_[index].kind;

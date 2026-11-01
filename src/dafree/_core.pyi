@@ -426,6 +426,213 @@ class Tree:
     def resolve_owners(self, ids: Sequence[int]) -> None:
         """Resolve requested identities with the GIL released."""
 
+class TimeField(enum.Enum):
+    MODIFIED = 0
+
+    CREATED = 1
+
+    ACCESSED = 2
+
+class ExtCategory(enum.Enum):
+    IMAGE = 0
+
+    VIDEO = 1
+
+    AUDIO = 2
+
+    ARCHIVE = 3
+
+    DOCUMENT = 4
+
+    CODE = 5
+
+    EXECUTABLE = 6
+
+    DISK_IMAGE = 7
+
+    SYSTEM = 8
+
+    OTHER = 9
+
+class SortKey(enum.Enum):
+    NAME = 0
+
+    SIZE = 1
+
+    ALLOC = 2
+
+    PCT_PARENT = 3
+
+    FILES = 4
+
+    DIRS = 5
+
+    MTIME = 6
+
+    OWNER = 7
+
+    EXT = 8
+
+class CmpOp(enum.Enum):
+    LT = 0
+
+    LE = 1
+
+    EQ = 2
+
+    GE = 3
+
+    GT = 4
+
+class Cmp64:
+    """Unsigned numeric filter comparison."""
+
+    def __init__(self) -> None: ...
+    @property
+    def op(self) -> CmpOp: ...
+    @op.setter
+    def op(self, arg: CmpOp, /) -> None: ...
+    @property
+    def v(self) -> int: ...
+    @v.setter
+    def v(self, arg: int, /) -> None: ...
+
+class FilterKind(enum.Enum):
+    AND = 0
+
+    OR = 1
+
+    NOT = 2
+
+    SIZE = 3
+
+    ALLOC = 4
+
+    EXT = 5
+
+    NAME_GLOB = 6
+
+    PATH_GLOB = 7
+
+    REGEX = 8
+
+    OWNER = 9
+
+    TIME = 10
+
+    TYPE = 11
+
+    FILES = 12
+
+    FLAG = 13
+
+class FilterSpec:
+    """Copied native filter expression."""
+
+    def __init__(self) -> None: ...
+    @property
+    def kind(self) -> FilterKind: ...
+    @kind.setter
+    def kind(self, arg: FilterKind, /) -> None: ...
+    @property
+    def children(self) -> list[FilterSpec]: ...
+    @children.setter
+    def children(self, arg: Sequence[FilterSpec], /) -> None: ...
+    @property
+    def cmp(self) -> Cmp64: ...
+    @cmp.setter
+    def cmp(self, arg: Cmp64, /) -> None: ...
+    @property
+    def time_field(self) -> TimeField: ...
+    @time_field.setter
+    def time_field(self, arg: TimeField, /) -> None: ...
+    @property
+    def values(self) -> list[str]: ...
+    @values.setter
+    def values(self, arg: Sequence[str], /) -> None: ...
+    @property
+    def regex(self) -> str: ...
+    @regex.setter
+    def regex(self, arg: str, /) -> None: ...
+    @property
+    def flag(self) -> int: ...
+    @flag.setter
+    def flag(self, arg: int, /) -> None: ...
+    @property
+    def type_dir(self) -> bool: ...
+    @type_dir.setter
+    def type_dir(self, arg: bool, /) -> None: ...
+
+class ViewOptions:
+    """Copied view display options."""
+
+    def __init__(self) -> None: ...
+    @property
+    def sort(self) -> SortKey: ...
+    @sort.setter
+    def sort(self, arg: SortKey, /) -> None: ...
+    @property
+    def descending(self) -> bool: ...
+    @descending.setter
+    def descending(self, arg: bool, /) -> None: ...
+    @property
+    def dirs_first(self) -> bool: ...
+    @dirs_first.setter
+    def dirs_first(self, arg: bool, /) -> None: ...
+    @property
+    def show_files(self) -> bool: ...
+    @show_files.setter
+    def show_files(self, arg: bool, /) -> None: ...
+    @property
+    def filter(self) -> FilterSpec | None: ...
+    @filter.setter
+    def filter(self, arg: FilterSpec | None, /) -> None: ...
+    @property
+    def resolve_owner(self) -> bool: ...
+    @resolve_owner.setter
+    def resolve_owner(self, arg: bool, /) -> None: ...
+
+class TreeView:
+    """Paged native visible tree."""
+
+    def __init__(self, tree: Tree, options: ViewOptions) -> None: ...
+    @property
+    def row_count(self) -> int: ...
+    @property
+    def options(self) -> ViewOptions: ...
+    def rows(
+        self, start: int, count: int
+    ) -> list[
+        tuple[
+            int,
+            int,
+            bool,
+            bool,
+            str,
+            int,
+            int,
+            float,
+            int,
+            int,
+            int,
+            str | None,
+            str | None,
+            int,
+            int,
+        ]
+    ]:
+        """
+        Return at most 500 native tuples:
+        (id, depth, has_children, expanded, name, size, alloc, pct,
+         files, dirs, mtime, owner, ext, flags, ext_cat).
+        """
+
+    def expand(self, id: int) -> int: ...
+    def collapse(self, id: int) -> int: ...
+    def expand_to(self, id: int) -> int: ...
+    def set_options(self, options: ViewOptions) -> None: ...
+    def index_of(self, id: int) -> int | None: ...
+
 class ScanResult:
     """An immutable tree and final scan summary."""
 

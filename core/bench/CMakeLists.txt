@@ -1,4 +1,4 @@
-add_executable(dafree_bench bench_aggregate.cpp bench_scan_mock.cpp)
+add_executable(dafree_bench bench_aggregate.cpp bench_scan_mock.cpp bench_view.cpp)
 target_link_libraries(dafree_bench PRIVATE dafree_core benchmark::benchmark)
 target_compile_features(dafree_bench PRIVATE cxx_std_20)
 dafree_enable_warnings(dafree_bench)

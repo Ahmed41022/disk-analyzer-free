@@ -16,6 +16,7 @@ std::vector<std::string> encode_strings(const std::vector<nb::str> &input);
 void bind_scan_types(nb::module_ &module);
 void bind_scan(nb::module_ &module);
 void bind_tree(nb::module_ &module);
+void bind_view(nb::module_ &module);
 void bind_testing(nb::module_ &module);
 
 struct BoundTree {

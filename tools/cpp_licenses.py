@@ -9,6 +9,7 @@ ALLOWED_LICENSES = {
     "MIT",
     "BSD-2-Clause",
     "BSD-3-Clause",
+    "BSD-3-Clause WITH PCRE2-exception",
     "Apache-2.0",
     "ISC",
     "Zlib",
@@ -17,7 +18,7 @@ ALLOWED_LICENSES = {
     "MPL-2.0",
     "BSL-1.0",
 }
-COMMENT_PATTERN = re.compile(r"^\s*# dafree-dep: name=(\S+) license=(\S+) url=(\S+)\s*$")
+COMMENT_PATTERN = re.compile(r"^\s*# dafree-dep: name=(\S+) license=(.+?) url=(\S+)\s*$")
 DECLARATION_PATTERN = re.compile(r"(?mi)^\s*FetchContent_Declare\s*\(\s*([A-Za-z0-9_.+-]+)")
 
 

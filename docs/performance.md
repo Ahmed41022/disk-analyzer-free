@@ -11,6 +11,12 @@ The full native suite runs under GCC AddressSanitizer and UndefinedBehaviorSanit
 with leak detection enabled. ThreadSanitizer separately exercises scanner controls,
 snapshots, owner lookups, and allocation instrumentation.
 
+The view suite also runs under ThreadSanitizer, including concurrent filtering and
+lazy owner updates through the same tree handle. The `sanitizers` job additionally
+builds the Python extension with Clang ASan/UBSan and runs the unit/integration
+suites with its matching ASan runtime preloaded. CPython leak checks are disabled
+for that suite as planned; native leak checks remain enabled.
+
 GCC/gcovr coverage enforces at least 85% lines for the model and scanner independently,
 including their public headers. Local results on 2026-10-31 are 88.8% model,
 87.7% scanner, and 88.2% combined. Coverage HTML, XML, and JSON reports are retained
@@ -111,6 +117,36 @@ These are developer-machine measurements, not performance guarantees. The scan
 million-node elapsed-time coefficient of variation was 14.51%; aggregation was
 noisier at 44.84%. Keep build configuration, machine load, and fixture identical
 when comparing revisions.
+
+## Tree-view latency budgets
+
+The full CI tier builds the view benchmarks in Release and checks the median of
+five repetitions against strict limits of 150 ms for cold expansion and 2 ms for
+a 100-row window starting at row 9,999,900. PRs leave these heavy checks to
+main/nightly under the product-owner policy; correctness assertions remain on PRs.
+
+```console
+dafree_bench --benchmark_filter='BM_(Expand100kChildren|RowsWindow10M)' --benchmark_min_time=0.2s --benchmark_repetitions=5 --benchmark_out=build/view-bench.json --benchmark_out_format=json
+python -m tools.view_bench_check build/view-bench.json
+```
+
+`BM_Expand100kChildren` uses 100,000 uniquely named children with scrambled sizes.
+Each iteration constructs a fresh view outside timing, then times expansion with
+an empty sibling cache; destruction is also outside timing. `BM_RowsWindow10M`
+has exactly ten million visible rows (one target root and 9,999,999 files), with
+unique names and decreasing sizes so setup is already in the default sort order.
+Only the requested native metadata window is timed. Both benchmarks assert their
+expected row counts. Fixture generation and initial view setup are excluded.
+
+Local Linux GCC 13.3 Release results in WSL, 24 logical CPUs, 2026-11-01:
+
+| Benchmark | Median of three repetitions | Required |
+| --- | ---: | ---: |
+| Cold expansion of 100,000 children | 18.727 ms | < 150 ms |
+| Final 100-row window in ten million rows | 0.003588 ms | < 2 ms |
+
+These are developer-machine results. CI retains its own five-repetition JSON
+report and enforces the same limits, without relaxing them for platform noise.
 
 ## Deterministic filesystem fixtures
 

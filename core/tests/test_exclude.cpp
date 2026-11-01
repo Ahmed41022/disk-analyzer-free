@@ -133,3 +133,14 @@ TEST_CASE("glob_matching_is_bounded") {
     CHECK_FALSE(
         dafree::detail::CompiledGlob::compile(long_literal, false).matches(long_literal + "b"));
 }
+
+TEST_CASE("glob_long_pattern_workspace_can_be_reused") {
+    const std::string literal(300, 'a');
+    const auto glob = dafree::detail::CompiledGlob::compile(literal + "*b", false);
+    dafree::detail::CompiledGlob::Workspace workspace;
+    CHECK(glob.matches(literal + "b", false, workspace));
+    CHECK_FALSE(glob.matches(literal + "c", false, workspace));
+    CHECK(glob.matches(literal + "xxb", false, workspace));
+    CHECK_FALSE(glob.matches("b", false, workspace));
+    CHECK(glob.matches(literal + "b", false, workspace));
+}

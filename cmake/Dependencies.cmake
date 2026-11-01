@@ -37,7 +37,7 @@ FetchContent_Declare(
   URL_HASH SHA256=6b51aefe515969785da02e87befafc7fdc7a065cd3458cf1141f29267749e81f
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
-# dafree-dep: name=pcre2 license=BSD-3-Clause url=https://github.com/PCRE2Project/pcre2
+# dafree-dep: name=pcre2 license=BSD-3-Clause WITH PCRE2-exception url=https://github.com/PCRE2Project/pcre2
 FetchContent_Declare(
   pcre2
   URL https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.46/pcre2-10.46.tar.gz
@@ -62,5 +62,19 @@ FetchContent_Declare(
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(NB_USE_SUBMODULE_DEPS OFF CACHE BOOL "Use separately pinned robin-map source" FORCE)
 FetchContent_MakeAvailable(robin_map nanobind doctest)
+set(PCRE2_BUILD_PCRE2_8 ON CACHE BOOL "" FORCE)
+set(PCRE2_BUILD_PCRE2_16 OFF CACHE BOOL "" FORCE)
+set(PCRE2_BUILD_PCRE2_32 OFF CACHE BOOL "" FORCE)
+set(PCRE2_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(PCRE2_BUILD_PCRE2GREP OFF CACHE BOOL "" FORCE)
+set(PCRE2_SUPPORT_JIT OFF CACHE BOOL "" FORCE)
+set(PCRE2_STATIC_PIC ON CACHE BOOL "" FORCE)
+set(PCRE2_LINK_SIZE 3 CACHE STRING "Support patterns up to the view compiler's 1 MiB budget" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(pcre2)
+# Only the linked static target belongs in our build; do not install upstream tools,
+# headers, archives, or manuals into application wheels.
+set_property(DIRECTORY "${pcre2_SOURCE_DIR}" PROPERTY EXCLUDE_FROM_ALL TRUE)
+install(FILES "${pcre2_SOURCE_DIR}/LICENCE.md" DESTINATION dafree/licenses RENAME PCRE2.txt)
 # Keep project warnings strict while treating the pinned vendor headers as external.
 set_property(TARGET robin_map PROPERTY SYSTEM ON)
