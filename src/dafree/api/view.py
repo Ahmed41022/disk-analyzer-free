@@ -148,8 +148,14 @@ class TreeView:
     """Keep a native tree alive and retrieve visible rows without Python tree walks."""
 
     def __init__(self, tree: Tree, options: ViewOptions = _DEFAULT_OPTIONS) -> None:
+        self._tree = tree
         self._node_count = len(tree)
         self._native = _core.TreeView(tree._native, _native_options(options))
+
+    @property
+    def tree(self) -> Tree:
+        """Retain the source facade for individual path and parent lookups."""
+        return self._tree
 
     @property
     def row_count(self) -> int:
@@ -191,6 +197,18 @@ class TreeView:
     def collapse(self, node_id: int) -> int:
         """Collapse a directory and return the number of removed rows."""
         return self._native.collapse(self._id(node_id))
+
+    def expansion_count(self, node_id: int) -> int:
+        """Preview insertions before a GUI model announces its structural change."""
+        return self._native.expansion_count(self._id(node_id))
+
+    def collapse_count(self, node_id: int) -> int:
+        """Preview removals without changing rows or expansion preferences."""
+        return self._native.collapse_count(self._id(node_id))
+
+    def expand_children(self, node_id: int) -> None:
+        """Expand this directory and its immediate child directories in C++."""
+        self._native.expand_children(self._id(node_id))
 
     def expand_to(self, node_id: int) -> int:
         """Expand ancestors and return the requested visible row index."""

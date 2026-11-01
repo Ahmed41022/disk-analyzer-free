@@ -92,6 +92,12 @@ class TreeView {
     [[nodiscard]] std::vector<Row> rows(std::uint32_t start, std::uint32_t count) const;
     /// Expand a directory and return the number of inserted visible rows.
     std::uint32_t expand(NodeId id);
+    /// Count rows an expansion would insert, without changing rows or sort caches.
+    [[nodiscard]] std::uint32_t expansion_count(NodeId id) const;
+    /// Count visible descendants a collapse would remove, without changing expansion state.
+    [[nodiscard]] std::uint32_t collapse_count(NodeId id) const;
+    /// Expand a directory and its eligible immediate child directories in native code.
+    void expand_children(NodeId id);
     /// Collapse a directory while retaining descendant expansion preferences.
     std::uint32_t collapse(NodeId id);
     /// Expand ancestors and return the node's visible row index; hidden nodes are rejected.

@@ -515,6 +515,9 @@ public:
     std::uint32_t row_count() const;
     std::vector<Row> rows(std::uint32_t start, std::uint32_t count) const;  // count ≤ 500
     std::uint32_t expand(NodeId);        // returns number of inserted rows (for beginInsertRows); O(k log k)
+    std::uint32_t expansion_count(NodeId) const; // D-0044: pure preview BEFORE beginInsertRows
+    std::uint32_t collapse_count(NodeId) const;  // pure preview BEFORE beginRemoveRows
+    void expand_children(NodeId);        // native one-level child expansion, no Python tree walk
     std::uint32_t collapse(NodeId);      // returns number of removed rows
     std::uint32_t expand_to(NodeId);     // expands ancestors, returns row index
     void set_options(ViewOptions);       // re-sorts/re-filters, keeps expanded paths
@@ -1510,7 +1513,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T4.2, T1.13
   - **Acceptance (MockBackend with delays):** `test_progress_signals_emitted`, `test_cancel_emits_finished_with_partial`, `test_pause_stops_progress_growth`.
 
-- [ ] **T4.4 — Tree table model**
+- [x] **T4.4 — Tree table model**
   - **Files:** C `src/dafree/gui/models/tree_model.py`, `tests/gui/test_tree_model.py`.
   - **Interface:**
     ```python
@@ -1522,6 +1525,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
         def set_options(self, opts: api.ViewOptions) -> None: ...   # beginResetModel/endResetModel, keeps selection by node id
         def node_at(self, row: int) -> int: ...
         def row_of(self, node: int) -> int | None: ...
+        def bind_selection_model(self, selection: QItemSelectionModel) -> None: ... # D-0044
     ```
   - **Behavior:** pages of 200 rows, LRU 50 pages, invalidated on structural change; `data()` serves only `DisplayRole`, `ToolTipRole`, `AccessibleTextRole`, `ROW_ROLE`; `headerData` localized; `sort()` delegates to C++ via `set_options`.
   - **Depends on:** T4.1, T4.2

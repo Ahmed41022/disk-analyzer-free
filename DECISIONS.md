@@ -14,6 +14,20 @@ This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when it
 
 Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `coverage` needs cross-OS Python coverage and Codecov upload (T4.13 follow-up); `python` gains GUI scroll performance in T4.5 and SMB/scheduler integration in T9.5–T9.7. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
+## D-0044 — 2026-11-01 — Native structural previews and Qt model selection
+
+Question: How can Qt receive correct before-change row ranges when the planned native expansion methods return counts only after mutation, and how can an otherwise standalone model retain table selection?
+
+Choice: Add pure native `expansion_count(id)` and `collapse_count(id)` queries. They count eligible descendants or the visible removal span without sorting, populating sibling caches, resolving owners, or modifying expansion preferences. The model brackets native mutation with `begin/endInsertRows` or `begin/endRemoveRows`, rather than changing the tree before notifying Qt. Add native `expand_children(id)` for the specified one-level operation, avoiding a Python traversal. Preserve existing descendant expansion preferences. Update §2.5's interface accordingly. These additions do not change existing budgets or introduce a dependency.
+
+Choice: Retain the source facade as the read-only Python `TreeView.tree` property for individual path/parent lookups. Add `TreeTableModel.bind_selection_model` so the table can explicitly register its external Qt selection model. Hold that registration weakly and restore visible selected/current node IDs after reset, dropping filtered-out nodes. A failed option change still ends the reset and restores the previous selection. Cache only fifty 200-row native pages, clear them on structural changes, and return immediately for unsupported Qt roles.
+
+Choice: Keep the native 15-field tuple for `ROW_ROLE`; an actual `QModelIndex.data()` regression verifies the Qt boundary preserves its surrogate string and uint64 maximum size. Escape surrogates only in display/accessibility/tooltip strings using the existing diagnostic display helper. Use native flags for file/folder descriptions. Extension categories remain `Other` until deferred T2.5. Tests dispose Qt models, signal connections, and strict model testers before native binding leak checks.
+
+Reasoning: Qt requires accurate old row counts during its about-to-change signals. Preview queries satisfy that contract while retaining native ownership of enumeration and sorting. Selection is owned by a view, so explicit registration avoids searching global widgets or inventing a second selection store. No user-file action or later milestone algorithm is introduced.
+
+Task: T4.4
+
 ## D-0043 — 2026-11-01 — Scan-controller startup, failures, and partial trees
 
 Question: How should the selected polling interface avoid GUI blocking and report failures before deferred settings/main-window tasks?

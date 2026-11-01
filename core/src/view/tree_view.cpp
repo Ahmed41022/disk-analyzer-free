@@ -491,6 +491,22 @@ struct TreeView::Impl {
         expanded[id] = true;
         return static_cast<std::uint32_t>(inserted.size());
     }
+    std::uint32_t collapse_count(NodeId id) const {
+        if (id >= expanded.size())
+            throw std::out_of_range("tree node ID is out of range");
+        const auto index = visible.index_of(id);
+        if (id == kRoot || !expanded[id] || !index)
+            return 0;
+        const auto depth = visible.at(*index).depth;
+        std::uint32_t count = 0;
+        visible.visit(*index + 1, visible.size() - *index - 1, [&](const detail::RowRef &row) {
+            if (row.depth <= depth)
+                return false;
+            ++count;
+            return true;
+        });
+        return count;
+    }
 };
 
 TreeView::TreeView(std::shared_ptr<const Tree> tree, ViewOptions options)
@@ -521,26 +537,63 @@ std::uint32_t TreeView::expand(NodeId id) {
     return impl_->expand(id);
 }
 
+std::uint32_t TreeView::expansion_count(NodeId id) const {
+    std::lock_guard lock(impl_->mutex);
+    return impl_->handle->read([&](const Tree &tree) {
+        const auto &node = tree.node(id); // Validate even when the node is hidden.
+        if (id == kRoot || (node.flags & kDir) == 0 || impl_->expanded[id] ||
+            !impl_->visible.index_of(id))
+            return std::uint32_t{0};
+        std::uint32_t count = 0;
+        std::vector<NodeId> pending{id};
+        while (!pending.empty()) {
+            const auto parent = pending.back();
+            pending.pop_back();
+            const auto [begin, end] = tree.children(parent);
+            for (auto child = begin; child < end; ++child) {
+                if (!impl_->eligible(tree, child, impl_->options, impl_->visibility))
+                    continue;
+                ++count;
+                if ((tree.node(child).flags & kDir) != 0 && impl_->expanded[child])
+                    pending.push_back(child);
+            }
+        }
+        return count;
+    });
+}
+
+std::uint32_t TreeView::collapse_count(NodeId id) const {
+    std::lock_guard lock(impl_->mutex);
+    return impl_->collapse_count(id);
+}
+
+void TreeView::expand_children(NodeId id) {
+    std::lock_guard lock(impl_->mutex);
+    const auto children = impl_->handle->read([&](const Tree &tree) {
+        std::vector<NodeId> result;
+        if ((tree.node(id).flags & kDir) == 0 || id == kRoot)
+            return result;
+        const auto [begin, end] = tree.children(id);
+        for (auto child = begin; child < end; ++child)
+            if ((tree.node(child).flags & kDir) != 0 &&
+                impl_->eligible(tree, child, impl_->options, impl_->visibility))
+                result.push_back(child);
+        return result;
+    });
+    impl_->expand(id);
+    for (const auto child : children)
+        impl_->expand(child);
+}
+
 std::uint32_t TreeView::collapse(NodeId id) {
     std::lock_guard lock(impl_->mutex);
-    if (id >= impl_->expanded.size())
-        throw std::out_of_range("tree node ID is out of range");
+    const auto removed = impl_->collapse_count(id);
     if (id == kRoot || !impl_->expanded[id])
         return 0;
     impl_->expanded[id] = false;
     const auto index = impl_->visible.index_of(id);
     if (!index)
         return 0;
-    const auto depth = impl_->visible.at(*index).depth;
-    std::uint32_t removed = 0;
-    // Walk chunks sequentially rather than locating each descendant from the treap root.
-    impl_->visible.visit(*index + 1, impl_->visible.size() - *index - 1,
-                         [&](const detail::RowRef &row) {
-                             if (row.depth <= depth)
-                                 return false;
-                             ++removed;
-                             return true;
-                         });
     impl_->visible.erase(*index + 1, removed);
     return removed;
 }
