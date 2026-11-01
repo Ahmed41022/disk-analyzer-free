@@ -14,6 +14,22 @@ This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when it
 
 Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `coverage` needs cross-OS Python coverage and Codecov upload (T4.13 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance lands in T4.5. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
+## D-0050 — 2026-11-01 — Progress metrics, shared actions, and lifecycle alerts
+
+Question: How should the progress panel coexist with toolbar controls and show estimates before the MFT engine exists?
+
+Choice: Reuse the exact toolbar Pause/Resume and Cancel `QAction` objects in the panel's tool buttons. The panel owns their command connections and state, so a toolbar pause and panel resume operate one controller without duplicate calls or independent toggles. Standalone panels create equivalent actions. Add no controller timer or second scan loop; partial trees retain T4.3's native snapshot delivery and one-second throttle.
+
+Choice: Initialize the files/second EMA from the first positive-duration sample; subsequent samples use alpha 0.3 and monotonic file/time deltas. Ignore duplicate timestamps and reset the baseline if counts/time move backward. Use shared units, locale digits, and a day-preserving duration formatter. Current paths are middle-elided with full escaped accessible text/tooltips. When `est_total` is present, use files plus directories against that estimated record count, clamped into a 0–1,000 Qt range to avoid integer overflow; zero estimates show zero. Unknown totals stay indeterminate. MFT parsing itself remains paused M3 work. Completion stops the animation; cancellation shows the partial badge immediately and retains the actual terminal summary's cancellation status.
+
+Choice: Send Qt accessible Alert events on start and terminal success/cancellation/failure, using the visible status label's accessible name. Progress ticks update ordinary labels without repeatedly announcing alerts. Clear rate history, failure tooltip and partial status on the next scan. Closing continues to use the already tested asynchronous main-window shutdown.
+
+Choice: Correct two new test-fixture mistakes without removing assertions: synthetic progress bytes must obey the public uint64 range, and surrogate failure diagnostics must pass through the controller's escaping before its `Signal(str)` crosses Qt. Drive the real controller failure path for that assertion. Complete pytest-qt deferred widget disposal in a test fixture after its teardown hook, rather than flushing only inside a test body; otherwise a completed suite can retain native Tree/Backend owners until interpreter shutdown. Keep the leak diagnostics enabled and verify child-process output contains none. Native delayed-scan integration verifies shared controls and a cancelled partial result.
+
+Reasoning: Shared Qt actions provide one source of control state without extending the scanner protocol. A bounded percentage range supports native uint64 estimates safely, and lifecycle-only alerts communicate meaningful changes without flooding screen readers. The panel presents existing controller data rather than bringing M3 functionality forward.
+
+Task: T4.8
+
 ## D-0049 — 2026-11-01 — Repaint performance after scan-dialog integration
 
 Question: How should T4.7 handle a repaint failure discovered when running the performance test after the full GUI suite?

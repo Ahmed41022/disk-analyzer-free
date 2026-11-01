@@ -1551,7 +1551,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T4.6
   - **Acceptance:** `test_empty_targets_disables_start`, `test_multiple_folders_added`, `test_mft_option_only_on_windows`, `test_options_persist_to_settings`.
 
-- [ ] **T4.8 — Progress panel**
+- [x] **T4.8 — Progress panel**
   - **Files:** C `src/dafree/gui/widgets/progress_panel.py`, `tests/gui/test_progress_panel.py`.
   - **Behavior:** files, dirs, bytes, rate (files/s EMA α = 0.3), elapsed, current path (middle-elided), percentage bar when `est_total` (MFT) else busy indicator; Pause/Resume toggle; Cancel without confirmation (non-destructive), then a "partial results" badge. Tree tab shows the live partial tree, refreshed ≤ 1/s. Announces start/finish via an accessible live-region equivalent (`QAccessible.updateAccessibility` with `QAccessibleEvent(QAccessible.Event.Alert)`).
   - **Depends on:** T4.3

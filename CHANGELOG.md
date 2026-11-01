@@ -10,6 +10,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- Live progress panel with smoothed throughput, shared toolbar controls, elapsed time/current path, bounded estimates, partial-result status, and accessible lifecycle alerts.
+
 - Scan dialog with multiple folder/volume targets, asynchronous directory validation, traversal/exclusion options, atomic saved defaults, and explicit acceptance of forwarded launch targets.
 
 - Main window with lazy Tree/Issues views, background native volume discovery, capacity bars, recent targets, breadcrumbs, live status, and asynchronous scan shutdown.

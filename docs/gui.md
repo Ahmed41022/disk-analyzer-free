@@ -94,7 +94,7 @@ the real Windows privilege query remains paused T3.7 work.
 
 Closing the window cancels its read-only scan and keeps processing GUI events until
 background work delivers its result, then saves window geometry and disposes the
-native-backed views. The detailed progress panel is the next task; file actions remain deferred.
+native-backed views. The progress panel shares toolbar actions; properties and file actions remain deferred.
 Configuration storage paths are described in [configuration commands](cli.md).
 
 
@@ -112,3 +112,17 @@ one entry per line. Existing unedited exclusions retain their raw native values.
 without saving. A failed preference write keeps the dialog open with its error.
 Windows lists MFT as disabled until its fast engine is implemented. Administrator
 relaunch is also disabled until the paused Windows privilege task supplies it.
+
+
+During a scan, the progress panel shows files, folders, logical bytes, elapsed
+time, current path, and files/second smoothed with an EMA (alpha 0.3). Long paths
+are middle-elided; their complete diagnostic text remains in the tooltip and
+accessible name. Pause/Resume and Cancel share the toolbar actions, so either
+location controls the same scan. Cancel is immediate and needs no confirmation
+because scanning is read-only; partial results remain available on completion.
+
+Walk scans show an indeterminate bar. A supplied native total enables bounded
+percentage display from processed files/folders; the MFT engine that supplies
+these estimates remains deferred. Start and terminal states issue accessible
+alerts, while regular progress ticks update ordinary labels. A new scan clears
+old rates, errors, and partial status.

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-01 09:27+0200\n"
+"POT-Creation-Date: 2026-11-01 09:52+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -58,6 +58,9 @@ msgid "Auto"
 msgstr ""
 
 msgid "Cancel"
+msgstr ""
+
+msgid "Cancellation requested…"
 msgstr ""
 
 #, python-brace-format
@@ -116,6 +119,10 @@ msgstr ""
 msgid "Duplicates"
 msgstr ""
 
+#, python-brace-format
+msgid "Elapsed: {time}"
+msgstr ""
+
 msgid "Empty"
 msgstr ""
 
@@ -151,6 +158,9 @@ msgid "Files: {count}"
 msgstr ""
 
 msgid "Find"
+msgstr ""
+
+msgid "Finishing scan…"
 msgstr ""
 
 #, python-brace-format
@@ -243,6 +253,9 @@ msgstr ""
 msgid "Parent folder"
 msgstr ""
 
+msgid "Partial results"
+msgstr ""
+
 msgid "Path"
 msgstr ""
 
@@ -253,6 +266,9 @@ msgid "Paths"
 msgstr ""
 
 msgid "Pause"
+msgstr ""
+
+msgid "Paused"
 msgstr ""
 
 msgid "Portable mode is not available yet"
@@ -268,6 +284,9 @@ msgid "Print a setting as JSON."
 msgstr ""
 
 msgid "Print the preferences file path."
+msgstr ""
+
+msgid "Rate: —"
 msgstr ""
 
 msgid "Read and update shared preferences."
@@ -294,16 +313,34 @@ msgstr ""
 msgid "Running as administrator"
 msgstr ""
 
+msgid "Scan cancelled. Partial results are available."
+msgstr ""
+
+msgid "Scan complete."
+msgstr ""
+
 msgid "Scan controls"
 msgstr ""
 
 msgid "Scan failed"
 msgstr ""
 
+msgid "Scan failed."
+msgstr ""
+
 msgid "Scan issues"
 msgstr ""
 
+msgid "Scan progress"
+msgstr ""
+
+msgid "Scan started."
+msgstr ""
+
 msgid "Scan targets"
+msgstr ""
+
+msgid "Scanning…"
 msgstr ""
 
 msgid "Search"
@@ -456,4 +493,8 @@ msgstr ""
 
 #, python-brace-format
 msgid "{name}, {kind}, {size}, {percent} of parent"
+msgstr ""
+
+#, python-brace-format
+msgid "{rate} files/s"
 msgstr ""
