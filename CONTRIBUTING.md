@@ -127,3 +127,16 @@ mkdocs build --strict -f docs/mkdocs.yml
 Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) such as `feat:`, `fix:`, `test:`, `docs:`, `ci:`, and `chore:`. Keep a commit focused on one task. Pull requests should explain the change, link a related issue, include tests, regenerate stubs when needed, update docs, and include screenshots for visible UI changes.
 
 There is no DCO requirement. Contributions are accepted under the project's MIT license.
+
+
+### Coverage checks
+
+Main/nightly coverage jobs run the complete correctness suite on Linux, Windows,
+and macOS, retaining Python XML/data reports. Overall/API/settings/paths remain
+at 85%, CLI at 80%, and GUI at 70%; native model/scanner line gates remain 85%
+each on Linux. Repaint budgets run separately without coverage instrumentation.
+The optional Codecov upload runs only when the repository has `CODECOV_TOKEN`;
+thresholds and artifacts remain mandatory without it. Use `coverage run
+--parallel-mode -m pytest -m "not slow"`, then `coverage combine --keep` and
+`coverage report` for a local report. Keep per-platform `COVERAGE_FILE` paths
+separate when testing Windows and WSL concurrently.

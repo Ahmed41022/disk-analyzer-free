@@ -20,15 +20,23 @@ class _Task(QRunnable):
         self, token: int, task_id: object, fn: Callable[[], object], signals: _Signals
     ) -> None:
         super().__init__()
-        self._token, self._task_id, self._fn, self._signals = token, task_id, fn, signals
+        self._token, self._task_id, self._signals = token, task_id, signals
+        self._fn: Callable[[], object] | None = fn
 
     def run(self) -> None:
+        fn, self._fn = self._fn, None
+        if fn is None:
+            return
+        result: object | None = None
         try:
-            result = self._fn()
+            result = fn()
         except Exception as error:
             self._signals.failed.emit(self._token, self._task_id, _display_text(str(error)))
         else:
             self._signals.finished.emit(self._token, self._task_id, result)
+        finally:
+            # Completed runnable wrappers must not retain captured native trees/results.
+            fn = result = None
 
 
 class TaskRunner(QObject):

@@ -89,8 +89,16 @@ struct MockBackend::Impl {
     }
 
     void pause() const {
-        if (spec.delay.count() > 0)
-            std::this_thread::sleep_for(spec.delay);
+        if (spec.delay.count() > 0) {
+            const auto start = std::chrono::steady_clock::now();
+            auto remaining = spec.delay;
+            do {
+                std::this_thread::sleep_for(remaining);
+                // A platform sleep can return early; the mock promises a minimum delay.
+                remaining = spec.delay - std::chrono::duration_cast<std::chrono::milliseconds>(
+                                             std::chrono::steady_clock::now() - start);
+            } while (remaining.count() > 0);
+        }
     }
 
     std::string resolve(std::string path, bool final) const {

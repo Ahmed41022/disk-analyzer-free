@@ -73,8 +73,8 @@ restores the caller's initial owner-resolution policy.
 Use Up/Down, Page Up/Page Down, Home/End for row navigation. Right expands the
 current directory or moves to its first child; Left collapses it or moves to its
 parent. `*` expands immediate child directories. Enter requests properties and
-Menu requests the row context menu; their application actions are connected in
-later tasks. Clicking a chevron also toggles expansion, with mirrored controls
+Menu opens the row context menu. Enter and its Properties action open the
+read-only properties dialog. Clicking a chevron also toggles expansion, with mirrored controls
 and hit regions in RTL. Accessible row descriptions include type, size, and
 percentage without exposing internal numeric IDs.
 
@@ -88,13 +88,13 @@ recent targets and the snapshot directory. Snapshot opening belongs to M6.
 `TreeTableView` uses compact 24-pixel rows and initial shared unit preferences.
 The Tree tab prepares native views off-thread and pairs its table with a breadcrumb
 and selection metadata; miniature charts remain M5 work. Issues retain the native
-summary's first 1,000 entries and show its complete count; filtering/export are
-T4.13 work. Windows displays an administrator badge only when elevation is known;
+summary's first 1,000 entries and show its complete count; kind filtering applies
+to copying and CSV export. Windows displays an administrator badge only when elevation is known;
 the real Windows privilege query remains paused T3.7 work.
 
 Closing the window cancels its read-only scan and keeps processing GUI events until
 background work delivers its result, then saves window geometry and disposes the
-native-backed views. The progress panel shares toolbar actions; properties and file actions remain deferred.
+native-backed views. The progress panel shares toolbar actions; properties are available and file actions remain deferred.
 Configuration storage paths are described in [configuration commands](cli.md).
 
 
@@ -126,3 +126,21 @@ percentage display from processed files/folders; the MFT engine that supplies
 these estimates remains deferred. Start and terminal states issue accessible
 alerts, while regular progress ticks update ordinary labels. A new scan clears
 old rates, errors, and partial status.
+
+
+Use Enter on a tree row or choose **Properties** from its context menu to inspect
+its full path, type, logical/allocated sizes and ratio, descendant counts,
+timestamps, human-readable flags, and matching volume information recorded by
+the scan. Missing timestamps/volume metadata show **—**. Opening the dialog
+resolves its owner in the background; unavailable owner data does not hide the
+other properties. **Copy path** copies readable text, escaping undecodable
+characters and retaining an additional native-string clipboard payload.
+
+The Issues tab's **Issue kind** filter applies to **Copy all** and **Export CSV**.
+Both use all matching retained rows; diagnostics beyond the scan's first-1,000
+limit are counted but cannot be exported from this view. Clipboard text and
+UTF-8 CSV include Kind, Path, and Message with normal comma/newline quoting;
+clipboard data also retains raw issue strings. Choose a new CSV filename:
+existing files and final symlinks are preserved. Export runs in a worker.
+An interrupted write reports that its newly created report may be incomplete;
+it does not remove or overwrite another file.

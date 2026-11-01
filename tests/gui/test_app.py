@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import threading
+import weakref
 from collections.abc import Iterator
 from datetime import date, timedelta
 from importlib.util import find_spec
@@ -24,9 +25,10 @@ from PySide6.QtCore import QDir, QLocale, Qt, QTimer
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import QApplication
 
+from dafree.api.testing import TreeBuilder
 from dafree.gui import app as bootstrap
 from dafree.gui.app import _ApplicationState, _SingleInstance, build_app
-from dafree.gui.controllers.task_runner import TaskRunner
+from dafree.gui.controllers.task_runner import TaskRunner, _Signals, _Task
 from dafree.gui.main_window import MainWindow
 from dafree.i18n import current_locale, setup
 from dafree.paths import AppPaths
@@ -343,3 +345,29 @@ def test_first_window_retains_lossless_launch_arguments(
 
         monkeypatch.setattr(QApplication, "exec", event_loop)
         assert bootstrap.main(initial) == 0
+
+
+@pytest.mark.parametrize("failed", [False, True])
+def test_completed_task_releases_captured_native_tree(tmp_path: Path, failed: bool) -> None:
+    """A completed runnable may outlive delivery without retaining its captured scan tree."""
+    tree = TreeBuilder.flat(tmp_path, 1)
+    reference = weakref.ref(tree)
+    signals = _Signals()
+    delivered, errors = [], []
+    signals.finished.connect(lambda token, job, value: delivered.append(value))
+    signals.failed.connect(lambda token, job, message: errors.append(message))
+
+    def execute(value):
+        if failed:
+            raise ValueError("test failure")
+        return value
+
+    task = _Task(0, "capture", lambda value=tree: execute(value), signals)
+    del tree
+    task.run()
+    if failed:
+        assert errors == ["test failure"] and delivered == []
+    else:
+        assert delivered == [reference()]
+    delivered.clear()
+    assert reference() is None

@@ -208,3 +208,19 @@ TEST_CASE("mock_delay_counters_and_owners") {
     }
     CHECK(backend.read_dir_calls() == 17);
 }
+
+TEST_CASE("mock_delay_never_returns_before_minimum") {
+    for (const auto delay : {std::chrono::milliseconds(1), std::chrono::milliseconds(2),
+                             std::chrono::milliseconds(10), std::chrono::milliseconds(25)}) {
+        auto spec = sample();
+        spec.delay = delay;
+        dafree::MockBackend backend(std::move(spec));
+        CAPTURE(delay.count());
+        for (unsigned phase = 0; phase < 4; ++phase) {
+            CAPTURE(phase);
+            const auto start = std::chrono::steady_clock::now();
+            (void)backend.read_dir("/mock", {});
+            CHECK(std::chrono::steady_clock::now() - start >= delay);
+        }
+    }
+}

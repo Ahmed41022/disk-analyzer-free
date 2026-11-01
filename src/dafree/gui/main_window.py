@@ -7,7 +7,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 
-from PySide6.QtCore import QLocale, QSignalBlocker, Qt, QTimer, Signal
+from PySide6.QtCore import QLocale, QPoint, QSignalBlocker, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QCloseEvent
 from PySide6.QtWidgets import (
     QDockWidget,
@@ -30,6 +30,7 @@ from dafree.api.types import ScanIssue
 from dafree.gui import _display_text
 from dafree.gui.controllers.scan_controller import ScanController
 from dafree.gui.controllers.task_runner import TaskRunner
+from dafree.gui.dialogs.properties_dialog import PropertiesDialog
 from dafree.gui.dialogs.scan_dialog import ScanDialog
 from dafree.gui.views.issues_tab import IssuesTab
 from dafree.gui.views.tree_tab import TreeTab
@@ -48,6 +49,12 @@ _MAX_RECENT = 10
 @dataclass(frozen=True)
 class _Target:
     path: str
+
+
+@dataclass(frozen=True)
+class _PropertyTarget:
+    tree: api.Tree
+    node: int
 
 
 class MainWindow(QMainWindow):
@@ -72,6 +79,7 @@ class MainWindow(QMainWindow):
         self._paths = paths
         self._volume_provider = volume_provider
         self._scan_dialog: ScanDialog | None = None
+        self._properties_dialogs: list[PropertiesDialog] = []
         self._pending_launch_arguments: list[str] = []
         self._latest_tree: api.Tree | None = None
         self._issues: list[ScanIssue] = []
@@ -101,6 +109,8 @@ class MainWindow(QMainWindow):
         self.controller.noticeReceived.connect(lambda notice: self._show_notice(notice.detail))
         self.controller.finished.connect(self._finished)
         self.controller.failed.connect(self._failed)
+        self.propertiesRequested.connect(self.open_properties)
+        self.contextMenuRequested.connect(self._row_menu)
         self.scanRequested.connect(self.open_scan_dialog)
         self.volumes.refresh()
 
@@ -231,7 +241,7 @@ class MainWindow(QMainWindow):
                 tree_page.contextMenuRequested.connect(self.contextMenuRequested.emit)
                 page: TreeTab | IssuesTab = tree_page
             else:
-                page = IssuesTab(self.tabs)
+                page = IssuesTab(self.tabs, runner=self.runner)
             self._pages[key] = page
             old, title = self.tabs.widget(index), self.tabs.tabText(index)
             with QSignalBlocker(self.tabs):
@@ -291,6 +301,34 @@ class MainWindow(QMainWindow):
         self.notice_label.setToolTip(text)
         self.notice_label.setAccessibleName(text)
         self.notice_label.show()
+
+    def open_properties(self, tree: api.Tree, node: int) -> None:
+        """Inspect a selected native node without enabling deferred user-file actions."""
+        dialog = PropertiesDialog(tree, node, self._settings, self.runner, self)
+        self._properties_dialogs.append(dialog)
+        dialog.finished.connect(self._close_properties)
+        dialog.show()
+
+    def _close_properties(self, result: int) -> None:
+        dialog = self.sender()
+        if isinstance(dialog, PropertiesDialog) and dialog in self._properties_dialogs:
+            self._properties_dialogs.remove(dialog)
+            dialog.deleteLater()
+
+    def _row_menu(self, tree: api.Tree, node: int, point: QPoint) -> None:
+        menu = QMenu(self)
+        menu.setObjectName("tree.context-menu")
+        menu.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        action = menu.addAction(_("Properties"))
+        action.setData(_PropertyTarget(tree, node))
+        action.triggered.connect(self._context_properties)
+        menu.aboutToHide.connect(menu.deleteLater)
+        menu.popup(point)
+
+    def _context_properties(self, checked: bool) -> None:
+        action = self.sender()
+        if isinstance(action, QAction) and isinstance(target := action.data(), _PropertyTarget):
+            self.open_properties(target.tree, target.node)
 
     def open_scan_dialog(self, targets: list[str] | None = None) -> None:
         """Open one target-selection dialog; acceptance alone starts the read-only scan."""
@@ -419,6 +457,8 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """Cancel read-only work and keep servicing Qt until workers deliver their results."""
+        for dialog in tuple(self._properties_dialogs):
+            dialog.reject()
         if self.controller.running or self.runner.busy:
             self._closing = True
             self.controller.cancel()

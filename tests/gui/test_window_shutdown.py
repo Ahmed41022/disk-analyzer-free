@@ -11,7 +11,10 @@ import pytest
 
 @pytest.mark.gui
 @pytest.mark.parametrize("external_quit", [False, True])
-def test_application_shutdown_drains_owned_scan(tmp_path: Path, external_quit: bool) -> None:
+@pytest.mark.parametrize("properties_open", [False, True])
+def test_application_shutdown_drains_owned_scan(
+    tmp_path: Path, external_quit: bool, properties_open: bool
+) -> None:
     """Both closing and external quit cancel a native scan, deliver results, and exit cleanly."""
     script = r"""
 import os
@@ -19,7 +22,7 @@ from pathlib import Path
 from PySide6.QtCore import QDir, QTimer
 from PySide6.QtWidgets import QApplication
 from dafree import api
-from dafree.api.testing import MockEntry, MockSpec, make_mock_backend
+from dafree.api.testing import MockEntry, MockSpec, TreeBuilder, make_mock_backend
 from dafree.gui import app
 from dafree.gui.main_window import create_main_window
 QDir.tempPath = lambda: os.environ["DAFREE_TEST_IPC"]
@@ -34,6 +37,8 @@ backend = make_mock_backend(MockSpec(entries, delay_ms=80))
 def create(**kwargs):
     window = create_main_window(**kwargs, volume_provider=lambda: [], scan_backend=backend)
     window.start_scan(api.ScanRequest([root], threads=1))
+    if os.environ["DAFREE_OPEN_PROPERTIES"] == "1":
+        window.open_properties(TreeBuilder.flat(root / "properties", 1), 1)
     action = QApplication.quit if os.environ['DAFREE_EXTERNAL_QUIT']=='1' else window.close
     QTimer.singleShot(50, action)
     return window
@@ -50,6 +55,7 @@ raise SystemExit(exit_code)
             "DAFREE_TEST_ROOT": str(tmp_path / "native-mock"),
             "DAFREE_TEST_IPC": ipc,
             "DAFREE_EXTERNAL_QUIT": "1" if external_quit else "0",
+            "DAFREE_OPEN_PROPERTIES": "1" if properties_open else "0",
             "TMPDIR": ipc,
             "TMP": ipc,
             "TEMP": ipc,
