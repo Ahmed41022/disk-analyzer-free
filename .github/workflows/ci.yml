@@ -23,7 +23,8 @@ env:
   DAFREE_REQUIRE_GUI: 1
   DAFREE_REQUIRE_ALL_CAPS: 1
   QT_QPA_PLATFORM: offscreen
-  DAFREE_FULL_CI: ${{ github.ref == 'refs/heads/main' || github.event_name == 'schedule' }}
+  # The temporary M4-core light tier is complete; every configured event runs full gates.
+  DAFREE_FULL_CI: "true"
 
 defaults:
   run:
@@ -86,13 +87,8 @@ jobs:
       - name: Build
         run: cmake --build --preset dev
       - name: Unit tests
-        if: env.DAFREE_FULL_CI == 'true'
         run: ctest --preset dev --output-junit cpp-junit.xml
-      - name: Branch correctness tests (performance budgets run on main/nightly)
-        if: env.DAFREE_FULL_CI != 'true'
-        run: ./build/dev/core/dafree_core_tests${{ runner.os == 'Windows' && '.exe' || '' }} --test-case-exclude="memory_*" --reporters=junit --out=cpp-junit.xml
       - name: Mock scan benchmark smoke
-        if: env.DAFREE_FULL_CI == 'true'
         run: |
           ./build/dev/core/bench/dafree_bench${{ runner.os == 'Windows' && '.exe' || '' }} \
             --benchmark_filter=BM_ScanMock/10000/ --benchmark_min_time=0.01s
@@ -133,15 +129,8 @@ jobs:
           python -m pip install --require-hashes -r requirements/dev.txt
           python -m pip install ".[gui]"
       - name: Python tests
-        if: env.DAFREE_FULL_CI == 'true'
         run: python -m pytest -m "not slow" --hypothesis-show-statistics --junitxml=py-junit.xml
-      - name: Branch full Linux suite (wide fixture runs on main/nightly)
-        if: env.DAFREE_FULL_CI != 'true' && runner.os == 'Linux'
-        run: python -m pytest -m "not slow and not main_only" --hypothesis-show-statistics --junitxml=py-junit.xml
-      - name: Branch GUI smoke
-        if: env.DAFREE_FULL_CI != 'true' && runner.os != 'Linux'
-        run: python -m pytest tests/gui/test_smoke.py --junitxml=py-junit.xml
-      - name: GUI scroll performance (Linux main, all OSes nightly)
+      - name: GUI scroll performance (Linux every event, all OSes nightly)
         if: env.DAFREE_FULL_CI == 'true' && ((runner.os == 'Linux' && matrix.python == '3.12') || (github.event_name == 'schedule' && runner.os != 'Linux'))
         env:
           SKBUILD_CMAKE_BUILD_TYPE: Release
@@ -166,7 +155,6 @@ jobs:
           retention-days: 14
 
   sanitizers:
-    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
     name: Native and Python AddressSanitizer / UndefinedBehaviorSanitizer
     needs: lint
     runs-on: ubuntu-24.04
@@ -206,7 +194,6 @@ jobs:
             --hypothesis-show-statistics
 
   coverage:
-    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
     name: Coverage (${{ matrix.os }})
     needs: lint
     strategy:
@@ -297,7 +284,6 @@ jobs:
           fail_ci_if_error: true
 
   tsan:
-    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
     name: Scan engine and view ThreadSanitizer
     needs: lint
     runs-on: ubuntu-24.04
@@ -321,7 +307,6 @@ jobs:
           ./build/dev-tsan/core/dafree_core_tests --no-colors --test-suite=view
 
   fuzz:
-    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
     name: Glob fuzz build and smoke
     needs: lint
     runs-on: ubuntu-24.04
@@ -342,7 +327,6 @@ jobs:
 
   wheels:
     name: Wheel (${{ matrix.os }})
-    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
     needs: [cpp, python]
     strategy:
       fail-fast: false
@@ -362,7 +346,6 @@ jobs:
           retention-days: 7
 
   audit:
-    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
     name: Security and dependency licenses
     runs-on: ubuntu-24.04
     steps:
@@ -387,7 +370,6 @@ jobs:
         run: python tools/cpp_licenses.py cmake/Dependencies.cmake
 
   docs:
-    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
     name: Documentation
     runs-on: ubuntu-24.04
     steps:
@@ -410,7 +392,6 @@ jobs:
 
   view-perf:
     name: View release performance budgets
-    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
     needs: lint
     runs-on: ubuntu-24.04
     steps:
@@ -447,14 +428,10 @@ jobs:
       - name: Check all jobs
         env:
           RESULTS: ${{ toJSON(needs) }}
-          FULL_CI: ${{ env.DAFREE_FULL_CI }}
         run: |
           echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
-          bad=$(echo "$RESULTS" | jq -r --arg full "$FULL_CI" 'to_entries[]
-            | select(.value.result != "success")
-            | select(($full == "false" and .value.result == "skipped"
-              and (.key | IN("sanitizers", "coverage", "tsan", "fuzz", "wheels", "audit", "docs", "view-perf"))) | not)
-            | .key')
+          bad=$(echo "$RESULTS" | jq -r 'to_entries[]
+            | select(.value.result != "success") | .key')
           if [ -n "$bad" ]; then
             echo "::error::Failed jobs: $bad"
             exit 1

@@ -16,6 +16,8 @@ The original task specifications below remain in force; this order supersedes th
 5. Until M4-core completes, PRs require lint, the full Linux correctness suite, Windows/macOS C++ correctness and GUI smoke. Wide 100k, performance, coverage, and sanitizers run on main/nightly (manual full validation on main). Retain every test threshold and assertion. Report each CI job duration in the PR summary.
 6. M8 deletion/move must use the fd-relative, no-follow C++ remover only; never reuse path-based stat/remove helpers. All original trash/confirmation/dry-run safety rules remain required.
 
+M4-core completed on main `b39d472` with all 21 full jobs green. M3 resumes at T3.1; deferred T2.1–T2.6 follow resumed M3 (D-0054). The temporary light PR CI exception above has expired: all existing gates run on every configured workflow event again.
+
 See DECISIONS.md for the pending §7.3 CI inventory and dependency adaptations.
 
 ---
@@ -1401,8 +1403,8 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
 
 ### M3 — Windows fast mode (MFT) and Windows specifics
 
-- [ ] **T3.1 — NTFS record header and fixups (pure C++)**
-  - **Files:** C `core/include/dafree/mft.hpp`, `core/src/mft/{record.cpp,fixup.cpp}`, `core/tests/test_mft_record.cpp`, `tools/golden_mft.py`, `core/tests/golden/mft/README.md`.
+- [x] **T3.1 — NTFS record header and fixups (pure C++)**
+  - **Files:** C `core/include/dafree/mft.hpp`, `core/src/mft/{record.cpp,fixup.cpp,byte_reader.hpp}`, `core/tests/test_mft_record.cpp`, `tools/golden_mft.py`, `core/tests/golden/mft/README.md`.
   - **Interface:**
     ```cpp
     struct RecordHeader { std::array<char,4> signature; std::uint16_t usa_offset, usa_count; std::uint64_t lsn; std::uint16_t sequence,
@@ -1411,7 +1413,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
     Expected<RecordHeader, MftError> parse_header(std::span<const std::byte>);
     Expected<void, MftError> apply_fixups(std::span<std::byte> rec, std::size_t sector_size); // verifies USN per sector, restores saved bytes
     ```
-  - **Behavior:** every read through a bounds-checked `ByteReader`; `usa_count == rec.size()/sector_size + 1` required. Golden binaries are synthesized from the NTFS on-disk layout by `tools/golden_mft.py` (no copyrighted dumps); after T3.5 one record captured from the CI runner's own fixture file is added with its expected JSON.
+  - **Behavior:** every read through a bounds-checked `ByteReader`; `usa_count == rec.size()/sector_size + 1` required. D-0055 specifies NTFS v3 prefix/USA/attribute bounds, error policy, and exact record allocation for mutation. Golden binaries are synthesized from the NTFS on-disk layout by `tools/golden_mft.py` (no copyrighted dumps); after T3.5 one record captured from the CI runner's own fixture file is added with its expected JSON.
   - **Depends on:** T0.1
   - **Acceptance (all OSes):** doctest `golden_header`, `fixup_restores_bytes`, `fixup_mismatch_errors`, `truncated_record_errors_not_crashes`.
 

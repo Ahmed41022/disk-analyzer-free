@@ -6,11 +6,15 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Fixed
 
+- Tree rendering reuses frame colours, font and delegate context while preserving standalone rendering, RTL, selection and disabled text.
+
 - Native mock delays now enforce their minimum steady-clock duration; completed GUI tasks and context menus release captured tree owners promptly.
 
 - Linux wheel compilation with older manylinux headers retains statx mount-root detection through the stable UAPI flag and its supported-attribute mask.
 
 ### Added
+
+- Bounds-checked NTFS v3 record headers and all-or-nothing sector fixups, with synthesized golden records and malformed/unaligned-input tests on every OS.
 
 - Read-only node properties with lazy owner lookup, human flag badges, timestamps and captured volume data; Issues kind filtering, clipboard copy, and exclusive new CSV reports.
 - Three-platform Python coverage gates/artifacts and conditional Codecov upload, retaining the existing native model/scanner thresholds.

@@ -122,8 +122,8 @@ when comparing revisions.
 
 The full CI tier builds the view benchmarks in Release and checks the median of
 five repetitions against strict limits of 150 ms for cold expansion and 2 ms for
-a 100-row window starting at row 9,999,900. PRs leave these heavy checks to
-main/nightly under the product-owner policy; correctness assertions remain on PRs.
+a 100-row window starting at row 9,999,900. After M4-core, these heavy checks run on every configured CI event, including PRs;
+the temporary main/nightly-only exception has expired.
 
 ```console
 dafree_bench --benchmark_filter='BM_(Expand100kChildren|RowsWindow10M)' --benchmark_min_time=0.2s --benchmark_repetitions=5 --benchmark_out=build/view-bench.json --benchmark_out_format=json

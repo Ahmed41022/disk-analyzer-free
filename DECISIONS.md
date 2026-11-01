@@ -9,12 +9,54 @@ This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when it
 | Missing §7.3 job | Task that will add it | Remaining prerequisite / scope |
 | --- | --- | --- |
 | `frozen-smoke` | T10.1, using T4.14's deferred self-test hook | Build the actual frozen bundle, verify CLI/GUI fixture totals and bundle size. |
-| `bench` | T2.2, after M4-core | Add executable CLI wall-time/RSS comparison to existing `bench_compare`; run on main/nightly under D-0030 until M4-core completes. |
+| `bench` | T2.2, after M4-core | Add executable CLI wall-time/RSS comparison to existing `bench_compare`; use the restored full CI routing in D-0054. |
 | `pr-title` | T0.5 follow-up after these prerequisites | Enforce Conventional Commits on PR titles; no feature prerequisite. |
 
-Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance lands in T4.5. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
+Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance is implemented in T4.5 and runs separately without instrumentation. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
+
+## D-0056 — 2026-11-01 — Reuse frame state after a Windows repaint gate failure
+
+Question: How should a full-suite Windows repaint failure discovered during T3.1 validation be handled without relaxing the existing GUI budget?
+
+Choice: Preserve the exact ten-million-row fixture, all 60 jumps, real fonts, 1280×720 viewport, actual paint checks, and 16.7 ms median / 33 ms p95 thresholds. The initial Windows run measured 19.5716 ms median / 22.8032 ms p95. Profiling a separate small diagnostic viewport found repeated context lookups in every delegate and text-cache call, plus repeated palette/state queries per row. Read each delegate's shared context once, use its owned font directly, and compute invariant palette/current-index/alternation values once per frame. Change the painter's row text pen only at selection transitions. Preserve standalone delegate behavior, clipping, bounded layouts and font ownership.
+
+Choice: Add pixel-for-pixel shared-frame versus standalone text regressions covering LTR/RTL, selected/disabled colours, two font sizes, clipping and actual nonempty glyph output. After the code change, the unchanged Windows gate measured 5.2967 ms median / 6.8978 ms p95. The final Linux gate measured 6.4630695 ms median / 14.642587 ms p95. These are observed developer-machine results, not a controlled claim that the code change explains the entire timing difference; machine load can vary. Do not retry unchanged failing code or discard the initial result.
+
+Reasoning: The failed full-suite gate must be resolved before advancing tasks. Reusing already-owned frame values removes measured repeated work without adding features, dependencies, per-node storage, or test exceptions.
+
+Task: T3.1 validation follow-up / existing T4.5 repaint gate
+
+## D-0055 — 2026-11-01 — Bounded NTFS v3 headers and atomic fixup validation
+
+Question: Which record boundaries and error policies should T3.1 enforce where the supplied interface leaves details open?
+
+Choice: Keep the exact public RecordHeader/MftError/parse_header/apply_fixups interface in namespace `dafree`. Add a private `core/src/mft/byte_reader.hpp` for shared bounds-checked little-endian reads, accepting unaligned spans and using subtraction-based range checks before access. Decode fields individually; do not reinterpret packed buffers or add dependencies.
+
+Choice: Accept the NTFS v3 fixed prefix through the next-attribute-id storage at offset 0x28 (42 bytes), though that final word is not exposed in RecordHeader. Support word-aligned USA locations including 0x2A and 0x30. Require USA storage before the aligned first-attribute offset and inside bytes_used, and bytes_used <= bytes_allocated <= supplied span. Preserve sequence, link count and unknown flags. Header inspection can use a larger containing span; fixup mutation requires the declared allocation to equal the complete supplied record span.
+
+Choice: Use the plan's caller-supplied power-of-two sector size rather than hard-coding the 512-byte stride described in Microsoft's older multi-sector notes. Reject invalid sector sizes as Unsupported, missing/nonintegral/bad ranges as OutOfBounds, and validly bounded USA-count or sector-marker mismatches as BadFixup. Require usa_count == record_size / sector_size + 1 and keep the full USA before the first sector trailer. Validate all markers before restoring any bytes, preventing partial mutation and overlap with future saved words.
+
+Choice: Generate original deterministic golden bytes/JSON from Microsoft's public FILE_RECORD_SEGMENT_HEADER and MULTI_SECTOR_HEADER layouts; do not import disk dumps. A captured CI-owned fixture record remains explicitly deferred to T3.5. Add no attribute parser, run-list decoder or disk reader in T3.1.
+
+Reasoning: Explicit boundaries prevent unaligned accesses, overflow, truncated reads, and restoration outside a record's declared extent. Verifying before mutation leaves malformed inputs unchanged. The supplied sector geometry remains authoritative while primary layout documentation supplies fixed offsets.
+
+Task: T3.1
+
+## D-0054 — 2026-11-01 — Resume M3 with parallel work inside ordered tasks
+
+Question: What follows completed M4-core, and how should the owner's new request for parallel work interact with task order and temporary CI routing?
+
+Choice: Resume M3 at T3.1, following the explicit “resume it after M4-core” instruction. T2.1–T2.6 remain queued after M4-core and will follow resumed M3; both were deferred past the same boundary without a stricter relative order. Divide independent implementation and acceptance-test files inside the current task, integrate/review centrally, and complete full validation, docs and a task commit before starting T3.2. Use the original one-branch/one-PR-per-milestone rule for resumed M3, preserving owner authorship.
+
+Choice: M4-core is complete on main `b39d472` with all 21 full CI jobs green. Its explicitly temporary light PR tier therefore expires. Run all existing gates for every configured workflow event again: PRs, merge queue, main pushes, nightly and manual runs. Preserve every threshold and assertion, the separate uninstrumented GUI performance step, and job-duration reporting. Keep the existing nightly-only additional Windows/macOS repaint legs.
+
+Choice: The owner's clarified quota limit is the primary worker plus at most two active subagents (three workers total). Reuse completed workers as needed within that cap.
+
+Reasoning: Parallel file ownership increases throughput without bringing later tasks forward. Resuming the explicitly paused milestone first is the narrowest interpretation of the recorded order. Restoring full CI at the stated boundary honors the owner's time-limited exception rather than silently extending it.
+
+Task: T3.1 / M3 resumption
 
 ## D-0053 — 2026-11-01 — Validation fixes for minimum mock delays and test method ownership
 

@@ -53,14 +53,14 @@ Python environment on the Linux filesystem avoids slow package extraction on
 Windows mounts; the native build and FetchContent cache still stay inside this
 repository as above.
 
-## CI tiers through M4-core
+## CI gates after M4-core
 
-PRs run lint, the full Linux correctness suite (including property tests), native
-correctness on all three operating systems, and Windows/macOS GUI smoke. The
-wide 100k fixture, memory budgets and benchmarks, sanitizers, and coverage run
-on main and nightly, plus manual full validation on main. No test assertions or budgets
-are reduced. Include each job's duration from the current-head Actions run in
-the PR summary. The pending §7.3 inventory is in `DECISIONS.md`.
+M4-core is complete. Every configured CI event now runs all existing gates:
+lint/types/stubs, full native and Python correctness suites on all three OSes,
+coverage, sanitizers, wide fixtures, installed abi3 wheels, and release performance.
+The explicit slow repaint test runs without coverage instrumentation; its Linux
+leg runs on every event, with additional Windows/macOS legs nightly. Thresholds
+and assertions are unchanged. Report every job's duration in the PR summary.
 
 ## Common checks
 
@@ -78,8 +78,8 @@ The GUI tests run offscreen in CI. Set `QT_QPA_PLATFORM=offscreen` when running 
 
 The GUI repaint benchmark runs in Release, with real system fonts, exactly ten
 million native rows, and 60 viewport jumps. It retains every sample and enforces
-median ≤16.7 ms and p95 ≤33 ms. CI runs it on Linux main and all three OSes nightly;
-it is outside the PR tier. For local Linux verification, reuse the repo's caches:
+median ≤16.7 ms and p95 ≤33 ms. CI runs its Linux leg on every event and all
+three OSes nightly. For local Linux verification, reuse the repo's caches:
 
 ```sh
 SKBUILD_CMAKE_BUILD_TYPE=Release python -m pip install ".[gui]" --no-build-isolation -Cbuild-dir=build/gui-scroll-release
@@ -131,7 +131,7 @@ There is no DCO requirement. Contributions are accepted under the project's MIT 
 
 ### Coverage checks
 
-Main/nightly coverage jobs run the complete correctness suite on Linux, Windows,
+Coverage jobs run the complete correctness suite on Linux, Windows,
 and macOS, retaining Python XML/data reports. Overall/API/settings/paths remain
 at 85%, CLI at 80%, and GUI at 70%; native model/scanner line gates remain 85%
 each on Linux. Repaint budgets run separately without coverage instrumentation.
