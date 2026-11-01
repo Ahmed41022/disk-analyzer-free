@@ -16,6 +16,8 @@ The original task specifications below remain in force; this order supersedes th
 5. Until M4-core completes, PRs require lint, the full Linux correctness suite, Windows/macOS C++ correctness and GUI smoke. Wide 100k, performance, coverage, and sanitizers run on main/nightly (manual full validation on main). Retain every test threshold and assertion. Report each CI job duration in the PR summary.
 6. M8 deletion/move must use the fd-relative, no-follow C++ remover only; never reuse path-based stat/remove helpers. All original trash/confirmation/dry-run safety rules remain required.
 
+M4-core completed on main `b39d472` with all 21 full jobs green. M3 resumes at T3.1; deferred T2.1–T2.6 follow resumed M3 (D-0054). The temporary light PR CI exception above has expired: all existing gates run on every configured workflow event again.
+
 See DECISIONS.md for the pending §7.3 CI inventory and dependency adaptations.
 
 ---
@@ -1401,8 +1403,8 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
 
 ### M3 — Windows fast mode (MFT) and Windows specifics
 
-- [ ] **T3.1 — NTFS record header and fixups (pure C++)**
-  - **Files:** C `core/include/dafree/mft.hpp`, `core/src/mft/{record.cpp,fixup.cpp}`, `core/tests/test_mft_record.cpp`, `tools/golden_mft.py`, `core/tests/golden/mft/README.md`.
+- [x] **T3.1 — NTFS record header and fixups (pure C++)**
+  - **Files:** C `core/include/dafree/mft.hpp`, `core/src/mft/{record.cpp,fixup.cpp,byte_reader.hpp}`, `core/tests/test_mft_record.cpp`, `tools/golden_mft.py`, `core/tests/golden/mft/README.md`.
   - **Interface:**
     ```cpp
     struct RecordHeader { std::array<char,4> signature; std::uint16_t usa_offset, usa_count; std::uint64_t lsn; std::uint16_t sequence,
@@ -1411,12 +1413,12 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
     Expected<RecordHeader, MftError> parse_header(std::span<const std::byte>);
     Expected<void, MftError> apply_fixups(std::span<std::byte> rec, std::size_t sector_size); // verifies USN per sector, restores saved bytes
     ```
-  - **Behavior:** every read through a bounds-checked `ByteReader`; `usa_count == rec.size()/sector_size + 1` required. Golden binaries are synthesized from the NTFS on-disk layout by `tools/golden_mft.py` (no copyrighted dumps); after T3.5 one record captured from the CI runner's own fixture file is added with its expected JSON.
+  - **Behavior:** every read through a bounds-checked `ByteReader`; `usa_count == rec.size()/sector_size + 1` required. D-0055 specifies NTFS v3 prefix/USA/attribute bounds, error policy, and exact record allocation for mutation. Golden binaries are synthesized from the NTFS on-disk layout by `tools/golden_mft.py` (no copyrighted dumps); after T3.5 one record captured from the CI runner's own fixture file is added with its expected JSON.
   - **Depends on:** T0.1
   - **Acceptance (all OSes):** doctest `golden_header`, `fixup_restores_bytes`, `fixup_mismatch_errors`, `truncated_record_errors_not_crashes`.
 
-- [ ] **T3.2 — Attribute iteration (pure C++)**
-  - **Files:** C `core/src/mft/attr.cpp`, `core/tests/test_mft_attr.cpp`.
+- [x] **T3.2 — Attribute iteration (pure C++)**
+  - **Files:** C `core/src/mft/attr.cpp`, `core/tests/test_mft_attr.cpp`; M `core/include/dafree/mft.hpp` and shared private `byte_reader.hpp` (D-0057).
   - **Interface:**
     ```cpp
     struct StdInfo { std::int64_t created, modified, accessed; std::uint32_t file_attributes; };   // unix seconds
@@ -1426,13 +1428,14 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
     class AttrIterator { public: Expected<std::optional<Attr>, MftError> next(); };   // stops at 0xFFFFFFFF or bytes_used
     std::int64_t filetime_to_unix(std::uint64_t filetime);
     ```
-  - **Behavior:** zero-length attribute → `OutOfBounds`; non-resident compressed/sparse use the total-allocated field when header length ≥ 0x48. `u16string_view` built via `memcpy` into aligned storage when the record buffer is unaligned (no UB).
+  - **Behavior:** zero-length attribute → `OutOfBounds`; non-resident compressed/sparse use the total-allocated field when header length ≥ 0x48. D-0057 defines construction, bounds and borrowed-view lifetime. Names always copy into aligned fixed storage, including aligned source buffers, avoiding byte-buffer aliasing as well as unaligned access (no UB).
   - **Depends on:** T3.1
   - **Acceptance:** doctest `std_info_times`, `filename_namespaces`, `data_resident_size`, `data_nonresident_sparse_alloc`, `named_stream_detected`, `filetime_table`; UBSan clean.
 
-- [ ] **T3.3 — Run-list decoding (pure C++)**
-  - **Files:** C `core/src/mft/runlist.cpp`, `core/tests/test_runlist.cpp`, `core/fuzz/fuzz_runlist.cpp`.
+- [x] **T3.3 — Run-list decoding (pure C++)**
+  - **Files:** C `core/src/mft/runlist.cpp`, `core/tests/test_runlist.cpp`, `core/fuzz/fuzz_runlist.cpp`; M `core/include/dafree/mft.hpp`, CMake and fuzz smoke CI integration (D-0058).
   - **Interface:** `struct Run { std::optional<std::int64_t> lcn; std::uint64_t clusters; }; Expected<std::vector<Run>, MftError> decode_runlist(std::span<const std::byte>);`
+  - **Behavior:** D-0058 defines checked mapping-pair fields, sparse/physical-zero semantics, termination/errors and a 64 MiB decoded-output bound with exact allocation. The short fuzz smoke lands here; T3.8 retains the longer nightly campaign.
   - **Depends on:** T3.1
   - **Acceptance:** doctest `runlist_table` (≥ 10 vectors incl. negative deltas and sparse runs), `encode_decode_roundtrip` (test-only encoder, 1,000 seeds).
 

@@ -26,7 +26,7 @@ from dafree.gui.delegates import TextCache
 from dafree.gui.delegates.name_delegate import NameDelegate
 from dafree.gui.delegates.size_delegate import SizeDelegate
 from dafree.gui.models.tree_model import TreeTableModel
-from dafree.gui.widgets.tree_table import TreeTableView
+from dafree.gui.widgets.tree_table import TreeTableView, _PaintOption
 from dafree.paths import AppPaths
 from dafree.settings import ColumnId, Settings, load_settings
 
@@ -326,6 +326,57 @@ def test_text_layout_cache_owns_fonts_and_stays_bounded(qtbot: QtBot) -> None:
         assert len(cache._layouts) == 256
     finally:
         painter.end()
+
+
+@pytest.mark.parametrize(
+    "direction", [Qt.LayoutDirection.LeftToRight, Qt.LayoutDirection.RightToLeft]
+)
+@pytest.mark.parametrize("enabled,selected", [(True, False), (True, True), (False, True)])
+def test_frame_text_matches_standalone_rendering(
+    make_table: TableFactory,
+    direction: Qt.LayoutDirection,
+    enabled: bool,
+    selected: bool,
+) -> None:
+    """Shared frame values preserve glyphs, clipping, fonts and selection/disabled colours."""
+    table = make_table()
+    cache = TextCache()
+    for font_size in (9, 15):
+        option = _PaintOption()
+        table.initViewItemOption(option)
+        font = option.font
+        font.setPointSize(font_size)
+        option.font = font
+        option.rect, option.direction = QRect(5, 3, 75, 23), direction
+        option.state = QStyle.StateFlag.State_None
+        if enabled:
+            option.state |= QStyle.StateFlag.State_Enabled
+        if selected:
+            option.state |= QStyle.StateFlag.State_Selected
+        images = []
+        for shared in (False, True):
+            image = QImage(90, 30, QImage.Format.Format_ARGB32_Premultiplied)
+            image.fill(Qt.GlobalColor.transparent)
+            painter = QPainter(image)
+            try:
+                if shared:
+                    context = table._frame_context(option, 0)
+                    context.text_color = option.palette.color(
+                        option.palette.currentColorGroup()
+                        if enabled
+                        else QPalette.ColorGroup.Disabled,
+                        QPalette.ColorRole.HighlightedText if selected else QPalette.ColorRole.Text,
+                    )
+                    painter.setFont(context.font)
+                    painter.setPen(context.text_color)
+                cache.draw(
+                    painter, option, option.rect, "12,345.67 MB العربية", SizeDelegate.alignment
+                )
+            finally:
+                painter.end()
+            images.append(image)
+        assert images[0] == images[1]
+        assert any(images[0].constBits()), "The comparison must include rendered glyphs"
 
 
 @pytest.mark.parametrize(

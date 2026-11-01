@@ -1,0 +1,25 @@
+{
+  "fixed_sha256": "4f802605a90e95bf11cff7a93e0a0ffc4399fcaf1b9af0b9583b38b0d555e057",
+  "header": {
+    "attrs_offset": 48,
+    "base_record": 18364758544493064720,
+    "bytes_allocated": 1024,
+    "bytes_used": 56,
+    "flags": 1,
+    "link_count": 9029,
+    "lsn": 72623859790382856,
+    "sequence": 4660,
+    "signature": "FILE",
+    "usa_count": 3,
+    "usa_offset": 42
+  },
+  "provenance": "Synthetic bytes; no filesystem record was captured or copied.",
+  "record_size": 1024,
+  "saved_sector_words": [
+    45056,
+    45057
+  ],
+  "sector_size": 512,
+  "sha256": "8dbd370d968394c0a7e22b6f02dfa4b59d6fdb60206edd297efccd51ddc3b3a4",
+  "usa_number": 42330
+}

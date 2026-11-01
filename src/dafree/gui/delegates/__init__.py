@@ -152,12 +152,9 @@ class TextCache:
         alignment: Qt.AlignmentFlag,
     ) -> None:
         """Prepare only new text/font/width/direction combinations and retain clipping."""
-        state = paint_state(option)
         frame = paint_context(option)
         direction = frame.direction if frame is not None else option.direction
-        font = cast(QFont | None, getattr(option, "_dafree_frame_font", None))
-        if font is None:
-            font = option.font
+        font = frame.font if frame is not None else option.font
         if self._font is None or (
             (frame is None or self._frame_font is not font) and self._font != font
         ):
@@ -186,8 +183,7 @@ class TextCache:
         self._layouts.move_to_end(key)
         layout, width, height = cached
         if frame is None:
-            set_text_pen(painter, option, state)
-        if not hasattr(option, "_dafree_frame_font"):
+            set_text_pen(painter, option, option.state.value)
             painter.setFont(self._font)
         flags = int(alignment)
         right = bool(flags & _RIGHT)
@@ -232,9 +228,13 @@ class DisplayDelegate(QStyledItemDelegate):
         index: QModelIndex | QPersistentModelIndex,
     ) -> None:
         """Paint the supplied palette and font directly, retaining native keyboard focus."""
-        text = display_text(index, option)
-        state = paint_state(option)
         frame = paint_context(option)
+        if frame is not None:
+            text = frame.model.display_value(frame.row, frame.column)
+            state = frame.state
+        else:
+            text = display_text(index)
+            state = option.state.value
         rect = (frame.rect if frame is not None else option.rect).adjusted(4, 0, -4, 0)
         if frame is not None and not state & _FOCUS:
             # The frame already painted the row and installed its text pen/font.

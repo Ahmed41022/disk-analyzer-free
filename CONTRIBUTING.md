@@ -53,14 +53,14 @@ Python environment on the Linux filesystem avoids slow package extraction on
 Windows mounts; the native build and FetchContent cache still stay inside this
 repository as above.
 
-## CI tiers through M4-core
+## CI gates after M4-core
 
-PRs run lint, the full Linux correctness suite (including property tests), native
-correctness on all three operating systems, and Windows/macOS GUI smoke. The
-wide 100k fixture, memory budgets and benchmarks, sanitizers, and coverage run
-on main and nightly, plus manual full validation on main. No test assertions or budgets
-are reduced. Include each job's duration from the current-head Actions run in
-the PR summary. The pending §7.3 inventory is in `DECISIONS.md`.
+M4-core is complete. Every configured CI event now runs all existing gates:
+lint/types/stubs, full native and Python correctness suites on all three OSes,
+coverage, sanitizers, wide fixtures, installed abi3 wheels, and release performance.
+The explicit slow repaint test runs without coverage instrumentation; its Linux
+leg runs on every event, with additional Windows/macOS legs nightly. Thresholds
+and assertions are unchanged. Report every job's duration in the PR summary.
 
 ## Common checks
 
@@ -78,8 +78,8 @@ The GUI tests run offscreen in CI. Set `QT_QPA_PLATFORM=offscreen` when running 
 
 The GUI repaint benchmark runs in Release, with real system fonts, exactly ten
 million native rows, and 60 viewport jumps. It retains every sample and enforces
-median ≤16.7 ms and p95 ≤33 ms. CI runs it on Linux main and all three OSes nightly;
-it is outside the PR tier. For local Linux verification, reuse the repo's caches:
+median ≤16.7 ms and p95 ≤33 ms. CI runs its Linux leg on every event and all
+three OSes nightly. For local Linux verification, reuse the repo's caches:
 
 ```sh
 SKBUILD_CMAKE_BUILD_TYPE=Release python -m pip install ".[gui]" --no-build-isolation -Cbuild-dir=build/gui-scroll-release
@@ -94,7 +94,16 @@ supported toolchains remain unchanged (D-0046).
 
 Filesystem tests can describe a tree with `tests.testkit.spec`, create it under pytest's `tmp_path` with `Fixture.create`, and compare logical totals with `oracle`. Keep each fixture inside the test's temporary directory. Call `fixture.caps.require("feature")` before relying on an optional OS feature; CI sets `DAFREE_REQUIRE_ALL_CAPS=1` so an unexpected missing capability fails the test.
 
-On Linux with Clang and libFuzzer installed, build the glob fuzz target with `cmake --preset fuzz -DCMAKE_CXX_COMPILER=clang++` and `cmake --build build/fuzz --target fuzz_glob`. Run it with a corpus directory created for that test, for example `build/fuzz/core/fuzz_glob /path/to/temporary/corpus -runs=10000`. CI builds the target and runs a smoke campaign with address and undefined-behavior sanitizers.
+On Linux with Clang and libFuzzer installed, configure with
+`cmake --preset fuzz -DCMAKE_CXX_COMPILER=clang++` and build with
+`cmake --build build/fuzz --target fuzz_glob fuzz_runlist`. Give each target a
+separate temporary corpus, for example
+`build/fuzz/core/fuzz_runlist /path/to/temporary/corpus -runs=10000 -max_len=1048576`.
+CI runs 1,000 smoke mutations for each with address and undefined-behavior
+sanitizers. The run-list harness accepts inputs up to 1 MiB; the decoder itself
+has no input-size cap and independently rejects output above 64 MiB before
+allocation. Native tests also exercise larger encoded input for that limit.
+The longer nightly campaigns remain assigned to T3.8.
 
 The Linux scanner concurrency gate uses `cmake --preset dev-tsan -DCMAKE_CXX_COMPILER=clang++` and `cmake --build build/dev-tsan --target dafree_core_tests`. Run the scanner cases with `TSAN_OPTIONS=halt_on_error=1`; the CI workflow lists their doctest names explicitly.
 
@@ -131,7 +140,7 @@ There is no DCO requirement. Contributions are accepted under the project's MIT 
 
 ### Coverage checks
 
-Main/nightly coverage jobs run the complete correctness suite on Linux, Windows,
+Coverage jobs run the complete correctness suite on Linux, Windows,
 and macOS, retaining Python XML/data reports. Overall/API/settings/paths remain
 at 85%, CLI at 80%, and GUI at 70%; native model/scanner line gates remain 85%
 each on Linux. Repaint budgets run separately without coverage instrumentation.
