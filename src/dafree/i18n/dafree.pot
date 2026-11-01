@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-01 07:15+0200\n"
+"POT-Creation-Date: 2026-11-01 09:18+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,14 +27,38 @@ msgstr ""
 msgid "A scan is already running."
 msgstr ""
 
+msgid "Access denied"
+msgstr ""
+
+msgid "Administrator"
+msgstr ""
+
+msgid "Age"
+msgstr ""
+
 msgid "Allocated"
 msgstr ""
 
 msgid "An unexpected error occurred. Details were saved to the application log."
 msgstr ""
 
+msgid "Cancel"
+msgstr ""
+
 #, python-brace-format
 msgid "Cannot access preferences: {error}"
+msgstr ""
+
+msgid "Changed during scan"
+msgstr ""
+
+msgid "Charts"
+msgstr ""
+
+msgid "Choose a target to start a scan."
+msgstr ""
+
+msgid "Compare"
 msgstr ""
 
 msgid "Copy details"
@@ -43,10 +67,24 @@ msgstr ""
 msgid "Could not pass arguments to the other instance."
 msgstr ""
 
+#, python-brace-format
+msgid "Could not prepare tree: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Could not read volumes: {error}"
+msgstr ""
+
 msgid "Directory tree"
 msgstr ""
 
 msgid "Disk Analyzer Free"
+msgstr ""
+
+msgid "Duplicates"
+msgstr ""
+
+msgid "Empty"
 msgstr ""
 
 msgid "Extension"
@@ -55,19 +93,106 @@ msgstr ""
 msgid "Files"
 msgstr ""
 
+msgid "Files: 0"
+msgstr ""
+
+#, python-brace-format
+msgid "Files: {count}"
+msgstr ""
+
+msgid "Find"
+msgstr ""
+
 msgid "Folders"
+msgstr ""
+
+msgid "Folders: 0"
+msgstr ""
+
+#, python-brace-format
+msgid "Folders: {count}"
+msgstr ""
+
+msgid "I/O error"
+msgstr ""
+
+msgid "Invalid name"
+msgstr ""
+
+msgid "Invalid volume metadata"
+msgstr ""
+
+msgid "Issues"
+msgstr ""
+
+msgid "Issues: 0"
+msgstr ""
+
+#, python-brace-format
+msgid "Issues: {count}"
+msgstr ""
+
+msgid "Kind"
 msgstr ""
 
 msgid "Last Modified"
 msgstr ""
 
+msgid "Loading volumes…"
+msgstr ""
+
+msgid "Locations"
+msgstr ""
+
+msgid "MFT"
+msgstr ""
+
+msgid "Message"
+msgstr ""
+
 msgid "Name"
+msgstr ""
+
+msgid "New scan"
+msgstr ""
+
+msgid "No scan issues."
+msgstr ""
+
+msgid "No volumes available"
+msgstr ""
+
+msgid "Not found"
+msgstr ""
+
+msgid "Orphaned entry"
+msgstr ""
+
+msgid "Other"
 msgstr ""
 
 msgid "Owner"
 msgstr ""
 
+msgid "Parent folder"
+msgstr ""
+
+msgid "Path"
+msgstr ""
+
+msgid "Path too long"
+msgstr ""
+
+msgid "Pause"
+msgstr ""
+
 msgid "Portable mode is not available yet"
+msgstr ""
+
+msgid "Preparing scan…"
+msgstr ""
+
+msgid "Preparing tree view…"
 msgstr ""
 
 msgid "Print a setting as JSON."
@@ -79,17 +204,97 @@ msgstr ""
 msgid "Read and update shared preferences."
 msgstr ""
 
+msgid "Ready"
+msgstr ""
+
+msgid "Recent scans"
+msgstr ""
+
+msgid "Refresh"
+msgstr ""
+
+msgid "Resume"
+msgstr ""
+
+msgid "Running as administrator"
+msgstr ""
+
+msgid "Scan controls"
+msgstr ""
+
+msgid "Scan failed"
+msgstr ""
+
+msgid "Scan issues"
+msgstr ""
+
+msgid "Search"
+msgstr ""
+
+msgid "Search results"
+msgstr ""
+
+msgid "Select a row to inspect it."
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+#, python-brace-format
+msgid "Showing {shown} of {total} issues"
+msgstr ""
+
 msgid "Size"
 msgstr ""
 
+msgid "Snapshots"
+msgstr ""
+
+msgid "Symbolic link loop"
+msgstr ""
+
+msgid "Timeout"
+msgstr ""
+
+msgid "Top"
+msgstr ""
+
+msgid "Total: 0 B"
+msgstr ""
+
+#, python-brace-format
+msgid "Total: {size}"
+msgstr ""
+
+msgid "Tree"
+msgstr ""
+
+msgid "Treemap"
+msgstr ""
+
+msgid "Types"
+msgstr ""
+
 msgid "Unexpected error"
+msgstr ""
+
+msgid "Units"
 msgstr ""
 
 #, python-brace-format
 msgid "Unsupported settings version: {version}"
 msgstr ""
 
+msgid "Up"
+msgstr ""
+
 msgid "Validate and save a setting."
+msgstr ""
+
+msgid "Volumes"
+msgstr ""
+
+msgid "Walk"
 msgstr ""
 
 msgid "dotted setting name"
@@ -137,7 +342,32 @@ msgid "user preference (version is managed by migrations)"
 msgstr ""
 
 #, python-brace-format
+msgid "{days}d {time}"
+msgstr ""
+
+#, python-brace-format
+msgid "{free} free of {total}"
+msgstr ""
+
+#, python-brace-format
 msgid "{key}: expected {expected}"
+msgstr ""
+
+#, python-brace-format
+msgid "{label} ({mount})"
+msgstr ""
+
+#, python-brace-format
+msgid "{mount}: {capacity}"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"{name}\n"
+"Size: {size}\n"
+"Allocated: {allocated}\n"
+"Files: {files}\n"
+"Folders: {folders}"
 msgstr ""
 
 #, python-brace-format

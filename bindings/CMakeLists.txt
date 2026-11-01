@@ -1,5 +1,5 @@
 nanobind_add_module(_core STABLE_ABI NB_STATIC LTO NB_SUPPRESS_WARNINGS
-  src/module.cpp src/strings.cpp src/scan_bind.cpp src/tree_bind.cpp src/view_bind.cpp src/testing_bind.cpp)
+  src/module.cpp src/strings.cpp src/scan_bind.cpp src/tree_bind.cpp src/view_bind.cpp src/platform_bind.cpp src/testing_bind.cpp)
 target_compile_features(_core PRIVATE cxx_std_20)
 if(MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL "15.1.0")
   # This optional local toolchain ICEs in nanobind's wrap_move during the LTO alias pass.

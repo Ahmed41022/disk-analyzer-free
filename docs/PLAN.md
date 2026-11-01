@@ -1539,9 +1539,9 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T4.4
   - **Acceptance:** `test_keyboard_navigation`, `test_rtl_chevron_mirrors`, `test_column_visibility_persists`, `test_accessible_text_role_present`; perf (`slow` marker, Linux leg in CI, all OSes nightly): `test_scroll_10m_rows_frame_times` — scrolls a MockBackend-free synthetic 10M-row `TreeView` (built via `_core.testing.TreeBuilder` flat tree) in 60 jumps; median repaint ≤ 16.7 ms and p95 ≤ 33 ms on CI runners.
 
-- [ ] **T4.6 — Main window, tabs, status bar, sidebar**
+- [x] **T4.6 — Main window, tabs, status bar, sidebar**
   - **Files:** M `src/dafree/gui/main_window.py`, C `src/dafree/gui/views/{tree_tab.py,issues_tab.py}`, `src/dafree/gui/widgets/{volume_list.py,breadcrumb.py}`, `tests/gui/test_main_window.py`.
-  - **Behavior:** layout per §2.10; tabs created lazily on first activation; status bar shows mode, counts, total, elapsed, issue count (click → Issues tab), elevated badge on Windows; sidebar lists `platform.volumes()` with used/free bars and network icon, recent scans, snapshots dir.
+  - **Behavior:** layout per §2.10; tabs created lazily on first activation; status bar shows mode, counts, total, elapsed, issue count (click → Issues tab), elevated badge on Windows; sidebar lists `platform.volumes()` with used/free bars and network icon, recent scans, snapshots dir. D-0047 stages the SDK facade over existing M1 volume services; Windows elevation stays explicitly unavailable until paused T3.7. Tree details use metadata until M5 visualization work.
   - **Depends on:** T4.5, T4.3
   - **Acceptance:** `test_status_bar_updates_from_progress`, `test_issue_count_click_opens_issues_tab`, `test_volume_list_populated`.
 

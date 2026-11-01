@@ -10,6 +10,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- Main window with lazy Tree/Issues views, background native volume discovery, capacity bars, recent targets, breadcrumbs, live status, and asynchronous scan shutdown.
+
 - Virtual tree table with RTL chevrons, depth percentage bars, original category icons, row navigation, debounced column preferences, and a strict 60-jump repaint budget on ten million native rows.
 
 - A bounded, paged Qt tree table model with correct structural notifications, native column sorting, accessible row descriptions, and selection restoration by node ID.

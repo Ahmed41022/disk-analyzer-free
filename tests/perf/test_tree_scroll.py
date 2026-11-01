@@ -27,7 +27,7 @@ from dafree import api
 from dafree.api.testing import TreeBuilder
 from dafree.gui.app import _ApplicationState, build_app
 from dafree.gui.models.tree_model import TreeTableModel
-from dafree.gui.widgets.tree_table import TreeTable
+from dafree.gui.widgets.tree_table import TreeTableView
 from dafree.paths import AppPaths
 from dafree.settings import ColumnId, Settings
 
@@ -61,7 +61,7 @@ def test_scroll_10m_rows_frame_times(
     assert state is not None
     tree = TreeBuilder.flat(tmp_path / "synthetic", 10_000_000)
     model = TreeTableModel(api.TreeView(tree), list(ColumnId))
-    table = TreeTable(model, settings)
+    table = TreeTableView(model, settings)
     table.resize(1280, 720)
     counter = PaintCounter(table)
     table.viewport().installEventFilter(counter)

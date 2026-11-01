@@ -3,6 +3,7 @@
 
 #include <doctest/doctest.h>
 
+#include <algorithm>
 #include <array>
 #include <cstring>
 #include <stdexcept>
@@ -101,6 +102,17 @@ void make_junction(const std::wstring &path, const std::wstring &target) {
 }
 
 } // namespace
+
+TEST_CASE("volume_listing_restores_thread_error_mode") {
+    const DWORD before = ::GetThreadErrorMode();
+    const auto volumes = dafree::platform::list_volumes();
+    CHECK(::GetThreadErrorMode() == before);
+    TempDir temp;
+    const auto own_volume = dafree::platform::volume_info(detail::to_wtf8(temp.root));
+    REQUIRE(own_volume.has_value());
+    CHECK(std::any_of(volumes.begin(), volumes.end(),
+                      [&](const auto &volume) { return volume.serial == own_volume->serial; }));
+}
 
 TEST_CASE("lists_files_with_sizes") {
     TempDir temp;

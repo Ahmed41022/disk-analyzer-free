@@ -62,6 +62,19 @@ std::optional<VolumeInfo> volume_info(std::string_view path) {
 }
 
 std::vector<VolumeInfo> list_volumes() {
+    struct RestoreErrorMode {
+        DWORD previous;
+        bool changed;
+        ~RestoreErrorMode() {
+            if (changed)
+                ::SetThreadErrorMode(previous, nullptr);
+        }
+    };
+    const DWORD previous_mode = ::GetThreadErrorMode();
+    const RestoreErrorMode restore{
+        previous_mode,
+        ::SetThreadErrorMode(previous_mode | SEM_FAILCRITICALERRORS, nullptr) != FALSE};
+    // Capacity probes of empty removable drives must report failure, not show an OS dialog.
     const DWORD length = ::GetLogicalDriveStringsW(0, nullptr);
     if (length == 0)
         return {};
