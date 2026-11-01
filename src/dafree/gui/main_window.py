@@ -7,7 +7,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 
-from PySide6.QtCore import QLocale, QSignalBlocker, Qt, QTime, QTimer, Signal
+from PySide6.QtCore import QLocale, QSignalBlocker, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QCloseEvent
 from PySide6.QtWidgets import (
     QDockWidget,
@@ -34,6 +34,7 @@ from dafree.gui.dialogs.scan_dialog import ScanDialog
 from dafree.gui.views.issues_tab import IssuesTab
 from dafree.gui.views.tree_tab import TreeTab
 from dafree.gui.widgets.breadcrumb import ElidedPathLabel
+from dafree.gui.widgets.progress_panel import ProgressPanel, elapsed_text
 from dafree.gui.widgets.volume_list import VolumeList
 from dafree.i18n import _
 from dafree.paths import AppPaths
@@ -42,12 +43,6 @@ from dafree.settings import Settings, WindowState, save_settings
 _WINDOWS = sys.platform == "win32"
 _MAX_ISSUES = 1000
 _MAX_RECENT = 10
-
-
-def _elapsed_text(milliseconds: int) -> str:
-    days, seconds = divmod(milliseconds // 1000, 24 * 60 * 60)
-    time = QLocale().toString(QTime(0, 0).addSecs(seconds), "HH:mm:ss")
-    return _("{days}d {time}").format(days=QLocale().toString(days), time=time) if days else time
 
 
 @dataclass(frozen=True)
@@ -84,7 +79,6 @@ class MainWindow(QMainWindow):
         self._pages: dict[str, TreeTab | IssuesTab] = {}
         self._tab_keys: list[str] = []
         self._closing = False
-        self._pause_requested = False
         self.runner = TaskRunner(self)
         self.controller = ScanController(self, runner=self.runner, backend=scan_backend)
         self.setWindowTitle(_("Disk Analyzer Free"))
@@ -95,6 +89,7 @@ class MainWindow(QMainWindow):
         self._build_toolbar()
         self._build_sidebar(volume_provider)
         self._build_tabs()
+        self._build_progress()
         self._build_status(elevation_provider)
         self._close_timer = QTimer(self)
         self._close_timer.setInterval(50)
@@ -124,11 +119,9 @@ class MainWindow(QMainWindow):
         self.pause = QAction(_("Pause"), self)
         self.pause.setCheckable(True)
         self.pause.setEnabled(False)
-        self.pause.triggered.connect(self._pause)
         toolbar.addAction(self.pause)
         self.cancel = QAction(_("Cancel"), self)
         self.cancel.setEnabled(False)
-        self.cancel.triggered.connect(self._cancel)
         toolbar.addAction(self.cancel)
         for caption in (_("Refresh"), _("Units")):
             action = toolbar.addAction(caption)
@@ -190,7 +183,6 @@ class MainWindow(QMainWindow):
 
     def _build_tabs(self) -> None:
         self.tabs = QTabWidget(self)
-        self.setCentralWidget(self.tabs)
         for key, title in (
             ("tree", _("Tree")),
             ("treemap", _("Treemap")),
@@ -211,6 +203,20 @@ class MainWindow(QMainWindow):
             self.tabs.setTabEnabled(index, key in ("tree", "issues"))
         self.tabs.currentChanged.connect(self._activate_tab)
         self._activate_tab(0)
+
+    def _build_progress(self) -> None:
+        body = QWidget(self)
+        layout = QVBoxLayout(body)
+        self.progress_panel = ProgressPanel(
+            self.controller,
+            self._settings,
+            body,
+            pause_action=self.pause,
+            cancel_action=self.cancel,
+        )
+        layout.addWidget(self.progress_panel)
+        layout.addWidget(self.tabs, 1)
+        self.setCentralWidget(body)
 
     def _activate_tab(self, index: int) -> None:
         if index < 0:
@@ -250,7 +256,7 @@ class MainWindow(QMainWindow):
         self.files_label = QLabel(_("Files: 0"), self)
         self.dirs_label = QLabel(_("Folders: 0"), self)
         self.total_label = QLabel(_("Total: 0 B"), self)
-        self.elapsed_label = QLabel(_elapsed_text(0), self)
+        self.elapsed_label = QLabel(elapsed_text(0), self)
         for label in (
             self.mode_label,
             self.files_label,
@@ -332,12 +338,7 @@ class MainWindow(QMainWindow):
         self._latest_tree = None
         self._issues.clear()
         self._issue_total = 0
-        self._pause_requested = False
         self.new_scan.setEnabled(False)
-        self.pause.setEnabled(True)
-        self.pause.setChecked(False)
-        self.pause.setText(_("Pause"))
-        self.cancel.setEnabled(True)
         self.mode_label.setText(_("Preparing scan…"))
         self.files_label.setText(_("Files: {count}").format(count=QLocale().toString(0)))
         self.dirs_label.setText(_("Folders: {count}").format(count=QLocale().toString(0)))
@@ -346,7 +347,7 @@ class MainWindow(QMainWindow):
                 size=api.format_size(0, self._settings.units, self._settings.unit_style)
             )
         )
-        self.elapsed_label.setText(_elapsed_text(0))
+        self.elapsed_label.setText(elapsed_text(0))
         self.notice_label.hide()
         self.issues_button.setText(_("Issues: 0"))
         tree_page = self._pages.get("tree")
@@ -368,7 +369,7 @@ class MainWindow(QMainWindow):
                 )
             )
         )
-        self.elapsed_label.setText(_elapsed_text(progress.elapsed_ms))
+        self.elapsed_label.setText(elapsed_text(progress.elapsed_ms))
         self._issue_total = progress.issues
         self.issues_button.setText(
             _("Issues: {count}").format(count=locale.toString(progress.issues))
@@ -393,8 +394,6 @@ class MainWindow(QMainWindow):
         self._issue_total = metadata.issues.total
         self._tree_ready(result.tree)
         self.new_scan.setEnabled(True)
-        self.pause.setEnabled(False)
-        self.cancel.setEnabled(False)
         targets = [str(path) for path in metadata.options.targets]
         self._settings.recent_targets = list(
             dict.fromkeys(targets + self._settings.recent_targets)
@@ -410,20 +409,8 @@ class MainWindow(QMainWindow):
         self.mode_label.setText(_("Scan failed"))
         self._show_notice(message)
         self.new_scan.setEnabled(True)
-        self.pause.setEnabled(False)
-        self.cancel.setEnabled(False)
         if self._closing:
             self._try_close()
-
-    def _pause(self, checked: bool) -> None:
-        self._pause_requested = checked
-        self.controller.pause() if checked else self.controller.resume()
-        self.pause.setText(_("Resume") if checked else _("Pause"))
-
-    def _cancel(self) -> None:
-        self.controller.cancel()
-        self.pause.setEnabled(False)
-        self.cancel.setEnabled(False)
 
     def _try_close(self) -> None:
         if self._closing and not self.controller.running and not self.runner.busy:
