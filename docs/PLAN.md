@@ -1474,7 +1474,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T1.15
   - **Acceptance:** doctest `expand_inserts_sorted_children`, `collapse_removes_descendants`, `sort_each_key_both_directions` (random vs naive), `natural_name_sort`, `filter_shows_ancestors_of_matches`; benchmarks `BM_Expand100kChildren` < 150 ms, `BM_RowsWindow10M` (rows at 9,999,900) < 2 ms.
 
-- [ ] **T4.2 — Application bootstrap**
+- [x] **T4.2 — Application bootstrap**
   - **Files:** M `src/dafree/gui/app.py`, C `src/dafree/gui/theme/{palette.py,style.qss}`, `src/dafree/gui/controllers/task_runner.py`.
   - **Interface:**
     ```python

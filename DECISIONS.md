@@ -14,6 +14,26 @@ This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when it
 
 Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `coverage` needs cross-OS Python coverage and Codecov upload (T4.13 follow-up); `python` gains GUI scroll performance in T4.5 and SMB/scheduler integration in T9.5–T9.7. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
+## D-0042 — 2026-11-01 — Bootstrap before deferred GUI settings and actions
+
+Question: What should application startup implement before the deferred settings/RTL tasks and later main-window actions?
+
+Choice: T4.2 applies Fusion, the persisted initial light/dark/system palette, gettext locale, available Qt base translators, and initial layout direction. Live theme switching, settings dialogs, complete GUI translations, and RTL refinement remain deferred. Every new custom UI string uses `_()`. Public `main(argv)` takes explicit arguments after the executable name; `dafree gui` passes an empty list so its Click subcommand token is not forwarded as a target. Validate the optional Qt runtime before reading user configuration, including when the bootstrap module is cached.
+
+Choice: Use a `QLockFile` in the application data directory and a user-access-only `QLocalServer` endpoint. Hash the data-directory identity into a short endpoint name in Qt's temporary directory (named pipe on Windows), avoiding Unix socket path limits. Messages are bounded ASCII-escaped JSON arrays, retaining native surrogate characters without normalization. Use a Python-object signal to preserve them across Qt. The first instance acknowledges delivery before the second exits. Bootstrap activates the first window and retains its latest launch arguments; actual target opening belongs to later main-window actions. Tests exercise actual second processes while servicing the first process's Qt event loop, with both config and IPC locations in test-created temporary directories.
+
+Choice: Disable age-based lock expiry with `setStaleLockTime(0)` while retaining Qt's PID/host checks. This follows [Qt's long-lived lock guidance](https://doc.qt.io/qt-6/qlockfile.html#details). The live-lock integration test deliberately ages the lock file before launching its peer; no test waits for an expiry timeout or bypasses locking.
+
+Choice: Background callables use an owned `QThreadPool` capped at four workers. Internal completion/failure slots run on the owning GUI thread before emitting the specified public signals; arbitrary task IDs, including unhashable objects, are preserved. Native calls remain behind the existing public API. Unhandled main/thread Python exceptions are logged and delivered to a non-blocking error dialog with Copy details.
+
+Choice: Escape surrogate code points in displayed exception text before transporting it through Qt string signals. A regression reproduced `bad-\ud800` being truncated to `bad-` by QString conversion; the GUI/log now retain the explicit `\ud800` diagnostic spelling. Keep pending launch arguments in a Python list on the window, avoiding QVariant string-list conversion. Native paths, result objects, and forwarded argument lists remain unchanged and lossless. This is display formatting, not filename normalization.
+
+Choice: Select the dated UTF-8 log at launch, keeping a session's diagnostics together in that file. Keep its launch-date log plus six newest other dated regular app logs, including when the clock moved backward. No runtime rollover timer is specified or introduced. Retention and stale IPC/lock cleanup are application-owned housekeeping, separate from operations on user-selected scan targets. Touch only the named application namespace; reject linked data/log directories and today's linked log path, leave old links/unrelated files untouched. M8's explicit confirmation/trash/dry-run and fd-relative no-follow C++ remover requirements remain mandatory for user-file actions. Initial path/permission failures propagate rather than silently redirect application storage. Attach bootstrap state to the QApplication only after successful initialization, so a failed log open leaves no partial object behind.
+
+Reasoning: These choices implement the selected bootstrap task without enabling deferred settings, action, or localization features. A delivery acknowledgment prevents a short-lived second process from losing its message before the first accepts it. Qt wraps Fusion in QStyleSheetStyle when CSS is active; the palette test temporarily removes CSS to inspect the actual base style rather than incorrectly expecting the wrapper's object name to be Fusion.
+
+Task: T4.2
+
 ## D-0041 — 2026-11-01 — Enforce the owner's main/nightly-only heavy tier
 
 Question: Should manual branch or merge-queue runs inherit all heavy jobs just because they are not PR events?

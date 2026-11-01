@@ -10,6 +10,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- Desktop bootstrap with initial Fusion palettes, locale/Qt translator setup, acknowledged single-instance argument forwarding, bounded background tasks, and dated diagnostic logs with copyable error details.
+
 - Native paged tree views with natural sibling sorting, bounded regex/expression filtering, preserved expansion paths, lazy owners, and a typed Python tuple API. Release view budgets and Python sanitizer coverage join the full CI tier.
 
 - Shared typed JSON preferences with atomic saves, corruption backups, v0 migration, and `config get/set/path` commands.

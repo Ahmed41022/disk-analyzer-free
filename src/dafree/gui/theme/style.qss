@@ -1,0 +1,10 @@
+/* Colors come from the application palette, including disabled and selected text. */
+QToolTip {
+    color: palette(tool-tip-text);
+    background-color: palette(tool-tip-base);
+    padding: 5px;
+}
+QAbstractItemView {
+    selection-background-color: palette(highlight);
+    selection-color: palette(highlighted-text);
+}
