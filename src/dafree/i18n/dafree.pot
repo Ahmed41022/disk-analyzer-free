@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-01 09:52+0200\n"
+"POT-Creation-Date: 2026-11-01 15:14+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -30,6 +30,9 @@ msgstr ""
 msgid "Access denied"
 msgstr ""
 
+msgid "Accessed"
+msgstr ""
+
 msgid "Add folder…"
 msgstr ""
 
@@ -48,13 +51,22 @@ msgstr ""
 msgid "Age"
 msgstr ""
 
+msgid "All kinds"
+msgstr ""
+
 msgid "Allocated"
+msgstr ""
+
+msgid "Allocated size is approximate"
 msgstr ""
 
 msgid "An unexpected error occurred. Details were saved to the application log."
 msgstr ""
 
 msgid "Auto"
+msgstr ""
+
+msgid "CSV files (*.csv)"
 msgstr ""
 
 msgid "Cancel"
@@ -82,10 +94,34 @@ msgstr ""
 msgid "Choose scan folder"
 msgstr ""
 
+msgid "Cloud placeholder"
+msgstr ""
+
+msgid "Combined scan"
+msgstr ""
+
 msgid "Compare"
 msgstr ""
 
+msgid "Compressed"
+msgstr ""
+
+msgid "Copy all"
+msgstr ""
+
+msgid "Copy all displayed issues."
+msgstr ""
+
 msgid "Copy details"
+msgstr ""
+
+msgid "Copy path"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Could not export issues: {error}. Choose a new filename; existing files "
+"are preserved."
 msgstr ""
 
 msgid "Could not pass arguments to the other instance."
@@ -105,6 +141,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Could not validate folder: {error}"
+msgstr ""
+
+msgid "Created"
 msgstr ""
 
 msgid "Cross filesystems"
@@ -135,16 +174,38 @@ msgstr ""
 msgid "Exclude system entries"
 msgstr ""
 
+msgid "Excluded from totals"
+msgstr ""
+
 msgid "Excluded globs, one per line"
 msgstr ""
 
 msgid "Excluded paths, one per line"
 msgstr ""
 
+msgid "Export CSV"
+msgstr ""
+
+msgid "Export issues"
+msgstr ""
+
+msgid "Export retained issues matching the current filter to a new file."
+msgstr ""
+
+#, python-brace-format
+msgid "Exported {count} issues."
+msgstr ""
+
+msgid "Exporting issues…"
+msgstr ""
+
 msgid "Extension"
 msgstr ""
 
 msgid "Fast scanning is unavailable in this build."
+msgstr ""
+
+msgid "File"
 msgstr ""
 
 msgid "Files"
@@ -161,6 +222,9 @@ msgid "Find"
 msgstr ""
 
 msgid "Finishing scan…"
+msgstr ""
+
+msgid "Folder"
 msgstr ""
 
 #, python-brace-format
@@ -183,7 +247,16 @@ msgstr ""
 msgid "Follow symbolic links"
 msgstr ""
 
+msgid "Full path"
+msgstr ""
+
 msgid "Globs"
+msgstr ""
+
+msgid "Hard link — not counted in totals"
+msgstr ""
+
+msgid "Hidden"
 msgstr ""
 
 msgid "I/O error"
@@ -193,6 +266,9 @@ msgid "Invalid name"
 msgstr ""
 
 msgid "Invalid volume metadata"
+msgstr ""
+
+msgid "Issue kind"
 msgstr ""
 
 msgid "Issues"
@@ -226,6 +302,12 @@ msgstr ""
 msgid "Mode"
 msgstr ""
 
+msgid "Modified"
+msgstr ""
+
+msgid "Mount point"
+msgstr ""
+
 msgid "Name"
 msgstr ""
 
@@ -254,6 +336,9 @@ msgid "Parent folder"
 msgstr ""
 
 msgid "Partial results"
+msgstr ""
+
+msgid "Partial scan"
 msgstr ""
 
 msgid "Path"
@@ -286,6 +371,9 @@ msgstr ""
 msgid "Print the preferences file path."
 msgstr ""
 
+msgid "Properties"
+msgstr ""
+
 msgid "Rate: —"
 msgstr ""
 
@@ -304,6 +392,12 @@ msgstr ""
 msgid "Remove targets"
 msgstr ""
 
+msgid "Reparse point"
+msgstr ""
+
+msgid "Resolving…"
+msgstr ""
+
 msgid "Restart as administrator"
 msgstr ""
 
@@ -313,6 +407,9 @@ msgstr ""
 msgid "Running as administrator"
 msgstr ""
 
+msgid "Scan"
+msgstr ""
+
 msgid "Scan cancelled. Partial results are available."
 msgstr ""
 
@@ -320,6 +417,9 @@ msgid "Scan complete."
 msgstr ""
 
 msgid "Scan controls"
+msgstr ""
+
+msgid "Scan error"
 msgstr ""
 
 msgid "Scan failed"
@@ -365,10 +465,23 @@ msgstr ""
 msgid "Snapshots"
 msgstr ""
 
+msgid "Sparse"
+msgstr ""
+
 msgid "Start scan"
 msgstr ""
 
+msgid "Symbolic link"
+msgstr ""
+
 msgid "Symbolic link loop"
+msgstr ""
+
+msgid "System"
+msgstr ""
+
+#, python-brace-format
+msgid "The new report may be incomplete: {error}"
 msgstr ""
 
 msgid "Threads"
@@ -393,7 +506,13 @@ msgstr ""
 msgid "Treemap"
 msgstr ""
 
+msgid "Type"
+msgstr ""
+
 msgid "Types"
+msgstr ""
+
+msgid "Unavailable"
 msgstr ""
 
 msgid "Unexpected error"
@@ -410,6 +529,9 @@ msgid "Up"
 msgstr ""
 
 msgid "Validate and save a setting."
+msgstr ""
+
+msgid "Volume"
 msgstr ""
 
 msgid "Volumes"
@@ -475,6 +597,17 @@ msgid "{key}: expected {expected}"
 msgstr ""
 
 #, python-brace-format
+msgid ""
+"{label}\n"
+"Mount: {mount}\n"
+"Filesystem: {filesystem}\n"
+"Serial: {serial}\n"
+"Capacity: {total}\n"
+"Free: {free}\n"
+"Cluster size: {cluster}"
+msgstr ""
+
+#, python-brace-format
 msgid "{label} ({mount})"
 msgstr ""
 
@@ -497,4 +630,8 @@ msgstr ""
 
 #, python-brace-format
 msgid "{rate} files/s"
+msgstr ""
+
+#, python-brace-format
+msgid "{size} ({ratio} of logical size)"
 msgstr ""

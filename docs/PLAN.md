@@ -1581,9 +1581,9 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T0.7, T4.6
   - **Acceptance:** `test_arabic_sets_rtl_layout`, `test_no_untranslated_literals` (AST scan of `src/dafree/gui`: string literals passed to `setText/setWindowTitle/QAction/QLabel/setToolTip/addTab` must be wrapped in `_()`; allowlist for symbols).
 
-- [ ] **T4.13 — Properties dialog and Issues view**
+- [x] **T4.13 — Properties dialog and Issues view**
   - **Files:** C `src/dafree/gui/dialogs/properties_dialog.py`, M `views/issues_tab.py`.
-  - **Behavior:** properties: full path (copy button), type, size, allocated (+ ratio), files/folders, three timestamps (or "—"), owner (resolved on open), flags as human badges (e.g. "Hard link — not counted in totals"), volume info. Issues: table with kind filter, "Copy all", "Export CSV".
+  - **Behavior:** properties: full path (copy button), type, size, allocated (+ ratio), files/folders, three timestamps (or "—"), owner (resolved on open), flags as human badges (e.g. "Hard link — not counted in totals"), volume info. Issues: table with kind filter, "Copy all", "Export CSV". D-0051 defines retained-row actions, stored volume metadata, exclusive new reports, and clipboard lifetime handling; D-0052 completes the assigned cross-OS Python coverage follow-up.
   - **Depends on:** T4.6
   - **Acceptance:** `test_flags_render_human_labels`, `test_issues_filter_by_kind`.
 

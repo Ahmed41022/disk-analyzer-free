@@ -12,7 +12,49 @@ This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when it
 | `bench` | T2.2, after M4-core | Add executable CLI wall-time/RSS comparison to existing `bench_compare`; run on main/nightly under D-0030 until M4-core completes. |
 | `pr-title` | T0.5 follow-up after these prerequisites | Enforce Conventional Commits on PR titles; no feature prerequisite. |
 
-Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `coverage` needs cross-OS Python coverage and Codecov upload (T4.13 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance lands in T4.5. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
+Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance lands in T4.5. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
+
+Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
+
+## D-0053 — 2026-11-01 — Validation fixes for minimum mock delays and test method ownership
+
+Question: How should two validation failures discovered during T4.13 be fixed without relaxing timing assertions or hiding native leak warnings?
+
+Choice: The existing Windows native test configured a 10 ms MockBackend delay but measured only 3.3872 ms after the underlying sleep returned. Keep its minimum-delay assertion unchanged. Make the nonzero-delay mock path re-check elapsed steady-clock milliseconds and sleep the remaining interval until the configured minimum has passed. The zero-delay benchmark path adds no clock query, sleep, or allocation. Add minimum-delay regressions at 1, 2, 10, and 25 ms across four tick phases, checking every sample. This repairs deterministic test infrastructure; real filesystem scanner paths are unchanged.
+
+Choice: Patching a method on an individual public Tree instance can restore a bound method into its instance dictionary, creating a self-reference cycle that retains native owners until late interpreter collection. Patch the facade class with an identity guard instead, restoring its unbound method and retaining every original owner/timestamp/volume assertion. Keep native leak diagnostics enabled and reject them in subprocess validation. Use bound main-window slots and opaque action data for property dialogs/context menus, dispose popup menus when hidden, and close owned property dialogs when their window closes. Release background runnable callables/results immediately after delivery so a completed wrapper cannot retain captured native trees; weak-reference regressions cover success and failure without forcing collection. Extend real application shutdown tests to cover open properties during both close and external quit.
+
+Reasoning: A minimum mock delay must be measured against a monotonic clock rather than assumed from one platform sleep. Correct fixture restoration and explicit dialog ownership release native state promptly without forcing collection, disabling diagnostics, weakening assertions, or retrying flaky tests.
+
+Task: T4.13 validation follow-up
+
+## D-0052 — 2026-11-01 — Three-platform Python coverage and optional Codecov
+
+Question: How should the coverage follow-up already assigned to T4.13 land without changing the owner's temporary CI tiers?
+
+Choice: Expand the existing coverage job to Linux, Windows, and macOS on main/nightly only. Run the complete correctness suite under coverage, combine parallel data through the existing source-path aliases, retain XML/JUnit/data artifacts, and enforce §6.7's unchanged thresholds: overall 85%, API/settings/paths 85%, CLI 80%, GUI 70%. Keep the existing independent native model/scanner 85% line checks and native artifacts on Linux. The strict slow repaint test continues in its existing uninstrumented performance step; coverage tracing is not part of a repaint measurement. PR guards and aggregation remain unchanged; 264 event/ref/job/result scenarios verify that policy.
+
+Choice: Wire the plan's Codecov action only when `secrets.CODECOV_TOKEN` exists, with upload failures fatal when enabled. Repository secret names were inspected: no token is configured. Local thresholds and downloadable reports remain mandatory without it, as specified in §7.3; no external dashboard upload is claimed. Record the CI-only dependency `codecov/codecov-action` v5, pinned to resolved commit `04b047e8bb82a0c002c8312c1c880fbc6a999d45`, MIT license (verified from its official v5 LICENSE). It implements the plan's optional report publication, introduces no application runtime dependency, and receives no token while unconfigured.
+
+Reasoning: Native coverage alone did not complete the promised Python coverage follow-up. Independent per-OS Python gates retain all existing tests and thresholds and make platform differences visible. Conditional publication follows the supplied plan without requiring an unavailable credential or weakening local enforcement.
+
+Task: T4.13 / §7.3 coverage follow-up
+
+## D-0051 — 2026-11-01 — Read-only properties, retained issue actions, and clipboard ownership
+
+Question: How should properties and issue exports work before deferred file actions and snapshot features, including undecodable native paths?
+
+Choice: Show the selected node's stored path/type/sizes/counts/three timestamps, human flag badges, and the longest matching captured volume record. Unknown timestamps/volume data show “—”; zero logical size has no allocation ratio. Resolve only the opened node's owner through the existing native API in a worker, retaining cached results and showing an optional-lookup error without hiding other fields. Enter and a Properties-only context menu open the dialog. Do not enable delete/move/reveal actions ahead of their tasks or re-stat paths to invent snapshot metadata.
+
+Choice: Keep the native first-1,000 diagnostic bound and complete count. Kind filtering applies to both “Copy all” and CSV export: these actions operate on all displayed retained rows, not diagnostics that were never retained. CSV uses translated Kind/Path/Message headers, standard comma/newline quoting, UTF-8, and explicit surrogate display escapes. Clipboard text uses that same readable representation, with supplemental raw native strings in MIME data (path bytes with surrogate-pass encoding; issues as ASCII JSON).
+
+Choice: Use Qt-created clipboard storage (`setText` followed by supplemental data on its owned MIME object). A minimal Windows offscreen reproduction showed that transferring a Python-created `QMimeData` crashes at process shutdown despite its ownership flag changing to C++; the Qt-created path exits cleanly. Retain all text/raw-payload assertions and add a real subprocess exit regression. The fix adds no dependency.
+
+Choice: CSV export creates a new report exclusively in a worker. Existing files and final symlinks are rejected rather than overwritten; the save dialog does not present a misleading overwrite confirmation. An I/O error after creation explicitly reports that the new file may be incomplete and leaves it available for inspection. No existing user file is replaced, deleted, or moved, and no path-based cleanup/remover is introduced. M8's trash/confirmation/dry-run and fd-relative no-follow C++ remover requirements remain unchanged for user-file actions.
+
+Reasoning: Stored metadata and lazy owner resolution satisfy inspection without bringing later algorithms or destructive operations forward. Bounded filtered actions match what the user can see. Exclusive report creation protects existing data; clipboard process-exit tests cover a lifetime bug that assertion-only tests missed.
+
+Task: T4.13
 
 ## D-0050 — 2026-11-01 — Progress metrics, shared actions, and lifecycle alerts
 
