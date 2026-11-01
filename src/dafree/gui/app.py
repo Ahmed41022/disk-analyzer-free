@@ -15,7 +15,10 @@ from pathlib import Path
 from types import TracebackType
 
 from PySide6.QtCore import (
+    QCoreApplication,
     QDir,
+    QEvent,
+    QEventLoop,
     QLibraryInfo,
     QLocale,
     QLockFile,
@@ -296,7 +299,9 @@ def main(argv: list[str] | None = None) -> int:
             _("Could not pass arguments to the other instance."),
         )
         return 1
-    window = create_main_window()
+    window = create_main_window(paths=paths, settings=settings)
+    if settings.window is not None and settings.window.maximized:
+        window.showMaximized()
 
     def activate(arguments: list[str]) -> None:
         window._pending_launch_arguments = arguments.copy()
@@ -311,4 +316,18 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return QApplication.exec()
     finally:
+        guard.argumentsReceived.disconnect(activate)
         guard.close()
+        if not window.close():
+            # The main event loop may also have been quit externally. Keep
+            # delivering cancellation/results until this window can close.
+            shutdown = QEventLoop()
+            window.closed.connect(shutdown.quit)
+            shutdown.exec()
+        window.deleteLater()
+        state = app.findChild(_ApplicationState, _STATE_NAME)
+        if state is not None:
+            state.close()
+            state.setParent(None)
+            state.deleteLater()
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)

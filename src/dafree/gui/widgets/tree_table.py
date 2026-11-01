@@ -26,7 +26,7 @@ from dafree.i18n import _
 from dafree.paths import AppPaths
 from dafree.settings import ColumnId, ColumnSetting, Settings, save_settings
 
-_ROW_HEIGHT = 26
+_ROW_HEIGHT = 24
 _SAVE_DELAY_MS = 250
 _SELECTED = QStyle.StateFlag.State_Selected.value
 _FOCUSED = QStyle.StateFlag.State_HasFocus.value
@@ -41,7 +41,7 @@ class _PaintOption(QStyleOptionViewItem):
     _dafree_row_background: bool
 
 
-class TreeTable(QTableView):
+class TreeTableView(QTableView):
     """Display native pages without allocating items or resizing individual rows."""
 
     propertiesRequested = Signal(object)
@@ -58,6 +58,7 @@ class TreeTable(QTableView):
     ) -> None:
         super().__init__(parent)
         self.tree_model = model
+        model.unit_mode, model.unit_style = settings.units, settings.unit_style
         self._base_resolve_owner = model.view.options.resolve_owner
         self._settings = settings
         self._paths = paths

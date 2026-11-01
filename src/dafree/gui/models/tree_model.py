@@ -54,6 +54,8 @@ class TreeTableModel(QAbstractTableModel):
     def __init__(self, view: api.TreeView, columns: Sequence[ColumnId]) -> None:
         super().__init__()
         self.view = view
+        self.unit_mode = api.UnitMode.AUTO
+        self.unit_style = api.UnitStyle()
         self._row_count = view.row_count
         self.columns = tuple(columns)
         self._pages: OrderedDict[int, list[api.Row]] = OrderedDict()
@@ -102,7 +104,7 @@ class TreeTableModel(QAbstractTableModel):
             return _("{name}, {kind}, {size}, {percent} of parent").format(
                 name=_display_text(row[4]),
                 kind=_("folder") if row[13] & api.NodeFlags.DIR else _("file"),
-                size=api.format_size(row[5]),
+                size=api.format_size(row[5], self.unit_mode, self.unit_style),
                 percent=self._percent(row[7]),
             )
         return self._display(row, self.columns[column])
@@ -118,7 +120,7 @@ class TreeTableModel(QAbstractTableModel):
             case ColumnId.SIZE | ColumnId.ALLOC:
                 approximate = column == ColumnId.ALLOC and row[13] & _ALLOC_UNRELIABLE
                 return ("≈" if approximate else "") + api.format_size(
-                    row[6] if column == ColumnId.ALLOC else row[5]
+                    row[6] if column == ColumnId.ALLOC else row[5], self.unit_mode, self.unit_style
                 )
             case ColumnId.PCT_PARENT:
                 return self._percent(row[7])

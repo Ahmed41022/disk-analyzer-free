@@ -45,6 +45,11 @@ class TaskRunner(QObject):
         self._next_token = 0
         self._pending: dict[int, _Signals] = {}
 
+    @property
+    def busy(self) -> bool:
+        """Whether queued/running work still needs delivery on the owning GUI thread."""
+        return bool(self._pending)
+
     def submit(self, fn: Callable[[], _T], *, task_id: object) -> None:
         """Queue a callable; task IDs are returned unchanged and need not be hashable."""
         token = self._next_token

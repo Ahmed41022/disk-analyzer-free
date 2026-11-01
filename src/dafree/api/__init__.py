@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 
 from dafree import _core
-from dafree.api.errors import DafreeError, ExcludeError, ScanError, ScanErrorCode
+from dafree.api.errors import DafreeError, ExcludeError, ScanError, ScanErrorCode, Unsupported
 from dafree.api.scan import ScanHandle, ScanResult, scan, start_scan
 from dafree.api.tree import Tree
 from dafree.api.types import (
@@ -30,6 +30,7 @@ from dafree.api.types import (
     ScanSummary,
     TimeField,
     VolumeInfo,
+    _volume,
 )
 from dafree.api.view import (
     Cmp64,
@@ -97,6 +98,23 @@ def parse_size(text: str, style: UnitStyle = _DEFAULT_STYLE) -> int:
     return _core.parse_size(text, _native_style(style))
 
 
+class platform:
+    """Read-only host services; unavailable operations raise Unsupported explicitly."""
+
+    @staticmethod
+    def volumes() -> list[VolumeInfo]:
+        """Copy native mounted-volume metadata without enumerating user files."""
+        return [_volume(value) for value in _core.platform.volumes()]
+
+    @staticmethod
+    def is_elevated() -> bool:
+        """Return a known privilege level; never interpret unavailable information as false."""
+        result = _core.platform.is_elevated()
+        if result is None:
+            raise Unsupported("Privilege information is unavailable in this build")
+        return result
+
+
 __all__ = [
     "Backend",
     "Cmp64",
@@ -136,11 +154,13 @@ __all__ = [
     "UnitMode",
     "UnitStyle",
     "UnitSystem",
+    "Unsupported",
     "ViewOptions",
     "VolumeInfo",
     "__version__",
     "format_size",
     "parse_size",
+    "platform",
     "scan",
     "start_scan",
 ]

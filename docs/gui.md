@@ -29,7 +29,7 @@ worker. Pause, resume, and cancel can be requested while startup is pending.
 Cancellation keeps polling until a partial result arrives. A controller owns one
 scan at a time; an explicit `failed` signal reports asynchronous failures and
 leaves it ready for another scan. Final progress and diagnostics arrive before
-the `finished` signal. Main-window scan buttons are part of the next UI tasks.
+the `finished` signal. The main window owns this controller and connects Pause/Resume and Cancel.
 
 Unhandled Python exceptions are logged and displayed in a dialog with **Copy
 details**. Native surrogate characters appear as escaped diagnostic text, so Qt
@@ -75,5 +75,22 @@ later tasks. Clicking a chevron also toggles expansion, with mirrored controls
 and hit regions in RTL. Accessible row descriptions include type, size, and
 percentage without exposing internal numeric IDs.
 
-Main-window integration, scan controls, and file actions are still being built.
+The main window includes a Locations sidebar, the planned tab positions, and a
+status bar with mode, file/folder counts, total size, elapsed time, and a clickable
+issue count. Tree and Issues contents are created only when activated. Later
+analysis tabs and deferred toolbar actions remain disabled. The sidebar discovers
+native volumes in a worker, shows used/free capacity and network icons, and retains
+recent targets and the snapshot directory. Snapshot opening belongs to M6.
+
+`TreeTableView` uses compact 24-pixel rows and initial shared unit preferences.
+The Tree tab prepares native views off-thread and pairs its table with a breadcrumb
+and selection metadata; miniature charts remain M5 work. Issues retain the native
+summary's first 1,000 entries and show its complete count; filtering/export are
+T4.13 work. Windows displays an administrator badge only when elevation is known;
+the real Windows privilege query remains paused T3.7 work.
+
+Closing the window cancels its read-only scan and keeps processing GUI events until
+background work delivers its result, then saves window geometry and disposes the
+native-backed views. Scan-target selection and the detailed progress panel are the
+next tasks; file actions remain deferred.
 Configuration storage paths are described in [configuration commands](cli.md).

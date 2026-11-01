@@ -14,6 +14,22 @@ This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when it
 
 Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `coverage` needs cross-OS Python coverage and Codecov upload (T4.13 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance lands in T4.5. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
+## D-0047 — 2026-11-01 — Main-window integration with paused platform features
+
+Question: How should the selected main-window task expose mounted volumes and scan results while Windows privileges, analysis views, and settings actions remain deferred?
+
+Choice: Expose the existing M1 native `list_volumes` implementations through `_core.platform` and the public `api.platform` facade. Release the GIL and serialize mount-table calls because some host APIs use shared scratch storage. Discover volumes through the background runner; show positive-capacity mounts with used/free bars and native network flags. Preserve raw paths in opaque item data and Python-object signals, escaping only their display. Windows capacity probing temporarily suppresses critical-error dialogs and restores the calling thread's previous error mode; a native regression verifies restoration.
+
+Choice: POSIX elevation uses its existing native helper. Windows elevation remains unknown until paused T3.7: the native binding returns `None`, the public facade raises `Unsupported`, and the administrator badge appears only for a known elevated result. Do not implement token queries or relaunch behavior ahead of that task.
+
+Choice: Create Tree and Issues contents on first activation; retain disabled positions for the later analysis tabs and deferred toolbar actions. Show the snapshot directory without implementing M6 snapshot opening. Tree details show metadata until M5 supplies visualizations. Prepare native views in workers, coalescing snapshots and restoring the focused native node when present. Retain the native summary's first 1,000 issues with its complete count. Closing cancels read-only scans and continues servicing queued work before disposing native-backed widgets; subprocess tests cover ordinary close and external application quit. Correct the smoke fixture to flush deferred Qt deletion after widget teardown instead of leaving native objects alive at binding shutdown.
+
+Choice: Align the table's class name with §2.10 (`TreeTableView`) and use its specified compact 24-pixel row height, correcting the earlier component name/geometry during integration. Apply the initial shared unit preferences to table formatting without adding T4.9 unit switching. Re-run the unchanged ten-million-row repaint budget at this geometry.
+
+Reasoning: The sidebar needs a thin facade over already implemented native services, not a second filesystem backend. Explicit unknown privilege state avoids reporting an unavailable Windows query as a negative result. Lazy views, bounded issue retention, and worker-owned preparation keep the shell responsive without bringing deferred tasks forward.
+
+Task: T4.6
+
 ## D-0046 — 2026-11-01 — Repaint profiling and local Release compiler correction
 
 Question: How should the table meet the unchanged repaint budget, and how should local Windows Release validation handle an observed compiler crash?

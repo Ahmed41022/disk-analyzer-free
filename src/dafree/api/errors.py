@@ -9,6 +9,10 @@ class DafreeError(Exception):
     """Base class for errors reported by the native core."""
 
 
+class Unsupported(DafreeError):
+    """A requested platform operation is unavailable in this build."""
+
+
 class ScanErrorCode(StrEnum):
     """Machine-readable scan failure reason."""
 

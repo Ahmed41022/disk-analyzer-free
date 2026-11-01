@@ -325,13 +325,13 @@ def test_first_window_retains_lossless_launch_arguments(
     qtbot: QtBot, qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Both initial and forwarded paths avoid Qt's QVariant string conversion."""
-    window = MainWindow()
-    qtbot.addWidget(window)
+    # main() owns and disposes this window after its event loop exits.
+    window = MainWindow(volume_provider=lambda: [])
     initial, forwarded = ["initial-\ud800"], ["next-\udcff"]
     with TemporaryDirectory(prefix="da-") as directory:
         monkeypatch.setattr(QDir, "tempPath", lambda: directory)
         monkeypatch.setattr(bootstrap, "detect", lambda: paths_at(tmp_path))
-        monkeypatch.setattr(bootstrap, "create_main_window", lambda: window)
+        monkeypatch.setattr(bootstrap, "create_main_window", lambda **kwargs: window)
 
         def event_loop() -> int:
             assert window._pending_launch_arguments == initial

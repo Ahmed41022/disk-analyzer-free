@@ -26,20 +26,20 @@ from dafree.gui.delegates import TextCache
 from dafree.gui.delegates.name_delegate import NameDelegate
 from dafree.gui.delegates.size_delegate import SizeDelegate
 from dafree.gui.models.tree_model import TreeTableModel
-from dafree.gui.widgets.tree_table import TreeTable
+from dafree.gui.widgets.tree_table import TreeTableView
 from dafree.paths import AppPaths
 from dafree.settings import ColumnId, Settings, load_settings
 
 pytestmark = pytest.mark.gui
-type TableFactory = Callable[..., TreeTable]
+type TableFactory = Callable[..., TreeTableView]
 
 
 @pytest.fixture
 def make_table(qtbot: QtBot, tmp_path: Path) -> Iterator[TableFactory]:
     """Every real/synthetic path and persisted preference stays in this test root."""
-    tables: list[TreeTable] = []
+    tables: list[TreeTableView] = []
 
-    def create(settings: Settings | None = None, paths: AppPaths | None = None) -> TreeTable:
+    def create(settings: Settings | None = None, paths: AppPaths | None = None) -> TreeTableView:
         root = tmp_path / "tree"
         entries = [
             MockEntry(root, api.EntryKind.DIR),
@@ -53,7 +53,7 @@ def make_table(qtbot: QtBot, tmp_path: Path) -> Iterator[TableFactory]:
             backend=make_mock_backend(MockSpec(entries, owner_names={42: "Alice"})),
         ).tree
         model = TreeTableModel(api.TreeView(tree), list(ColumnId))
-        table = TreeTable(model, settings or Settings(), paths=paths)
+        table = TreeTableView(model, settings or Settings(), paths=paths)
         qtbot.addWidget(table)
         tables.append(table)
         table.resize(1100, 400)
@@ -254,7 +254,7 @@ def test_numeric_delegate_and_category_icons(
     value[6], value[13] = 2048, int(api.NodeFlags.ALLOC_UNRELIABLE)
     monkeypatch.setattr(view, "rows", lambda start, count: [tuple(value)])
     model = TreeTableModel(view, list(ColumnId))
-    table = TreeTable(model, Settings())
+    table = TreeTableView(model, Settings())
     qtbot.addWidget(table)
     index = model.index(0, list(ColumnId).index(ColumnId.ALLOC))
     assert index.data() == "≈" + api.format_size(2048)

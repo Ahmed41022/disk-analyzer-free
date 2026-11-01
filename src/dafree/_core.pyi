@@ -798,3 +798,14 @@ class MockSpec:
 
 def make_mock_backend(spec: MockSpec) -> Backend:
     """Build an immutable native test backend."""
+
+class platform:
+    """Native read-only platform services."""
+
+    @staticmethod
+    def volumes() -> list[VolumeInfo]:
+        """List mounted volumes using the native platform implementation."""
+
+    @staticmethod
+    def is_elevated() -> bool | None:
+        """Return known elevation, or None when the platform API is unavailable."""
