@@ -1417,8 +1417,8 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T0.1
   - **Acceptance (all OSes):** doctest `golden_header`, `fixup_restores_bytes`, `fixup_mismatch_errors`, `truncated_record_errors_not_crashes`.
 
-- [ ] **T3.2 — Attribute iteration (pure C++)**
-  - **Files:** C `core/src/mft/attr.cpp`, `core/tests/test_mft_attr.cpp`.
+- [x] **T3.2 — Attribute iteration (pure C++)**
+  - **Files:** C `core/src/mft/attr.cpp`, `core/tests/test_mft_attr.cpp`; M `core/include/dafree/mft.hpp` and shared private `byte_reader.hpp` (D-0057).
   - **Interface:**
     ```cpp
     struct StdInfo { std::int64_t created, modified, accessed; std::uint32_t file_attributes; };   // unix seconds
@@ -1428,7 +1428,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
     class AttrIterator { public: Expected<std::optional<Attr>, MftError> next(); };   // stops at 0xFFFFFFFF or bytes_used
     std::int64_t filetime_to_unix(std::uint64_t filetime);
     ```
-  - **Behavior:** zero-length attribute → `OutOfBounds`; non-resident compressed/sparse use the total-allocated field when header length ≥ 0x48. `u16string_view` built via `memcpy` into aligned storage when the record buffer is unaligned (no UB).
+  - **Behavior:** zero-length attribute → `OutOfBounds`; non-resident compressed/sparse use the total-allocated field when header length ≥ 0x48. D-0057 defines construction, bounds and borrowed-view lifetime. Names always copy into aligned fixed storage, including aligned source buffers, avoiding byte-buffer aliasing as well as unaligned access (no UB).
   - **Depends on:** T3.1
   - **Acceptance:** doctest `std_info_times`, `filename_namespaces`, `data_resident_size`, `data_nonresident_sparse_alloc`, `named_stream_detected`, `filetime_table`; UBSan clean.
 

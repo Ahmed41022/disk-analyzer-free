@@ -16,6 +16,24 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0057 — 2026-11-01 — Attribute iterator ownership and bounded optional headers
+
+Question: What constructor, marker fields, view lifetime and validation rules complete T3.2's partial interface without adding disk I/O or later parsers?
+
+Choice: Extend `mft.hpp` with the exact planned attribute types and `AttrIterator(std::span<const std::byte>)`. The caller supplies an already fixed-up record and retains it for any returned runlist spans. Parse the record header once, stop at the attribute end marker or exactly bytes_used, and make malformed-input errors sticky. Add empty attribute-list/reparse tags and `OtherAttr{type}`; resolving lists, interpreting reparse data and decoding runs remain later tasks.
+
+Choice: Names borrow a fixed 255-code-unit array owned by the iterator, valid until its next next() call or destruction. Always copy bounded UTF-16 bytes into aligned storage rather than reinterpret a byte buffer as live char16_t objects, including when the source happens to be aligned. Use memcpy on little-endian platforms and explicit little-endian decoding otherwise. Preserve code units, including lone surrogates, and namespace/flag values. This introduces no heap allocation or dependency.
+
+Choice: Require complete common/form headers, nonzero quadword-aligned attribute lengths, bounded nonoverlapping names and resident values/mapping pairs, and at least one encoded runlist byte. Ignore NameOffset when NameLength is zero, as its value is undefined. Require the 48-byte legacy standard-information prefix and 66-byte filename prefix; nonresident forms of these metadata attributes return Unsupported. Other attribute types remain distinguishable without interpreting their contents.
+
+Choice: For compressed (any low-byte compression flag) or sparse data, read total_allocated only when the actual nonresident header reaches 0x48: the first variable field (nonempty name or mapping pairs) starts at or beyond that offset. Otherwise retain allocated_size from the base header. A long attribute containing a name/runlist after a 0x40-byte header must not misinterpret those variable bytes as total_allocated. Preserve continuation lowest_vcn for the later index. Resident data has logical size equal to value length and zero cluster allocation.
+
+Choice: Convert FILETIME by unsigned division into whole seconds followed by subtraction of the 1601-to-1970 offset. This handles the full uint64 range without signed overflow and floors timestamps just before the Unix epoch. Golden table tests include both sides of second/epoch boundaries.
+
+Reasoning: The plan requires borrowed views and unaligned input support but leaves ownership and construction unspecified. Bounded fixed storage and explicit header extents prevent aliasing, alignment and out-of-range reads while keeping allocation out of the parser hot path. Layout facts are checked against Microsoft's [attribute header](https://learn.microsoft.com/en-us/windows/win32/devnotes/attribute-record-header), [filename](https://learn.microsoft.com/en-us/windows/win32/devnotes/file-name) and [standard-information](https://learn.microsoft.com/en-us/windows/win32/devnotes/standard-information) documentation; no third-party parser code is copied.
+
+Task: T3.2
+
 ## D-0056 — 2026-11-01 — Reuse frame state after a Windows repaint gate failure
 
 Question: How should a full-suite Windows repaint failure discovered during T3.1 validation be handled without relaxing the existing GUI budget?

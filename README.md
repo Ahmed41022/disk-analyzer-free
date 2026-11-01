@@ -121,7 +121,7 @@ parse_size("500 MiB")  # 524288000
 
 ## Windows fast mode
 
-The planned Windows NTFS fast mode reads file-system metadata to avoid opening every file individually. Its pure C++ header/fixup parser is implemented and tested with synthesized records on all operating systems; raw-volume scanning remains unavailable until the later M3 tasks. Fast scanning will require administrator privileges and Auto mode will fall back to a regular directory walk when unavailable.
+The planned Windows NTFS fast mode reads file-system metadata to avoid opening every file individually. Pure C++ parsers handle headers, sector fixups, timestamps, UTF-16 names and stream attributes, including resident and sparse/compressed allocation. Tests use synthesized records and unaligned/malformed buffers. Raw-volume scanning remains unavailable until the later M3 tasks. Fast scanning will require administrator privileges and Auto mode will fall back to a regular directory walk when unavailable.
 
 ## Safety
 

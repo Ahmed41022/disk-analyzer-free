@@ -22,6 +22,11 @@ class ByteReader {
         return data_.subspan(offset, count);
     }
 
+    /// Read one unsigned byte without an unchecked subscript.
+    [[nodiscard]] Expected<std::uint8_t, MftError> read_u8(std::size_t offset) const noexcept {
+        return read_integer<std::uint8_t>(offset);
+    }
+
     /// Decode an unsigned little-endian word without an aligned pointer cast.
     [[nodiscard]] Expected<std::uint16_t, MftError> read_u16(std::size_t offset) const noexcept {
         return read_integer<std::uint16_t>(offset);
