@@ -16,8 +16,8 @@ T4.12 work.
 
 Only one desktop instance owns each application data directory. A second launch
 passes its arguments through local IPC and exits after acknowledgment. The first
-window is activated. Opening/scanning those forwarded targets will be connected
-with the later main-window actions; the bootstrap retains the arguments.
+window is activated and opens a target-selection dialog for forwarded targets;
+scanning requires explicit acceptance.
 
 Background callables run through a four-worker `TaskRunner`. Results and failures
 arrive on the GUI thread, so waiting for native work does not block GUI events.
@@ -64,6 +64,9 @@ original geometric artwork; classification remains deferred to T2.5.
 The table paints only cells intersecting Qt's visible geometry, retaining Qt's
 scrolling, header, selection, and accessibility behavior. Delegates share native
 pages and bounded prepared text layouts; they create no items for hidden rows.
+A frame shares its owned font/metrics and current native tuple across delegates,
+fetching metadata once per visible row and reusing row text setup. Standalone Qt
+delegate calls retain independent painting and owned font-cache values.
 Showing Owner enables lazy native owner resolution for fetched pages. Hiding it
 restores the caller's initial owner-resolution policy.
 
@@ -91,6 +94,21 @@ the real Windows privilege query remains paused T3.7 work.
 
 Closing the window cancels its read-only scan and keeps processing GUI events until
 background work delivers its result, then saves window geometry and disposes the
-native-backed views. Scan-target selection and the detailed progress panel are the
-next tasks; file actions remain deferred.
+native-backed views. The detailed progress panel is the next task; file actions remain deferred.
 Configuration storage paths are described in [configuration commands](cli.md).
+
+
+Choose **New scan**, activate a volume/recent target, or launch with target
+arguments to open the scan dialog. Select multiple volumes and choose **Add
+selected volumes**, use **Add folder…** repeatedly, or type a directory and choose
+**Add path**. Remove selected targets with **Remove targets**. Folder checks run
+in the background; Start stays disabled while validation is pending. The native
+engine checks roots again when scanning begins.
+
+The dialog exposes thread count (0 means Auto), Auto/Walk modes, symbolic-link
+and filesystem traversal, hidden/system exclusions, and Globs/Paths editors with
+one entry per line. Existing unedited exclusions retain their raw native values.
+**Start scan** (Enter) saves these defaults and starts scanning; Escape cancels
+without saving. A failed preference write keeps the dialog open with its error.
+Windows lists MFT as disabled until its fast engine is implemented. Administrator
+relaunch is also disabled until the paused Windows privilege task supplies it.

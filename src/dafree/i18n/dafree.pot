@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-01 09:18+0200\n"
+"POT-Creation-Date: 2026-11-01 09:27+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -30,7 +30,19 @@ msgstr ""
 msgid "Access denied"
 msgstr ""
 
+msgid "Add folder…"
+msgstr ""
+
+msgid "Add path"
+msgstr ""
+
+msgid "Add selected volumes"
+msgstr ""
+
 msgid "Administrator"
+msgstr ""
+
+msgid "Administrator relaunch is unavailable in this build."
 msgstr ""
 
 msgid "Age"
@@ -40,6 +52,9 @@ msgid "Allocated"
 msgstr ""
 
 msgid "An unexpected error occurred. Details were saved to the application log."
+msgstr ""
+
+msgid "Auto"
 msgstr ""
 
 msgid "Cancel"
@@ -55,7 +70,13 @@ msgstr ""
 msgid "Charts"
 msgstr ""
 
+msgid "Checking folder…"
+msgstr ""
+
 msgid "Choose a target to start a scan."
+msgstr ""
+
+msgid "Choose scan folder"
 msgstr ""
 
 msgid "Compare"
@@ -75,6 +96,17 @@ msgstr ""
 msgid "Could not read volumes: {error}"
 msgstr ""
 
+#, python-brace-format
+msgid "Could not save scan options: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Could not validate folder: {error}"
+msgstr ""
+
+msgid "Cross filesystems"
+msgstr ""
+
 msgid "Directory tree"
 msgstr ""
 
@@ -87,7 +119,25 @@ msgstr ""
 msgid "Empty"
 msgstr ""
 
+msgid "Enter a valid folder path."
+msgstr ""
+
+msgid "Exclude hidden entries"
+msgstr ""
+
+msgid "Exclude system entries"
+msgstr ""
+
+msgid "Excluded globs, one per line"
+msgstr ""
+
+msgid "Excluded paths, one per line"
+msgstr ""
+
 msgid "Extension"
+msgstr ""
+
+msgid "Fast scanning is unavailable in this build."
 msgstr ""
 
 msgid "Files"
@@ -103,6 +153,13 @@ msgstr ""
 msgid "Find"
 msgstr ""
 
+#, python-brace-format
+msgid "Folder is unavailable: {path}"
+msgstr ""
+
+msgid "Folder path"
+msgstr ""
+
 msgid "Folders"
 msgstr ""
 
@@ -111,6 +168,12 @@ msgstr ""
 
 #, python-brace-format
 msgid "Folders: {count}"
+msgstr ""
+
+msgid "Follow symbolic links"
+msgstr ""
+
+msgid "Globs"
 msgstr ""
 
 msgid "I/O error"
@@ -150,6 +213,9 @@ msgstr ""
 msgid "Message"
 msgstr ""
 
+msgid "Mode"
+msgstr ""
+
 msgid "Name"
 msgstr ""
 
@@ -183,6 +249,9 @@ msgstr ""
 msgid "Path too long"
 msgstr ""
 
+msgid "Paths"
+msgstr ""
+
 msgid "Pause"
 msgstr ""
 
@@ -213,6 +282,12 @@ msgstr ""
 msgid "Refresh"
 msgstr ""
 
+msgid "Remove targets"
+msgstr ""
+
+msgid "Restart as administrator"
+msgstr ""
+
 msgid "Resume"
 msgstr ""
 
@@ -226,6 +301,9 @@ msgid "Scan failed"
 msgstr ""
 
 msgid "Scan issues"
+msgstr ""
+
+msgid "Scan targets"
 msgstr ""
 
 msgid "Search"
@@ -250,7 +328,13 @@ msgstr ""
 msgid "Snapshots"
 msgstr ""
 
+msgid "Start scan"
+msgstr ""
+
 msgid "Symbolic link loop"
+msgstr ""
+
+msgid "Threads"
 msgstr ""
 
 msgid "Timeout"

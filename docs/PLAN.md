@@ -1545,9 +1545,9 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T4.5, T4.3
   - **Acceptance:** `test_status_bar_updates_from_progress`, `test_issue_count_click_opens_issues_tab`, `test_volume_list_populated`.
 
-- [ ] **T4.7 — Scan dialog**
+- [x] **T4.7 — Scan dialog**
   - **Files:** C `src/dafree/gui/dialogs/scan_dialog.py`, `tests/gui/test_scan_dialog.py`.
-  - **Behavior:** pick volumes (multi-select), "Add folder…" (`QFileDialog.getExistingDirectory`, repeatable), typed path with validation, remove targets; options: threads, follow symlinks, cross filesystems, exclusions editor (globs and paths tabs), exclude hidden/system, mode Auto/Walk/MFT (MFT shown on Windows only) with "Restart as administrator" button when not elevated (calls `platform.relaunch_elevated` with the current targets, then quits). Remembers last options in settings. Enter starts, Esc closes.
+  - **Behavior:** pick volumes (multi-select), "Add folder…" (`QFileDialog.getExistingDirectory`, repeatable), typed path with validation, remove targets; options: threads, follow symlinks, cross filesystems, exclusions editor (globs and paths tabs), exclude hidden/system, mode Auto/Walk/MFT (MFT shown on Windows only) with "Restart as administrator" button when not elevated (calls `platform.relaunch_elevated` with the current targets, then quits). Remembers last options in settings. Enter starts, Esc closes. D-0048 stages MFT/admin controls as disabled until paused M3 provides their native services.
   - **Depends on:** T4.6
   - **Acceptance:** `test_empty_targets_disables_start`, `test_multiple_folders_added`, `test_mft_option_only_on_windows`, `test_options_persist_to_settings`.
 

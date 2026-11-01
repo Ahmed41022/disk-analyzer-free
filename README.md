@@ -9,7 +9,7 @@ Find out what's using your disk space — fast, free and open source.
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 
-> **Project status:** early development. The Python API supports cross-platform walk scanning, progress controls, link policies, exclusions, owner resolution, and native paged views. Desktop bootstrap, background scanning, the virtual tree table, and the main-window/sidebar integration are implemented; scan-dialog and progress-panel work is in development. The CLI currently provides version and configuration commands. Packaged releases are planned.
+> **Project status:** early development. The Python API supports cross-platform walk scanning, progress controls, link policies, exclusions, owner resolution, and native paged views. Desktop bootstrap, background scanning, the virtual tree table, and the main-window/sidebar integration are implemented; the scan dialog is available, and the detailed progress panel is in development. The CLI currently provides version and configuration commands. Packaged releases are planned.
 
 ## Screenshots
 

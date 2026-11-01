@@ -30,6 +30,7 @@ from dafree.api.types import ScanIssue
 from dafree.gui import _display_text
 from dafree.gui.controllers.scan_controller import ScanController
 from dafree.gui.controllers.task_runner import TaskRunner
+from dafree.gui.dialogs.scan_dialog import ScanDialog
 from dafree.gui.views.issues_tab import IssuesTab
 from dafree.gui.views.tree_tab import TreeTab
 from dafree.gui.widgets.breadcrumb import ElidedPathLabel
@@ -74,6 +75,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         self._settings = settings if settings is not None else Settings()
         self._paths = paths
+        self._volume_provider = volume_provider
+        self._scan_dialog: ScanDialog | None = None
         self._pending_launch_arguments: list[str] = []
         self._latest_tree: api.Tree | None = None
         self._issues: list[ScanIssue] = []
@@ -103,6 +106,7 @@ class MainWindow(QMainWindow):
         self.controller.noticeReceived.connect(lambda notice: self._show_notice(notice.detail))
         self.controller.finished.connect(self._finished)
         self.controller.failed.connect(self._failed)
+        self.scanRequested.connect(self.open_scan_dialog)
         self.volumes.refresh()
 
     def _build_toolbar(self) -> None:
@@ -281,6 +285,44 @@ class MainWindow(QMainWindow):
         self.notice_label.setToolTip(text)
         self.notice_label.setAccessibleName(text)
         self.notice_label.show()
+
+    def open_scan_dialog(self, targets: list[str] | None = None) -> None:
+        """Open one target-selection dialog; acceptance alone starts the read-only scan."""
+        if self._closing or self.controller.running:
+            return
+        if self._scan_dialog is not None:
+            for target in targets or []:
+                self._scan_dialog.add_target(target)
+            self._scan_dialog.raise_()
+            self._scan_dialog.activateWindow()
+            return
+        dialog = ScanDialog(
+            self._settings,
+            self.runner,
+            self,
+            paths=self._paths,
+            targets=targets or None,
+            volume_provider=self._volume_provider,
+        )
+        self._scan_dialog = dialog
+        dialog.accepted.connect(self._accept_scan_dialog)
+        dialog.finished.connect(self._dispose_scan_dialog)
+        dialog.open()
+
+    def _accept_scan_dialog(self) -> None:
+        if self._scan_dialog is not None and self._scan_dialog.request is not None:
+            self.start_scan(self._scan_dialog.request)
+
+    def _dispose_scan_dialog(self, result: int) -> None:
+        if self._scan_dialog is not None:
+            self._scan_dialog.deleteLater()
+            self._scan_dialog = None
+
+    def receive_arguments(self, arguments: list[str]) -> None:
+        """Retain lossless launch targets and present them for explicit scan acceptance."""
+        self._pending_launch_arguments = arguments.copy()
+        if arguments:
+            self.open_scan_dialog(arguments)
 
     def start_scan(self, request: api.ScanRequest) -> None:
         """Start the single owned controller; native validation/collection stay off-thread."""
