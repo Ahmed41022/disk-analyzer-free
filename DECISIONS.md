@@ -16,6 +16,24 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0060 — 2026-11-02 — Owned MFT indexing and deterministic tree construction
+
+Question: Which ownership, graph, selection and diagnostic policies complete the pure T3.4 interfaces without introducing volume I/O?
+
+Choice: Keep `MftIndex` move-only behind an opaque sparse index keyed by actual record numbers; copy retained names and stream summaries before source chunks are reused. Add a private `index.hpp`, the shared documented `IssueSink = std::function<void(ScanIssue)>` alias, and exact builder friendship in the existing model rather than new public mutators. Parse FILE records after fixups, report BAAD and malformed FILE records, quietly ignore unused signatures/deleted records. Conflicting duplicate IDs are invalid regardless of ingest/merge order. Resolve extension records after all batches merge, including a base reference whose low 48 bits are zero, and check base/parent sequences.
+
+Choice: Radix-order record IDs and bucket parent edges before BFS for deterministic linear graph construction. Retain DOS-only names unless a Win32 name exists for that same parent. Reachable repeated-directory edges report SymlinkLoop and are not traversed twice; unreachable records/components, invalid parent kinds and stale references report Orphaned. Intentional exclusions, reparse pruning and hidden metafile subtrees do not create false orphan reports. Report every issue to a nonempty sink; retain full counts and only the first 1,000 diagnostics in metadata.
+
+Choice: Require live directory record 5. Resolve relative or same-volume absolute subtree paths case/separator insensitively on every OS, then construct the selected BFS tree directly with canonical on-disk spelling and fresh hard-link primaries inside the selection. This performs planned extraction without constructing two full trees. Dedup counts the first included file link; CountAll follows the walk engine's existing flag/accounting policy. NTFS records 0–15 except the scan root, and the $Extend subtree, are System/Hidden by default and disappear with `show_ntfs_metafiles=false`. Include ADS only on request; use primary DATA extents, resident allocation zero and saturating aggregation. Never traverse reparse targets; reject follow-symlink mode.
+
+Choice: Preserve paired and lone UTF-16 surrogates through WTF-8. Reject unsafe tree components (NUL, separators, dot components), while the converter itself preserves all code units. Clamp known timestamps to [1, UINT32_MAX], reserving zero for absent standard information per A9. Apply existing compiled exclusions through a normalized host anchor plus the existing Unicode simple-fold table so pure NTFS behavior is consistent on all OSes; use NTFS attributes for hidden/system exclusions. No filesystem queries or new dependencies.
+
+Choice: Add the planned MFT record fuzzer with a valid synthesized root and a copied mutable candidate record, checking graph/aggregate invariants. Instrument the complete core call graph with libFuzzer coverage, ASan and UBSan. CI smoke uses a separate temporary golden-seeded corpus and 1,000 runs; a 1 MiB harness-input cap bounds each iteration without adding an index input cap. Longer nightly campaigns remain T3.8.
+
+Reasoning: Chunk-independent summaries support later parallel readers safely. Sparse IDs, iterative graph construction and bounded retained diagnostics avoid attacker-controlled dense allocations or recursion. Selection must establish its own dedup primaries and preserve platform-independent NTFS semantics. This task remains pure C++ with no raw-volume, CLI or elevation features.
+
+Task: T3.4
+
 ## D-0059 — 2026-11-01 — Correct the MSVC debug-container allocation oracle
 
 Question: Why did T3.3's Windows native CI fail two allocation assertions while all parser values, Linux/macOS tests and sanitizer jobs passed?

@@ -8,7 +8,7 @@ target_sources(dafree_core PRIVATE src/view/tree_view.cpp src/view/sort.cpp
                                   src/view/filter.cpp src/view/natural_compare.cpp)
 
 target_sources(dafree_core PRIVATE src/mft/record.cpp src/mft/fixup.cpp src/mft/attr.cpp
-                                  src/mft/runlist.cpp)
+                                  src/mft/runlist.cpp src/mft/index.cpp src/mft/build_tree.cpp)
 target_sources(dafree_core PRIVATE src/platform/windows/longpath.cpp)
 target_include_directories(dafree_core PUBLIC include)
 target_compile_features(dafree_core PUBLIC cxx_std_20)
@@ -49,6 +49,7 @@ if(DAFREE_BUILD_TESTS)
                                      tests/test_mft_record.cpp
                                      tests/test_mft_attr.cpp
                                      tests/test_runlist.cpp
+                                     tests/test_mft_build.cpp
                                      tests/test_view.cpp
                                      tests/test_backends.cpp tests/test_exclude.cpp tests/test_engine.cpp)
   target_link_libraries(dafree_core_tests PRIVATE doctest::doctest_with_main dafree_core)
@@ -85,6 +86,10 @@ if(DAFREE_BUILD_FUZZ)
   if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(FATAL_ERROR "Fuzz targets require Clang and libFuzzer")
   endif()
+  # Instrument the complete tree-builder call graph, including model/exclusion code.
+  target_compile_options(dafree_core PRIVATE -fsanitize=fuzzer-no-link,address,undefined
+                                             -fno-omit-frame-pointer)
+  target_link_options(dafree_core INTERFACE -fsanitize=fuzzer-no-link,address,undefined)
   add_executable(fuzz_glob fuzz/fuzz_glob.cpp src/scan/glob.cpp)
   target_include_directories(fuzz_glob PRIVATE include)
   target_compile_features(fuzz_glob PRIVATE cxx_std_20)
@@ -99,4 +104,11 @@ if(DAFREE_BUILD_FUZZ)
   target_compile_options(fuzz_runlist PRIVATE -fsanitize=fuzzer,address,undefined
                                               -fno-omit-frame-pointer)
   target_link_options(fuzz_runlist PRIVATE -fsanitize=fuzzer,address,undefined)
+
+  add_executable(fuzz_mft_record fuzz/fuzz_mft_record.cpp)
+  target_link_libraries(fuzz_mft_record PRIVATE dafree_core)
+  dafree_enable_warnings(fuzz_mft_record)
+  target_compile_options(fuzz_mft_record PRIVATE -fsanitize=fuzzer,address,undefined
+                                                -fno-omit-frame-pointer)
+  target_link_options(fuzz_mft_record PRIVATE -fsanitize=fuzzer,address,undefined)
 endif()

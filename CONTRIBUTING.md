@@ -96,11 +96,15 @@ Filesystem tests can describe a tree with `tests.testkit.spec`, create it under 
 
 On Linux with Clang and libFuzzer installed, configure with
 `cmake --preset fuzz -DCMAKE_CXX_COMPILER=clang++` and build with
-`cmake --build build/fuzz --target fuzz_glob fuzz_runlist`. Give each target a
+`cmake --build build/fuzz --target fuzz_glob fuzz_runlist fuzz_mft_record`. Give each target a
 separate temporary corpus, for example
 `build/fuzz/core/fuzz_runlist /path/to/temporary/corpus -runs=10000 -max_len=1048576`.
 CI runs 1,000 smoke mutations for each with address and undefined-behavior
-sanitizers. The run-list harness accepts inputs up to 1 MiB; the decoder itself
+sanitizers. The MFT record target exercises raw fixups, attributes, index ingestion
+and tree construction, checking graph and aggregate invariants. Seed its temporary
+corpus with copies of `core/tests/golden/mft/*.bin`. The complete core call graph
+is instrumented for coverage, address and undefined-behavior checks.
+The MFT record and run-list harnesses accept inputs up to 1 MiB; the run-list decoder itself
 has no input-size cap and independently rejects output above 64 MiB before
 allocation. Native tests also exercise larger encoded input for that limit.
 The longer nightly campaigns remain assigned to T3.8.

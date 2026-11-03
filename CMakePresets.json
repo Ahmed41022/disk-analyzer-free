@@ -41,7 +41,10 @@
       "name": "fuzz",
       "inherits": "dev",
       "binaryDir": "${sourceDir}/build/fuzz",
-      "cacheVariables": { "DAFREE_BUILD_FUZZ": "ON" }
+      "cacheVariables": {
+        "DAFREE_BUILD_FUZZ": "ON",
+        "DAFREE_SANITIZE": "address,undefined"
+      }
     },
     {
       "name": "bench",

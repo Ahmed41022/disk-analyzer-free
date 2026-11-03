@@ -1,12 +1,15 @@
 #pragma once
 
 #include "dafree/error.hpp"
+#include "dafree/scan_types.hpp"
 
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <span>
+#include <string>
 #include <string_view>
 #include <variant>
 #include <vector>
@@ -115,5 +118,46 @@ struct Run {
 /// returns Unsupported before allocation; valid output uses one exact reservation.
 /// Standard-library checked-iterator bookkeeping is separate from run storage.
 Expected<std::vector<Run>, MftError> decode_runlist(std::span<const std::byte> bytes);
+
+class Tree;
+namespace mft_detail {
+struct IndexData;
+}
+
+/// Retain parsed, owned MFT summaries independently of source chunks and ingest order.
+class MftIndex {
+  public:
+    /// Create an empty sparse index; record numbers never determine allocation size.
+    MftIndex();
+    /// Release all retained summaries.
+    ~MftIndex();
+    MftIndex(const MftIndex &) = delete;
+    MftIndex &operator=(const MftIndex &) = delete;
+    /// Transfer the retained summaries.
+    MftIndex(MftIndex &&) noexcept;
+    /// Replace summaries with those owned by another index.
+    MftIndex &operator=(MftIndex &&) noexcept;
+    /// Verify/restore a raw record and copy only retained attributes; failures are issues.
+    void ingest(std::uint64_t record_no, std::span<std::byte> rec, std::size_t sector);
+    /// Combine independent parser batches; duplicates become conflicts rather than overwrite.
+    void merge(MftIndex &&other);
+
+  private:
+    friend Tree build_tree_from_mft(const MftIndex &, std::string_view,
+                                    std::optional<std::string_view>, const ScanOptions &,
+                                    IssueSink &);
+    std::unique_ptr<mft_detail::IndexData> data_;
+};
+
+/// Encode UTF-16 losslessly, combining valid pairs and preserving lone surrogates.
+std::string utf16_to_wtf8(std::u16string_view input);
+
+/// Build a breadth-first tree rooted at record 5 or a selected relative/absolute subtree.
+///
+/// Input and output retain native names. NTFS lookup is case/separator insensitive on
+/// every OS. No filesystem calls or reparse traversal occur. Issues are counted in the
+/// tree metadata, with the first 1,000 retained and every issue delivered to a nonempty sink.
+Tree build_tree_from_mft(const MftIndex &, std::string_view root_path,
+                         std::optional<std::string_view> subtree, const ScanOptions &, IssueSink &);
 
 } // namespace dafree

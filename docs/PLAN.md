@@ -1439,10 +1439,10 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T3.1
   - **Acceptance:** doctest `runlist_table` (≥ 10 vectors incl. negative deltas and sparse runs), `encode_decode_roundtrip` (test-only encoder, 1,000 seeds).
 
-- [ ] **T3.4 — MFT index and tree build (pure C++)**
-  - **Files:** C `core/src/mft/{index.cpp,build_tree.cpp}`, `core/tests/test_mft_build.cpp`, `core/fuzz/fuzz_mft_record.cpp`.
+- [x] **T3.4 — MFT index and tree build (pure C++)**
+  - **Files:** C `core/src/mft/{index.hpp,index.cpp,build_tree.cpp}`, `core/tests/test_mft_build.cpp`, `core/fuzz/fuzz_mft_record.cpp`; M `core/include/dafree/{mft.hpp,model.hpp,scan_types.hpp}`, CMake and fuzz smoke CI (D-0060).
   - **Interface:** `class MftIndex { public: void ingest(std::uint64_t record_no, std::span<std::byte> rec, std::size_t sector); void merge(MftIndex&&); }`; `Tree build_tree_from_mft(const MftIndex&, std::string_view root_path, std::optional<std::string_view> subtree, const ScanOptions&, IssueSink&);`
-  - **Behavior:** §2.4.3 step "build tree": DOS-name skipping, orphans, sequence check, BFS id assignment, hard links, metafiles policy, subtree extraction. UTF-16 → WTF-8 conversion function `utf16_to_wtf8` (pure, tested).
+  - **Behavior:** §2.4.3 step "build tree": DOS-name skipping, orphans, sequence check, BFS id assignment, hard links, metafiles policy, subtree extraction. UTF-16 → WTF-8 conversion function `utf16_to_wtf8` (pure, tested). D-0060 specifies sparse owned summaries, deterministic conflicts, selection/accounting and issue policy; `IssueSink` is the shared optional `std::function<void(ScanIssue)>`. The short whole-core sanitizer-backed MFT record fuzz smoke lands here; T3.8 retains the nightly campaign.
   - **Depends on:** T3.2, T3.3, T1.3
   - **Acceptance:** doctest `parent_before_child`, `hardlink_multiple_parents_counted_once`, `orphans_skipped_with_issue`, `sequence_mismatch_is_orphan`, `subtree_extraction`, `random_index_invariants` (500 seeds), `utf16_to_wtf8_lone_surrogates`.
 
