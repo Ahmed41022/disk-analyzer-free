@@ -16,6 +16,7 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 - NTFS mapping-pair decoding with signed-delta and sparse-extent checks, exact bounded output allocation, 1,000 roundtrip seeds and a sanitizer-backed run-list fuzzer.
 - An owned MFT index and pure in-memory tree builder with sequence validation, extension merging, hard-link accounting, subtree selection, exclusions, metafile policy and lossless WTF-8 names; randomized graph tests and a raw-record/tree fuzzer.
+- Native Windows elevation detection and an explicit elevated relaunch API with lossless argument quoting and typed cancellation. POSIX reports effective UID and raises `Unsupported` for relaunch.
 
 - Bounded NTFS attribute iteration for timestamps, raw UTF-16 filenames, resident and nonresident streams, sparse/compressed allocation and attribute markers; no parser heap allocations.
 

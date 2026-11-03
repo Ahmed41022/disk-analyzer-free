@@ -800,12 +800,16 @@ def make_mock_backend(spec: MockSpec) -> Backend:
     """Build an immutable native test backend."""
 
 class platform:
-    """Native read-only platform services."""
+    """Native platform services."""
 
     @staticmethod
     def volumes() -> list[VolumeInfo]:
         """List mounted volumes using the native platform implementation."""
 
     @staticmethod
-    def is_elevated() -> bool | None:
-        """Return known elevation, or None when the platform API is unavailable."""
+    def is_elevated() -> bool:
+        """Return whether the current process is elevated."""
+
+    @staticmethod
+    def relaunch_elevated(args: Sequence[str]) -> None:
+        """Relaunch the current executable with elevation and explicit arguments."""

@@ -9,7 +9,8 @@ target_sources(dafree_core PRIVATE src/view/tree_view.cpp src/view/sort.cpp
 
 target_sources(dafree_core PRIVATE src/mft/record.cpp src/mft/fixup.cpp src/mft/attr.cpp
                                   src/mft/runlist.cpp src/mft/index.cpp src/mft/build_tree.cpp)
-target_sources(dafree_core PRIVATE src/platform/windows/longpath.cpp)
+target_sources(dafree_core PRIVATE src/platform/windows/longpath.cpp
+                                  src/platform/windows/quote_args.cpp)
 target_include_directories(dafree_core PUBLIC include)
 target_compile_features(dafree_core PUBLIC cxx_std_20)
 find_package(Threads REQUIRED)
@@ -24,6 +25,7 @@ if(UNIX)
   target_sources(dafree_core PRIVATE src/platform/posix/read_dir.cpp
                                     src/platform/posix/stat.cpp
                                     src/platform/posix/owner.cpp
+                                    src/platform/posix/elevation.cpp
                                     src/platform/common/volume.cpp)
   if(APPLE)
     target_sources(dafree_core PRIVATE src/platform/macos/getattrlistbulk.cpp
@@ -37,7 +39,9 @@ endif()
 if(WIN32)
   target_sources(dafree_core PRIVATE src/platform/windows/read_dir_win.cpp
                                     src/platform/windows/fileid.cpp
-                                    src/platform/windows/volume_win.cpp)
+                                    src/platform/windows/volume_win.cpp
+                                    src/platform/windows/elevation_win.cpp)
+  target_link_libraries(dafree_core PRIVATE advapi32 ole32 shell32)
 endif()
 
 if(DAFREE_BUILD_TESTS)
@@ -50,6 +54,7 @@ if(DAFREE_BUILD_TESTS)
                                      tests/test_mft_attr.cpp
                                      tests/test_runlist.cpp
                                      tests/test_mft_build.cpp
+                                     tests/test_elevation.cpp
                                      tests/test_view.cpp
                                      tests/test_backends.cpp tests/test_exclude.cpp tests/test_engine.cpp)
   target_link_libraries(dafree_core_tests PRIVATE doctest::doctest_with_main dafree_core)

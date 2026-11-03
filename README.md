@@ -123,6 +123,8 @@ parse_size("500 MiB")  # 524288000
 
 The planned Windows NTFS fast mode reads file-system metadata to avoid opening every file individually. Pure C++ parsers handle headers, sector fixups, timestamps, UTF-16 names, stream attributes and mapping pairs, including resident and sparse/compressed allocation. Its in-memory index builds breadth-first trees with hard-link accounting, subtree selection, exclusions and orphan diagnostics, preserving lone UTF-16 surrogates. Tests use synthesized records, unaligned/malformed buffers, roundtrip properties and sanitizer-backed fuzzing. Raw-volume scanning remains unavailable until the later M3 tasks. Fast scanning will require administrator privileges and Auto mode will fall back to a regular directory walk when unavailable.
 
+The Python platform API exposes `api.platform.is_elevated()` and `api.platform.relaunch_elevated(args)`. On Windows the latter requests consent for the current executable with explicit arguments and raises `api.Cancelled` if consent is declined. The original process remains under the caller's control. POSIX reports effective UID and raises `api.Unsupported` for elevated relaunch.
+
 ## Safety
 
 Destructive operations are planned with safety as a default: confirmation, dry-run support, trash or recycle bin by default, protected paths, and no link following when deleting. Scanning is available through the Python API; deleting and moving files are not implemented.

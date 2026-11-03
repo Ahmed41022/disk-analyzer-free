@@ -16,7 +16,7 @@ The original task specifications below remain in force; this order supersedes th
 5. Until M4-core completes, PRs require lint, the full Linux correctness suite, Windows/macOS C++ correctness and GUI smoke. Wide 100k, performance, coverage, and sanitizers run on main/nightly (manual full validation on main). Retain every test threshold and assertion. Report each CI job duration in the PR summary.
 6. M8 deletion/move must use the fd-relative, no-follow C++ remover only; never reuse path-based stat/remove helpers. All original trash/confirmation/dry-run safety rules remain required.
 
-M4-core completed on main `b39d472` with all 21 full jobs green. M3 resumes at T3.1; deferred T2.1–T2.6 follow resumed M3 (D-0054). The temporary light PR CI exception above has expired: all existing gates run on every configured workflow event again.
+M4-core completed on main `b39d472` with all 21 full jobs green. M3 resumed at T3.1. T3.7 and deferred M2 precede T3.5 because its acceptance tests require the native elevation API and scan command (D-0061). The temporary light PR CI exception above has expired. Existing gates run on every configured workflow event again.
 
 See DECISIONS.md for the pending §7.3 CI inventory and dependency adaptations.
 
@@ -1450,7 +1450,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Files:** C `core/src/platform/windows/mft_reader.cpp`, `core/src/scan/mft_driver.cpp`, M `engine.cpp`, `tests/integration/test_mft_windows.py`.
   - **Interface:** `class VolumeReader { public: static Expected<VolumeReader, MftOpenError> open(std::wstring_view volume_root); std::uint64_t record_count() const; std::size_t record_size() const, sector_size() const; void read_chunks(std::size_t chunk_bytes, const std::function<bool(std::uint64_t first_record, std::span<std::byte>)>& f); };` with `MftOpenError { NotElevated, NotNtfs, AccessDenied, Io }`.
   - **Behavior:** §2.4.3 steps 1–2: sector-aligned 8 MiB reads (`_aligned_malloc`), reader thread → bounded queue (4 chunks) → parser threads with per-thread `MftIndex` merged at the end; `est_total = record_count`. Fallback policy per §2.4.3.
-  - **Depends on:** T3.4, T1.11
+  - **Depends on:** T3.4, T1.11, T3.7 and T2.2 (D-0061).
   - **Acceptance (windows-2025; GitHub-hosted Windows runners run as an elevated administrator — the test first asserts `_core.platform.is_elevated()` and fails loudly if that changes):** `test_mft_scan_matches_walk_on_fixture` (fixture under `D:\` if present else `C:\`; MFT scan with subtree extraction vs walk scan: equal names/sizes/counts/hard-link flags; resident files: MFT alloc 0 vs walk alloc ≤ cluster size, asserted), `test_mft_unavailable_when_not_elevated` (run `dafree scan --mode auto` under a restricted token via `tools/run_restricted.py` using `CreateRestrictedToken` through `ctypes`; assert `FastModeUnavailable` notice on stderr and success), `test_mft_mode_strict_errors_when_unavailable`.
 
 - [ ] **T3.6 — Windows owner (SID) and properties dialog**
@@ -1459,8 +1459,8 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T1.8, T1.15
   - **Acceptance (Windows):** `test_owner_of_temp_file_is_current_user` (case-insensitive compare with `whoami`), `test_sid_cache_hits` (test hook counter).
 
-- [ ] **T3.7 — Elevation API**
-  - **Files:** C `core/src/platform/windows/elevation_win.cpp`, `core/src/platform/posix/elevation.cpp`, `core/tests/test_elevation.cpp`.
+- [x] **T3.7 — Elevation API**
+  - **Files:** C `core/src/platform/windows/{elevation_win.cpp,quote_args.cpp}`, `core/src/platform/posix/elevation.cpp`, `core/tests/test_elevation.cpp`; M platform headers, CMake, bindings, Python facade, and `tests/unit/test_platform_api.py` (D-0061).
   - **Behavior:** Windows `is_elevated` via `GetTokenInformation(TokenElevation)`; `relaunch_elevated` → `ShellExecuteExW(L"runas", current exe, quoted args)`; `ERROR_CANCELLED` → `Cancelled` exception. POSIX: `geteuid()==0`; relaunch → `Unsupported`.
   - **Depends on:** T0.1
   - **Acceptance:** doctest `quote_windows_args_table` (pure, all OSes: spaces, quotes, trailing backslashes); Python `test_is_elevated_true_on_ci_windows` (guarded by `CI=true` and Windows).

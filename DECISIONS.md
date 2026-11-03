@@ -16,6 +16,18 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0061 — 2026-11-03 — Satisfy the Windows fast-mode test prerequisites
+
+Question: How can T3.5 keep its Windows acceptance tests now that the scan command and the native elevation API are still pending?
+
+Choice: Complete T3.7 after T3.4, then complete deferred M2 on its own branch and PR before T3.5. The M2 order is T2.1, T2.3, T2.4, T2.2, T2.5, T2.6 because T2.2 declares both exporters as prerequisites. This revises D-0054's assumed order after M4-core. The hosted runner check and the restricted-token `dafree scan --mode auto` test stay as specified. T3.6 and T3.8 still follow T3.5.
+
+Choice: Keep `platform::is_elevated()` a boolean query and raise `Unsupported` when the process token cannot be queried. Move the existing POSIX query into its planned elevation source and return a typed `Unsupported` for POSIX relaunch. Windows requests consent for the current executable through `ShellExecuteExW` and maps a declined prompt to `Cancelled`. Reuse the existing lossless Windows argument codec and the native exception translator. The portable quoting helper takes arguments after the executable name, preserves empty arguments and doubles backslashes where the Windows parser requires it. The Python caller supplies explicit arguments, including interpreter switches when needed, and controls when to exit. GUI restart wiring stays with Windows scan integration.
+
+Reasoning: T3.5's acceptance criteria explicitly invoke `dafree scan` and require an elevated native token query. Completing the missing prerequisites makes both tests possible without replacing their entry points. A separate pure quoting function lets every OS verify the command line without launching a privileged process. The Windows test also roundtrips the arguments through the OS parser. The SDK APIs are system libraries and add no third-party dependency. [Windows argument parsing](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-commandlinetoargvw) · [Shell execution](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecuteexw) · [Token elevation](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-token_elevation)
+
+Task: T3.7 and T3.5 prerequisite order
+
 ## D-0060 — 2026-11-02 — Owned MFT indexing and deterministic tree construction
 
 Question: Which ownership, graph, selection and diagnostic policies complete the pure T3.4 interfaces without introducing volume I/O?

@@ -13,6 +13,10 @@ class Unsupported(DafreeError):
     """A requested platform operation is unavailable in this build."""
 
 
+class Cancelled(DafreeError):
+    """The user declined an operating system prompt."""
+
+
 class ScanErrorCode(StrEnum):
     """Machine-readable scan failure reason."""
 
@@ -55,6 +59,10 @@ def _from_native(
 ) -> DafreeError:
     if family == "exclude":
         return ExcludeError(message, pattern)
+    if family == "cancelled":
+        return Cancelled(message)
+    if family == "unsupported":
+        return Unsupported(message)
     if family == "io":
         kind = IssueKind(code)
         reason = (

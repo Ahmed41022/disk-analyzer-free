@@ -106,7 +106,10 @@ std::optional<std::pair<OwnerKey, std::string>> owner_of(std::string_view path);
 std::optional<std::string> name_for_uid(std::uint32_t uid);
 /// Report whether the process has elevated privileges.
 bool is_elevated();
-/// Relaunch with elevated privileges, or throw when unsupported.
+/// Quote arguments (excluding argv[0]) for a Windows command line.
+std::wstring quote_windows_args(std::span<const std::wstring> args);
+/// Relaunch the current executable with explicit native arguments and request elevation.
+/// Throws Cancelled if the request is declined and Unsupported on POSIX.
 void relaunch_elevated(std::span<const std::string> args);
 
 } // namespace platform

@@ -44,10 +44,4 @@ std::optional<std::pair<OwnerKey, std::string>> owner_of(std::string_view path) 
     return std::pair{*entry.owner, name_for_uid(uid).value_or(std::to_string(uid))};
 }
 
-bool is_elevated() { return ::geteuid() == 0; }
-
-void relaunch_elevated(std::span<const std::string>) {
-    throw Error("elevated relaunch is unsupported on POSIX");
-}
-
 } // namespace dafree::platform

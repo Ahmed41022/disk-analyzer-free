@@ -1,7 +1,6 @@
 #include "bindings.hpp"
 
 #include <mutex>
-#include <nanobind/stl/optional.h>
 #include <nanobind/stl/vector.h>
 
 namespace dafree::bindings {
@@ -11,7 +10,7 @@ std::mutex volumes_mutex;
 } // namespace
 
 void bind_platform(nb::module_ &module) {
-    nb::class_<PlatformNamespace>(module, "platform", "Native read-only platform services.")
+    nb::class_<PlatformNamespace>(module, "platform", "Native platform services.")
         .def_static(
             "volumes",
             [] {
@@ -21,17 +20,16 @@ void bind_platform(nb::module_ &module) {
             },
             nb::call_guard<nb::gil_scoped_release>(),
             "List mounted volumes using the native platform implementation.")
+        .def_static("is_elevated", &platform::is_elevated, nb::call_guard<nb::gil_scoped_release>(),
+                    "Return whether the current process is elevated.")
         .def_static(
-            "is_elevated",
-            []() -> std::optional<bool> {
-#ifdef _WIN32
-                // The actual Windows token API belongs to paused T3.7. Unknown is not false.
-                return std::nullopt;
-#else
-                return platform::is_elevated();
-#endif
+            "relaunch_elevated",
+            [](const std::vector<nb::str> &args) {
+                const auto native = encode_strings(args);
+                nb::gil_scoped_release release;
+                platform::relaunch_elevated(native);
             },
-            nb::call_guard<nb::gil_scoped_release>(),
-            "Return known elevation, or None when the platform API is unavailable.");
+            nb::arg("args"),
+            "Relaunch the current executable with elevation and explicit arguments.");
 }
 } // namespace dafree::bindings
