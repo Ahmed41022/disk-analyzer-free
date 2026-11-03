@@ -5,6 +5,7 @@ from enum import IntEnum
 
 from dafree import _core
 from dafree.api.errors import DafreeError, ExcludeError, ScanError, ScanErrorCode, Unsupported
+from dafree.api.export import write_json
 from dafree.api.scan import ScanHandle, ScanResult, scan, start_scan
 from dafree.api.tree import Tree
 from dafree.api.types import (
@@ -163,4 +164,5 @@ __all__ = [
     "platform",
     "scan",
     "start_scan",
+    "write_json",
 ]

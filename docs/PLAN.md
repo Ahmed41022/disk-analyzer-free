@@ -1358,8 +1358,8 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T2.1, T2.3, T2.4
   - **Acceptance:** `test_scan_small_mixed_table` (syrupy; `--units b`, timestamps masked), `test_scan_json_validates_schema`, `test_scan_ndjson_one_object_per_line`, `test_scan_csv_quotes_commas_and_newlines`, `test_scan_strict_access_denied_exit_4`, `test_scan_sigint_exit_130_json_valid` (POSIX: subprocess + SIGINT after 200 ms with hidden `--test-slow-backend`; Windows: `CTRL_BREAK_EVENT` to a new process group).
 
-- [ ] **T2.3 — JSON schema and streaming JSON writer (C++)**
-  - **Files:** C `schemas/report.v1.json`, `core/include/dafree/export.hpp`, `core/src/io/json.cpp`, `core/tests/test_json.cpp`, M `bindings/src/io_bind.cpp`.
+- [x] **T2.3 — JSON schema and streaming JSON writer (C++)**
+  - **Files:** C `schemas/report.v1.json`, `core/include/dafree/export.hpp`, `core/src/io/json.cpp`, `core/tests/test_json.cpp`, `bindings/src/io_bind.cpp`, the Python export facade, schema test and Python CTest driver. M build wiring and the generated stub (D-0063).
   - **Interface:** `void write_json(const Tree&, std::span<const NodeId> scopes, std::ostream&, const JsonOptions&)`; `JsonOptions { std::optional<std::uint16_t> depth; bool include_files, ndjson, include_owner, pretty; }`.
   - **Behavior:** streaming, constant memory; names not valid UTF-8 (POSIX) or containing lone surrogates (Windows) → `name` with U+FFFD replacement + `name_raw_hex`. Times ISO-8601 UTC, `null` when 0. Proper JSON string escaping incl. control characters.
   - **Depends on:** T1.3

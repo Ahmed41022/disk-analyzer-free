@@ -1,5 +1,5 @@
 import enum
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 def version() -> str:
     """Return the installed package version."""
@@ -809,3 +809,15 @@ class platform:
     @staticmethod
     def is_elevated() -> bool | None:
         """Return known elevation, or None when the platform API is unavailable."""
+
+def write_json(
+    tree: Tree,
+    scopes: Sequence[int],
+    write: Callable[[bytes], int],
+    depth: int | None,
+    include_files: bool,
+    ndjson: bool,
+    include_owner: bool,
+    pretty: bool,
+) -> None:
+    """Write JSON as bounded UTF-8 chunks to a binary write callback."""

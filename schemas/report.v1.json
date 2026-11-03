@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Ahmed41022/disk-analyzer-free/main/schemas/report.v1.json",
+  "title": "Disk Analyzer Free report v1",
+  "type": "object",
+  "required": ["schema", "version", "meta", "roots"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "https://raw.githubusercontent.com/Ahmed41022/disk-analyzer-free/main/schemas/report.v1.json"},
+    "version": {"const": 1},
+    "meta": {"$ref": "#/$defs/meta"},
+    "roots": {"type": "array", "items": {"$ref": "#/$defs/node"}}
+  },
+  "$defs": {
+    "uint64": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615},
+    "uint32": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+    "timestamp": {"type": ["string", "null"], "format": "date-time"},
+    "rawHex": {"type": "string", "pattern": "^(?:[0-9a-f]{2})+$"},
+    "meta": {
+      "type": "object",
+      "required": ["started_at", "finished_at", "mode", "host", "os", "app_version", "cancelled", "issues"],
+      "additionalProperties": false,
+      "properties": {
+        "started_at": {"$ref": "#/$defs/timestamp"},
+        "finished_at": {"$ref": "#/$defs/timestamp"},
+        "mode": {"enum": ["walk", "mft", "sftp"]},
+        "host": {"type": "string"},
+        "os": {"type": "string"},
+        "app_version": {"type": "string"},
+        "cancelled": {"type": "boolean"},
+        "issues": {"$ref": "#/$defs/uint64"}
+      }
+    },
+    "fields": {
+      "type": "object",
+      "required": ["name", "type", "size", "alloc", "files", "dirs", "mtime", "btime", "atime", "flags"],
+      "properties": {
+        "name": {"type": "string"},
+        "name_raw_hex": {"$ref": "#/$defs/rawHex"},
+        "type": {"enum": ["directory", "file", "symlink"]},
+        "size": {"$ref": "#/$defs/uint64"},
+        "alloc": {"$ref": "#/$defs/uint64"},
+        "files": {"$ref": "#/$defs/uint32"},
+        "dirs": {"$ref": "#/$defs/uint32"},
+        "mtime": {"$ref": "#/$defs/timestamp"},
+        "btime": {"$ref": "#/$defs/timestamp"},
+        "atime": {"$ref": "#/$defs/timestamp"},
+        "owner": {"type": "string"},
+        "ext": {"type": "string"},
+        "flags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "dir", "symlink", "reparse", "mount_point", "hardlink_dup", "hidden", "system",
+              "access_denied", "partial", "sparse", "compressed", "cloud_placeholder",
+              "excluded", "error", "alloc_unreliable", "synthetic"
+            ]
+          }
+        }
+      }
+    },
+    "node": {
+      "$ref": "#/$defs/fields",
+      "properties": {"children": {"type": "array", "items": {"$ref": "#/$defs/node"}}},
+      "unevaluatedProperties": false
+    },
+    "line": {
+      "$ref": "#/$defs/fields",
+      "required": ["path"],
+      "properties": {
+        "path": {"type": "string"},
+        "path_raw_hex": {"$ref": "#/$defs/rawHex"}
+      },
+      "unevaluatedProperties": false
+    }
+  }
+}

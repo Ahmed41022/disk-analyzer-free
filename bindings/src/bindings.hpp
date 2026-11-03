@@ -19,6 +19,7 @@ void bind_tree(nb::module_ &module);
 void bind_view(nb::module_ &module);
 void bind_testing(nb::module_ &module);
 void bind_platform(nb::module_ &module);
+void bind_io(nb::module_ &module);
 
 struct BoundTree {
     std::shared_ptr<TreeHandle> handle;

@@ -16,6 +16,22 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0063 — 2026-11-03 — Stream JSON with stable native-name recovery
+
+Question: How should v1 encode scope, provenance, native names and streaming guarantees?
+
+Choice: Empty scopes select scan roots. Explicit IDs preserve input order, depth starts at zero for each scope, and filters preserve the stored aggregate totals. Nested JSON includes mode, host, OS, app version, times, cancellation and issue count. NDJSON has one flat row with a path per line. Use stable lowercase type and flag labels and locale-independent numbers and UTC times. Replace malformed native bytes and lone surrogates with U+FFFD, keeping lowercase raw hex for affected names and NDJSON paths.
+
+Choice: Walk contiguous child ranges using parent IDs and a depth counter, with no recursive stack or per-node buffer. NDJSON reuses a buffer for the longest path written. Python writes bounded binary chunks outside tree locks and handles short writes. Resolve optional owner names on demand using the existing native owner cache. The pure `Tree` overload writes owner names already available to it.
+
+Choice: Use Draft 2020-12 with nested and flat row definitions. Run the million-node memory oracle under the existing C++ counting allocator through a Python CTest driver. The gate runs on every native test platform without instrumenting production wheels or estimating RSS.
+
+Reasoning: The writer's storage does not grow with node count. The schema validates both output forms, and the raw fields preserve native names. [JSON standard](https://www.rfc-editor.org/rfc/rfc8259.html)
+
+Validation follow-up: The local MinGW GCC 15.1 full native suite twice hit the shared-lock assertion reported in MSYS2 #25193 while running existing tests. Use the native SRW lock only for this compiler fallback, preserving shared readers and exclusive writers. Other toolchains retain the standard shared mutex. Keep every test and assertion. [MSYS2 report](https://github.com/msys2/MINGW-packages/issues/25193) · [Windows SRW locks](https://learn.microsoft.com/en-us/windows/win32/sync/slim-reader-writer--srw--locks)
+
+Task: T2.3
+
 ## D-0062 — 2026-11-03 — CLI defaults and one exit status enum
 
 Question: How should the CLI apply per-invocation defaults while preserving existing settings commands?

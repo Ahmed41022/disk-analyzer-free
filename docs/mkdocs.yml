@@ -24,6 +24,7 @@ nav:
   - Overview: index.md
   - Command line: cli.md
   - Exit codes: reference/exit-codes.md
+  - JSON export: reference/json-export.md
   - Desktop bootstrap: gui.md
   - Performance and fixtures: performance.md
   - Implementation plan: PLAN.md

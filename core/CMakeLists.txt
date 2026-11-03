@@ -7,6 +7,7 @@ target_sources(dafree_core PRIVATE src/scan/engine.cpp src/scan/owner_resolve.cp
 target_sources(dafree_core PRIVATE src/view/tree_view.cpp src/view/sort.cpp
                                   src/view/filter.cpp src/view/natural_compare.cpp)
 target_sources(dafree_core PRIVATE src/platform/windows/longpath.cpp)
+target_sources(dafree_core PRIVATE src/io/json.cpp)
 target_include_directories(dafree_core PUBLIC include)
 target_compile_features(dafree_core PUBLIC cxx_std_20)
 find_package(Threads REQUIRED)
@@ -16,6 +17,11 @@ target_link_libraries(dafree_core PRIVATE pcre2-8-static)
 set_target_properties(dafree_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(dafree_core PUBLIC DAFREE_VERSION="${DAFREE_VERSION}")
 dafree_enable_warnings(dafree_core)
+
+if(MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL "15.1.0")
+  target_sources(dafree_core PRIVATE src/platform/windows/tree_mutex.cpp)
+  target_compile_definitions(dafree_core PUBLIC DAFREE_MINGW_SRWLOCK=1)
+endif()
 
 if(UNIX)
   target_sources(dafree_core PRIVATE src/platform/posix/read_dir.cpp
@@ -43,6 +49,7 @@ if(DAFREE_BUILD_TESTS)
                                      tests/test_aggregate.cpp tests/test_segvector.cpp
                                      tests/test_tree.cpp tests/test_units.cpp tests/test_longpath.cpp
                                      tests/test_statx_compat.cpp
+                                     tests/test_json.cpp
                                      tests/test_view.cpp
                                      tests/test_backends.cpp tests/test_exclude.cpp tests/test_engine.cpp)
   target_link_libraries(dafree_core_tests PRIVATE doctest::doctest_with_main dafree_core)
@@ -67,7 +74,12 @@ if(DAFREE_BUILD_TESTS)
   endif()
   target_compile_features(dafree_core_tests PRIVATE cxx_std_20)
   dafree_enable_warnings(dafree_core_tests)
-  add_test(NAME dafree_core_tests COMMAND dafree_core_tests)
+  add_test(NAME dafree_core_tests COMMAND dafree_core_tests
+           --test-case-exclude=test_json_streaming_constant_memory)
+  add_test(NAME test_json_streaming_constant_memory
+           COMMAND "${Python_EXECUTABLE}"
+                   "${PROJECT_SOURCE_DIR}/tests/native/json_streaming.py"
+                   "$<TARGET_FILE:dafree_core_tests>")
 endif()
 
 if(DAFREE_BUILD_BENCH)
