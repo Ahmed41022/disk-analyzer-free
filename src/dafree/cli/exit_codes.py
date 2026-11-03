@@ -3,9 +3,14 @@
 from enum import IntEnum
 
 
-class ExitCode(IntEnum):
-    """Standard CLI success, runtime failure, and usage failure codes."""
+class Exit(IntEnum):
+    """Stable process exit statuses shared by all CLI commands."""
 
-    SUCCESS = 0
-    ERROR = 1
+    OK = 0
+    RUNTIME = 1
     USAGE = 2
+    ALERT = 3
+    PARTIAL = 4
+    FOUND = 5
+    BLOCKED = 10
+    INTERRUPTED = 130

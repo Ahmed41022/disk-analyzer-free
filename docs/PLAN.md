@@ -18,6 +18,8 @@ The original task specifications below remain in force; this order supersedes th
 
 See DECISIONS.md for the pending §7.3 CI inventory and dependency adaptations.
 
+M4-core completed on main `b39d472`. Deferred M2 proceeds in dependency order T2.1, T2.3, T2.4, T2.2, T2.5, T2.6 so T3.5 can use the scan command. The temporary PR validation tier has expired and the full CI jobs run again (D-0062).
+
 ---
 
 ## 0. Project identity, scope and global assumptions
@@ -1343,8 +1345,8 @@ COMMANDS
 
 Machine formats write only data to stdout; progress/warnings/errors go to stderr. JSON/NDJSON/CSV are never localized. Table output honours `NO_COLOR` and `--no-color`.
 
-- [ ] **T2.1 — CLI framework, global options, exit codes**
-  - **Files:** C `src/dafree/cli/{main.py,exit_codes.py,output.py,progress.py}`, `tests/cli/test_main.py`.
+- [x] **T2.1 — CLI framework, global options, exit codes**
+  - **Files:** C `src/dafree/cli/{output.py,progress.py}`, `tests/cli/test_main.py`, `docs/reference/exit-codes.md`; M the scaffold `main.py` and `exit_codes.py`, entry points, existing CLI tests and docs (D-0062).
   - **Interface:** `class Exit(IntEnum): OK=0; RUNTIME=1; USAGE=2; ALERT=3; PARTIAL=4; FOUND=5; BLOCKED=10; INTERRUPTED=130`; `@click.group` `cli` with a `Context` object `CliState(format, units, unit_style, color, locale, verbosity, progress, threads, config, portable)`.
   - **Behavior:** usage errors exit 2 (click default); unhandled `DafreeError` → message on stderr + exit 1; `KeyboardInterrupt` → cancel active scan handle, flush, exit 130. `--config` loads TOML defaults (keys = long option names); explicit flags win.
   - **Depends on:** T1.13

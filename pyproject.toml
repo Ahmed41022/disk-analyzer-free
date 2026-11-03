@@ -41,7 +41,7 @@ docs = ["mkdocs-material>=9.8,<10", "mkdocs-click>=0.9,<1"]
 freeze = ["PyInstaller>=6.22,<7"]
 
 [project.scripts]
-dafree = "dafree.cli.main:cli"
+dafree = "dafree.cli.main:main"
 
 [project.gui-scripts]
 "disk-analyzer-free" = "dafree.gui.app:main"

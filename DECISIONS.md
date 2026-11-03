@@ -9,12 +9,26 @@ This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when it
 | Missing §7.3 job | Task that will add it | Remaining prerequisite / scope |
 | --- | --- | --- |
 | `frozen-smoke` | T10.1, using T4.14's deferred self-test hook | Build the actual frozen bundle, verify CLI/GUI fixture totals and bundle size. |
-| `bench` | T2.2, after M4-core | Add executable CLI wall-time/RSS comparison to existing `bench_compare`; run on main/nightly under D-0030 until M4-core completes. |
+| `bench` | T2.2, after M4-core | Add executable CLI wall-time/RSS comparison to existing `bench_compare` with full CI routing. |
 | `pr-title` | T0.5 follow-up after these prerequisites | Enforce Conventional Commits on PR titles; no feature prerequisite. |
 
 Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance lands in T4.5. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
+
+## D-0062 — 2026-11-03 — CLI defaults and one exit status enum
+
+Question: How should the CLI apply per-invocation defaults while preserving existing settings commands?
+
+Choice: Replace the scaffold `ExitCode` with the single planned `Exit` enum and update all consumers. Parse the TOML file supplied to `--config` as top-level defaults keyed by long global option names, without leading dashes. Explicit flags win, including when they choose the other unit system. Reject unknown keys and invalid values as usage errors. Persistent settings keep their existing storage and commands. An explicit portable request reports the current T10.2 limitation.
+
+Choice: Put resolved options in `CliState` on the Click context. Use table output on a TTY and JSON otherwise, with color only for terminal table output when permitted. Net verbosity is verbose count minus quiet count. Register active operations in the Click context so command interruption cancels the scan and flushes streams before exit 130. Leave actual scan output and partial JSON serialization with T2.2. Run M2 in dependency order T2.1, T2.3, T2.4, T2.2, T2.5, T2.6 so T3.5 can use the real scan command.
+
+Reasoning: Click validates both TOML defaults and command-line values through the same option types. The framework keeps global configuration and interruption handling in one place and retains the CLI contract without introducing scan or portable features early.
+
+Choice: Carry the previously validated full CI routing from T3.1 into the M2 branch. The temporary light tier ended at M4-core, and this branch starts from main before the M3 commits. The branch uses the existing jobs and keeps their full test gates.
+
+Task: T2.1
 
 ## D-0053 — 2026-11-01 — Validation fixes for minimum mock delays and test method ownership
 

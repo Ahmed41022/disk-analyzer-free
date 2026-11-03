@@ -1,7 +1,30 @@
-# Configuration commands
+# Command line interface
 
-The current CLI provides `--version`, `gui`, and `config get|set|path`. Scanning,
-reporting, global CLI options, and shell completion follow their deferred tasks.
+Use `dafree --help` for the available commands and options. Global options go
+before the command name and apply to that invocation. Scanning, reporting and
+shell completion follow their planned tasks.
+
+| Option | Meaning |
+| --- | --- |
+| `--format table\|json\|ndjson\|csv` | Select a report format. The default is table on a terminal and JSON when redirected. |
+| `--units auto\|b\|kb\|mb\|gb\|tb` | Select automatic or fixed-size units. |
+| `--si`, `--iec-labels` | Choose decimal SI units or IEC binary labels. Specify one at most. |
+| `--no-color` | Disable table colors. A nonempty `NO_COLOR` also disables colors. |
+| `--locale TAG` | Select a shipped locale. |
+| `-q`, `-v` | Decrease or increase verbosity. Both can be repeated. |
+| `--progress auto\|always\|never` | Select progress output policy for commands that report progress. |
+| `--threads N` | Set the requested worker count. `0` selects it automatically. |
+| `--config FILE` | Read global option defaults from TOML. Explicit command-line options take precedence. |
+| `--portable` | Request portable mode. This currently reports a usage error until T10.2 supplies portable storage. |
+
+The TOML file uses top-level long option names without the leading dashes.
+For example, `threads = 4`, `format = "json"` and `no-color = true` set three
+defaults. Unknown keys and malformed values report a usage error. The settings
+commands below manage persistent preferences separately from this file.
+
+See [exit codes](reference/exit-codes.md) for process status meanings.
+
+## Configuration commands
 
 ```console
 dafree config path

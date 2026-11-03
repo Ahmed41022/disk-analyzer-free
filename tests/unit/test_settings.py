@@ -9,7 +9,7 @@ import pytest
 from click.testing import CliRunner
 
 from dafree.api import ScanMode, UnitMode, UnitSystem
-from dafree.cli.exit_codes import ExitCode
+from dafree.cli.exit_codes import Exit
 from dafree.cli.main import cli
 from dafree.paths import AppPaths, detect
 from dafree.settings import (
@@ -228,10 +228,10 @@ def test_config_set_invalid_type_exit_2(tmp_path: Path, monkeypatch: pytest.Monk
     target = tmp_path / "settings.json"
     old = target.read_bytes()
     result = CliRunner().invoke(cli, ["config", "set", "default_scan.threads", "many"])
-    assert result.exit_code == ExitCode.USAGE
+    assert result.exit_code == Exit.USAGE
     assert "threads" in result.output
     assert target.read_bytes() == old
-    assert CliRunner().invoke(cli, ["config", "get", "missing"]).exit_code == ExitCode.USAGE
+    assert CliRunner().invoke(cli, ["config", "get", "missing"]).exit_code == Exit.USAGE
 
 
 def test_paths_detection_is_non_creating(tmp_path: Path) -> None:
@@ -279,5 +279,5 @@ def test_config_path_does_not_create_directory(
     assert Path(result.output.strip()) == directory / "settings.json"
     monkeypatch.setenv("DAFREE_PORTABLE", "1")
     result = CliRunner().invoke(cli, ["config", "path"])
-    assert result.exit_code == ExitCode.USAGE
+    assert result.exit_code == Exit.USAGE
     assert not directory.exists()

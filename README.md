@@ -64,7 +64,7 @@ The scaffold now applies shared theme/locale settings, forwards repeat launches
 to the first instance, and records diagnostic logs with an error-details dialog.
 See [desktop bootstrap](docs/gui.md) for the current behavior and remaining UI work.
 
-The CLI version command is:
+Use `dafree --help` for available commands and global options, or check the installed version:
 
 ```console
 dafree --version
@@ -79,7 +79,7 @@ dafree config set theme dark
 dafree config set default_scan.threads 4
 ```
 
-See [configuration commands](docs/cli.md) for typed values, migrations, and storage paths.
+See the [CLI reference](docs/cli.md) for global options, TOML defaults and preferences.
 
 The Python API can scan and page sorted tree rows without walking entries in Python:
 

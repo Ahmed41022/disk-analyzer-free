@@ -12,7 +12,7 @@ from dafree.settings import _encode, get_dotted, load_settings, save_settings, s
 
 @click.group("config", help=_("Read and update shared preferences."))
 def config_command() -> None:
-    """Group the settings commands without pulling forward T2.1 globals."""
+    """Group commands that read or update persistent preferences."""
 
 
 def _failure(error: OSError | ValueError) -> click.ClickException:
