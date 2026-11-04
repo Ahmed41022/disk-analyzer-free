@@ -680,6 +680,10 @@ def start_scan(options: ScanOptions, backend: Backend | None = None) -> ScanHand
 class testing:
     """Native test fixture namespace."""
 
+    @staticmethod
+    def sid_cache_hits() -> int:
+        """Count successful lookups served by the Windows SID cache."""
+
     class TreeBuilder:
         """MockBackend-free synthetic trees."""
 
@@ -819,6 +823,14 @@ class platform:
     @staticmethod
     def relaunch_elevated(args: Sequence[str]) -> None:
         """Relaunch the current executable with elevation and explicit arguments."""
+
+    @staticmethod
+    def owner_of(path: str) -> str | None:
+        """Return the file owner's account name when available."""
+
+    @staticmethod
+    def show_properties(path: str) -> bool:
+        """Open a native Windows property sheet when available."""
 
 def write_json(
     tree: Tree,

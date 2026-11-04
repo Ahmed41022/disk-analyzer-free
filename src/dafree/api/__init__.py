@@ -1,5 +1,6 @@
 """Typed public facade over the native core."""
 
+import os
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -50,6 +51,7 @@ from dafree.api.types import (
     ScanSummary,
     TimeField,
     VolumeInfo,
+    _absolute,
     _volume,
 )
 from dafree.api.view import (
@@ -153,6 +155,16 @@ class platform:
         raises Unsupported. The caller controls when to exit the original process.
         """
         _core.platform.relaunch_elevated(list(args))
+
+    @staticmethod
+    def owner_of(path: str | os.PathLike[str]) -> str | None:
+        """Return the account name that owns a file or directory, when available."""
+        return _core.platform.owner_of(_absolute(path))
+
+    @staticmethod
+    def show_properties(path: str | os.PathLike[str]) -> bool:
+        """Open the Windows Properties sheet and report whether it was invoked."""
+        return _core.platform.show_properties(_absolute(path))
 
 
 __all__ = [

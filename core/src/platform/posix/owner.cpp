@@ -44,4 +44,6 @@ std::optional<std::pair<OwnerKey, std::string>> owner_of(std::string_view path) 
     return std::pair{*entry.owner, name_for_uid(uid).value_or(std::to_string(uid))};
 }
 
+bool show_properties(std::string_view) { return false; }
+
 } // namespace dafree::platform

@@ -1456,7 +1456,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Acceptance (windows-2025; GitHub-hosted Windows runners run as an elevated administrator — the test first asserts `_core.platform.is_elevated()` and fails loudly if that changes):** `test_mft_scan_matches_walk_on_fixture` (fixture under `D:\` if present else `C:\`; MFT scan with subtree extraction vs walk scan: equal names/sizes/counts/hard-link flags; resident files: MFT alloc 0 vs walk alloc ≤ cluster size, asserted), `test_mft_unavailable_when_not_elevated` (run `dafree scan --mode auto` under a restricted token via `tools/run_restricted.py` using `CreateRestrictedToken` through `ctypes`; assert `FastModeUnavailable` notice on stderr and success), `test_mft_mode_strict_errors_when_unavailable`.
 
 - [ ] **T3.6 — Windows owner (SID) and properties dialog**
-  - **Files:** C `core/src/platform/windows/{sid_owner.cpp,properties_win.cpp}`, `tests/integration/test_owner_windows.py`.
+  - **Files:** C `core/src/platform/windows/{sid_owner.cpp,properties_win.cpp}`, `tests/integration/test_owner_windows.py`. M owner resolution, native platform bindings, Python facade, and build wiring (D-0070).
   - **Behavior:** `owner_of` via `GetNamedSecurityInfoW` on the verbatim path; SID→name cache; failure → `nullopt`. `show_properties` → `SHObjectProperties(nullptr, SHOP_FILEPATH, path, nullptr)` → `true`.
   - **Depends on:** T1.8, T1.15
   - **Acceptance (Windows):** `test_owner_of_temp_file_is_current_user` (case-insensitive compare with `whoami`), `test_sid_cache_hits` (test hook counter).

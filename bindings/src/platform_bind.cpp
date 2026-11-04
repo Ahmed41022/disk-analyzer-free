@@ -42,6 +42,30 @@ void bind_platform(nb::module_ &module) {
                 platform::relaunch_elevated(native);
             },
             nb::arg("args"),
-            "Relaunch the current executable with elevation and explicit arguments.");
+            "Relaunch the current executable with elevation and explicit arguments.")
+        .def_static(
+            "owner_of",
+            [](nb::str path) -> std::optional<nb::str> {
+                const auto native = encode_native(path);
+                std::optional<std::pair<OwnerKey, std::string>> owner;
+                {
+                    nb::gil_scoped_release release;
+                    try {
+                        owner = platform::owner_of(native);
+                    } catch (const IoError &) {
+                        return std::nullopt;
+                    }
+                }
+                return owner ? std::optional(decode_native(owner->second)) : std::nullopt;
+            },
+            nb::arg("path"), "Return the file owner's account name when available.")
+        .def_static(
+            "show_properties",
+            [](nb::str path) {
+                const auto native = encode_native(path);
+                nb::gil_scoped_release release;
+                return platform::show_properties(native);
+            },
+            nb::arg("path"), "Open a native Windows property sheet when available.");
 }
 } // namespace dafree::bindings

@@ -67,7 +67,7 @@ pages and bounded prepared text layouts; they create no items for hidden rows.
 A frame shares its owned font/metrics and current native tuple across delegates,
 fetching metadata once per visible row and reusing row text setup. Standalone Qt
 delegate calls retain independent painting and owned font-cache values.
-Showing Owner enables lazy native owner resolution for fetched pages. Hiding it
+Showing Owner enables lazy native owner resolution for fetched pages. Windows displays the account name associated with the file's SID when available. Hiding it
 restores the caller's initial owner-resolution policy.
 
 Use Up/Down, Page Up/Page Down, Home/End for row navigation. Right expands the

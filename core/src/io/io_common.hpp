@@ -98,7 +98,7 @@ inline std::optional<std::string> resolved_owner(TreeHandle &handle, FsBackend &
                                                  NodeId id) {
     const auto pending = handle.read([&](const Tree &tree) {
         const auto value = tree.owner_name(id);
-        return value && value->empty();
+        return value ? value->empty() : backend.can_resolve_owner_by_path();
     });
     if (pending)
         resolve_owners(handle, std::span(&id, 1), backend);

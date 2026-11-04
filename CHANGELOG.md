@@ -14,6 +14,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- Windows SID owner lookup for scan results and reports, with cached account names and a native Properties platform API.
+
 - Windows NTFS fast scans with bounded parallel MFT parsing, subtree selection, and an Auto fallback notice on stderr.
 
 - Completion scripts for Bash, Zsh, Fish, and PowerShell, plus a CLI reference generated from the registered commands.

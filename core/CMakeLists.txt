@@ -51,6 +51,8 @@ if(WIN32)
                                     src/platform/windows/volume_win.cpp
                                     src/platform/windows/elevation_win.cpp
                                     src/platform/windows/mft_reader.cpp
+                                    src/platform/windows/sid_owner.cpp
+                                    src/platform/windows/properties_win.cpp
                                     src/scan/mft_driver.cpp)
   target_link_libraries(dafree_core PRIVATE advapi32 ole32 shell32 Psapi)
 endif()

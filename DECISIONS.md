@@ -15,6 +15,16 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0070 — 2026-11-04 — Windows owner and Properties API
+
+Question: When should Windows scan results query owner SIDs and resolve account names?
+
+Choice: Keep ordinary enumeration free of security-descriptor reads. Resolve owners by verbatim path when requested by a lazy view, export, or eager scan. Owner Off suppresses lookups. Cache up to 4,096 successful SID-to-account mappings per process, and leave failed lookups retryable. Return the qualified account name through the Python platform API. Expose the Windows Shell Properties call separately from the existing scanner properties dialog. T8 wires the native action into the GUI.
+
+Reasoning: Owner lookup may require a filesystem or domain call. Deferring the first SID query preserves the scan hot path, and sharing successful SID mappings avoids repeated account lookups. [GetNamedSecurityInfoW](https://learn.microsoft.com/en-us/windows/win32/api/aclapi/nf-aclapi-getnamedsecurityinfow) · [LookupAccountSidW](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-lookupaccountsidw)
+
+Task: T3.6
+
 ## D-0069 — 2026-11-04 — macOS ARM64 runner capacity
 
 Question: How should T3.5 complete its macOS wheel check after repeated runner allocation failures?

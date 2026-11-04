@@ -106,6 +106,12 @@ std::optional<std::uint64_t> peak_rss();
 #endif
 /// Read an owner identity and its display name.
 std::optional<std::pair<OwnerKey, std::string>> owner_of(std::string_view path);
+/// Open the native Windows property sheet for an absolute path, or return false.
+bool show_properties(std::string_view path);
+#ifdef _WIN32
+/// Count SID-to-account cache hits for test verification.
+std::uint64_t sid_cache_hits();
+#endif
 /// Resolve a POSIX user ID to a display name.
 std::optional<std::string> name_for_uid(std::uint32_t uid);
 /// Report whether the process has elevated privileges.
