@@ -27,6 +27,7 @@ namespace dafree {
 class FsBackend;
 class TreeHandle;
 struct JsonOptions;
+struct CsvOptions;
 
 using NodeId = std::uint32_t;
 inline constexpr NodeId kRoot = 0;
@@ -489,6 +490,8 @@ class TreeHandle {
     friend void resolve_owners(TreeHandle &, std::span<const NodeId>, FsBackend &);
     friend void write_json(TreeHandle &, FsBackend &, std::span<const NodeId>, std::ostream &,
                            const JsonOptions &);
+    friend void write_csv(TreeHandle &, FsBackend &, std::span<const NodeId>, std::ostream &,
+                          const CsvOptions &);
     std::shared_ptr<const Tree> tree_;
     mutable detail::TreeMutex mutex_;
     std::mutex owner_resolution_mutex_;

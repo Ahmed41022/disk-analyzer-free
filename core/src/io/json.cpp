@@ -1,11 +1,10 @@
 #include "dafree/export.hpp"
 #include "dafree/scan.hpp"
 
-#include "../scan/glob.hpp"
+#include "io_common.hpp"
 
 #include <array>
 #include <charconv>
-#include <chrono>
 #include <ostream>
 #include <stdexcept>
 
@@ -64,7 +63,7 @@ class Json {
                     control[4] = hex[cp >> 4];
                     control[5] = hex[cp & 15];
                     escape = {control.data(), control.size()};
-                } else if (cp >= 0x110000 || (cp >= 0xd800 && cp <= 0xdfff)) {
+                } else if (io_detail::invalid_scalar(cp)) {
                     invalid = true;
                     escape = "\xef\xbf\xbd";
                 }
@@ -97,36 +96,12 @@ class Json {
     }
 
     void time(std::int64_t value) {
-        using namespace std::chrono;
-        constexpr auto first =
-            duration_cast<seconds>(sys_days{year{1} / January / 1}.time_since_epoch()).count();
-        constexpr auto end =
-            duration_cast<seconds>(sys_days{year{10000} / January / 1}.time_since_epoch()).count();
-        if (value == 0 || value < first || value >= end) {
+        if (const auto timestamp = io_detail::iso_time(value)) {
+            put('"');
+            raw({timestamp->data(), timestamp->size()});
+            put('"');
+        } else
             raw("null");
-            return;
-        }
-        const sys_seconds instant{seconds{value}};
-        const auto day = floor<days>(instant);
-        const year_month_day date{day};
-        const hh_mm_ss clock{instant - day};
-        std::array<char, 20> buffer{'0', '0', '0', '0', '-', '0', '0', '-', '0', '0',
-                                    'T', '0', '0', ':', '0', '0', ':', '0', '0', 'Z'};
-        const auto digits = [&](std::size_t last_digit, unsigned number, std::size_t count) {
-            for (std::size_t i = 0; i < count; ++i) {
-                buffer[last_digit - i] = static_cast<char>('0' + number % 10);
-                number /= 10;
-            }
-        };
-        digits(3, static_cast<unsigned>(static_cast<int>(date.year())), 4);
-        digits(6, static_cast<unsigned>(date.month()), 2);
-        digits(9, static_cast<unsigned>(date.day()), 2);
-        digits(12, static_cast<unsigned>(clock.hours().count()), 2);
-        digits(15, static_cast<unsigned>(clock.minutes().count()), 2);
-        digits(18, static_cast<unsigned>(clock.seconds().count()), 2);
-        put('"');
-        raw({buffer.data(), buffer.size()});
-        put('"');
     }
 
     void line(std::size_t depth) {
@@ -159,43 +134,6 @@ class Json {
     bool pretty_;
 };
 
-constexpr std::array flag_names{
-    std::pair{kDir, "dir"},
-    std::pair{kSymlink, "symlink"},
-    std::pair{kReparse, "reparse"},
-    std::pair{kMountPoint, "mount_point"},
-    std::pair{kHardlinkDup, "hardlink_dup"},
-    std::pair{kHidden, "hidden"},
-    std::pair{kSystem, "system"},
-    std::pair{kAccessDenied, "access_denied"},
-    std::pair{kPartial, "partial"},
-    std::pair{kSparse, "sparse"},
-    std::pair{kCompressed, "compressed"},
-    std::pair{kCloudPlaceholder, "cloud_placeholder"},
-    std::pair{kExcluded, "excluded"},
-    std::pair{kError, "error"},
-    std::pair{kAllocUnreliable, "alloc_unreliable"},
-    std::pair{kSynthetic, "synthetic"},
-};
-
-void path_of(const Tree &tree, NodeId id, std::string &path) {
-#ifdef _WIN32
-    constexpr char sep = '\\';
-#else
-    constexpr char sep = '/';
-#endif
-    // Append backward, then reverse in place, reusing storage for the next row.
-    path.clear();
-    while (id != kRoot) {
-        const auto name = tree.name_bytes(id);
-        if (!path.empty() && !name.empty() && name.back() != sep && name.back() != '/')
-            path.push_back(sep);
-        path.append(name.rbegin(), name.rend());
-        id = tree.node(id).parent;
-    }
-    std::reverse(path.begin(), path.end());
-}
-
 template <class Owner>
 void fields(Json &json, const Tree &tree, NodeId id, std::size_t indent, const JsonOptions &opts,
             Owner &owner, std::string &path) {
@@ -209,7 +147,7 @@ void fields(Json &json, const Tree &tree, NodeId id, std::size_t indent, const J
         json.bytes(name);
     }
     if (opts.ndjson) {
-        path_of(tree, id, path);
+        io_detail::path_of(tree, id, path);
         json.key("path", indent);
         if (json.string(path)) {
             json.key("path_raw_hex", indent);
@@ -217,7 +155,7 @@ void fields(Json &json, const Tree &tree, NodeId id, std::size_t indent, const J
         }
     }
     json.key("type", indent);
-    json.string((node.flags & kSymlink) ? "symlink" : (node.flags & kDir) ? "directory" : "file");
+    json.string(io_detail::node_type(node));
     json.key("size", indent);
     json.number(node.size);
     json.key("alloc", indent);
@@ -245,7 +183,7 @@ void fields(Json &json, const Tree &tree, NodeId id, std::size_t indent, const J
     json.key("flags", indent);
     json.put('[');
     bool first = true;
-    for (const auto &[flag, label] : flag_names) {
+    for (const auto &[flag, label] : io_detail::flag_names) {
         if ((node.flags & flag) == 0)
             continue;
         if (!first)
@@ -254,17 +192,6 @@ void fields(Json &json, const Tree &tree, NodeId id, std::size_t indent, const J
         first = false;
     }
     json.put(']');
-}
-
-bool visible(const Node &node, const JsonOptions &opts) {
-    return (node.flags & kExcluded) == 0 && (opts.include_files || (node.flags & kDir) != 0);
-}
-
-NodeId next_visible(const Tree &tree, NodeId begin, NodeId end, const JsonOptions &opts) {
-    for (auto id = begin; id < end; ++id)
-        if (visible(tree.node(id), opts))
-            return id;
-    return kNone;
 }
 
 template <class Owner>
@@ -279,8 +206,9 @@ void scope(Json &json, const Tree &tree, NodeId root, const JsonOptions &opts, O
         if (opts.ndjson)
             json.raw("}\n");
         const auto [first, end] = tree.children(id);
-        const auto child =
-            (!opts.depth || depth < *opts.depth) ? next_visible(tree, first, end, opts) : kNone;
+        const auto child = (!opts.depth || depth < *opts.depth)
+                               ? io_detail::next_visible(tree, first, end, opts.include_files)
+                               : kNone;
         if (child != kNone) {
             if (!opts.ndjson) {
                 json.key("children", indent(depth) + 1);
@@ -297,7 +225,8 @@ void scope(Json &json, const Tree &tree, NodeId root, const JsonOptions &opts, O
         // Contiguous child ranges and parent IDs make the DFS stack unnecessary.
         while (id != root) {
             const auto parent = tree.node(id).parent;
-            const auto sibling = next_visible(tree, id + 1, tree.children(parent).second, opts);
+            const auto sibling = io_detail::next_visible(tree, id + 1, tree.children(parent).second,
+                                                         opts.include_files);
             if (sibling != kNone) {
                 if (!opts.ndjson)
                     json.put(',');
@@ -365,7 +294,7 @@ void write(const Tree &tree, std::span<const NodeId> scopes, std::ostream &out,
     std::string path;
     bool first = true;
     for (const auto id : scopes) {
-        if (!visible(tree.node(id), opts))
+        if (!io_detail::visible(tree.node(id), opts.include_files))
             continue;
         if (!first && !opts.ndjson)
             json.put(',');
@@ -394,18 +323,7 @@ void write_json(TreeHandle &handle, FsBackend &backend, std::span<const NodeId> 
                 std::ostream &out, const JsonOptions &opts) {
     // The handle's tree pointer and all structure are immutable. Owner resolution
     // alone can change owner IDs/table entries and is synchronized separately.
-    const auto owner = [&](NodeId id) -> std::optional<std::string> {
-        const auto pending = handle.read([&](const Tree &tree) {
-            const auto value = tree.owner_name(id);
-            return value && value->empty();
-        });
-        if (pending)
-            resolve_owners(handle, std::span(&id, 1), backend);
-        return handle.read([&](const Tree &tree) -> std::optional<std::string> {
-            const auto value = tree.owner_name(id);
-            return value && !value->empty() ? std::optional(std::string(*value)) : std::nullopt;
-        });
-    };
+    const auto owner = [&](NodeId id) { return io_detail::resolved_owner(handle, backend, id); };
     write(*handle.tree_, scopes, out, opts, owner);
 }
 

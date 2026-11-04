@@ -34,6 +34,7 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 - Shared typed JSON preferences with atomic saves, corruption backups, v0 migration, and `config get/set/path` commands.
 - CLI global options, TOML invocation defaults, one `Exit` enum and cancellation handling that returns exit 130.
 - Streaming JSON and NDJSON export, a versioned report schema, and lossless recovery of invalid native names and paths.
+- Streaming CSV export with RFC 4180 quoting and Excel BOM and delimiter options.
 
 - Three-platform installed abi3 wheel verification with MSVC on Windows, nightly full CI, explicit PR/full test routing, and incremental Linux contributor setup.
 

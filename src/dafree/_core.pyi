@@ -821,3 +821,15 @@ def write_json(
     pretty: bool,
 ) -> None:
     """Write JSON as bounded UTF-8 chunks to a binary write callback."""
+
+def write_csv(
+    tree: Tree,
+    scopes: Sequence[int],
+    write: Callable[[bytes], int],
+    depth: int | None,
+    include_files: bool,
+    excel: bool,
+    include_owner: bool,
+    delimiter: str,
+) -> None:
+    """Write CSV as bounded UTF-8 chunks to a binary write callback."""

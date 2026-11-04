@@ -16,6 +16,18 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0064 — 2026-11-03 — CSV dialect and locale-independent report fields
+
+Question: How should the CSV API express scan data and Excel interoperability within the fixed column layout?
+
+Choice: Keep the exact 14 headers and scope behavior. Emit UTF-8 with CRLF, quote fields with delimiters or line breaks, and double embedded quotes. The C++ writer takes an explicit delimiter. The Python facade selects semicolon for Excel mode in a decimal-comma numeric locale unless the caller provides a delimiter. Excel mode adds a UTF-8 BOM.
+
+Choice: Write the fraction of the actual parent's logical size with zero for a scan root or a zero-sized parent. Use roundtrip precision and a reusable classic-locale stream for fractions, since Apple's floating-point `to_chars` requires macOS 13.3 and wheels target 13.0. Keep byte counts as decimal integers, optional metadata blank, and flags in stable pipe-separated order. Share path, UTF-8 validation, timestamp and owner logic with JSON. Repair invalid native text to U+FFFD within the fixed CSV fields. JSON retains the raw hex representation.
+
+Reasoning: The writer produces records that standard CSV readers can parse, with bounded stream storage and no change to the platform support floor. [RFC 4180](https://www.rfc-editor.org/rfc/rfc4180.html) · [Apple C++ library availability](https://developer.apple.com/xcode/cpp/)
+
+Task: T2.4
+
 ## D-0063 — 2026-11-03 — Stream JSON with stable native-name recovery
 
 Question: How should v1 encode scope, provenance, native names and streaming guarantees?

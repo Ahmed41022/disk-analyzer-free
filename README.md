@@ -81,7 +81,8 @@ dafree config set default_scan.threads 4
 
 See the [CLI reference](docs/cli.md) for global options, TOML defaults and preferences.
 
-The Python API streams scan results as [JSON or NDJSON](docs/reference/json-export.md).
+The Python API streams scan results as [JSON or NDJSON](docs/reference/json-export.md)
+and [CSV](docs/reference/csv-export.md).
 
 The Python API can scan and page sorted tree rows without walking entries in Python:
 

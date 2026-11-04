@@ -1365,8 +1365,8 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T1.3
   - **Acceptance:** doctest `json_escaping_table`, `json_non_utf8_name_hex`; Python `test_json_validates_against_schema`, `test_json_streaming_constant_memory` (1M-node mock tree, counting allocator peak delta < 8 MiB).
 
-- [ ] **T2.4 — CSV writer (C++)**
-  - **Files:** C `core/src/io/csv.cpp`, `core/tests/test_csv.cpp`.
+- [x] **T2.4 — CSV writer (C++)**
+  - **Files:** C `core/src/io/csv.cpp`, `core/src/io/io_common.hpp`, `core/tests/test_csv.cpp`, Python roundtrip tests and CSV reference. M shared writer interface, bindings, facade and build wiring (D-0064).
   - **Interface:** `void write_csv(const Tree&, std::span<const NodeId>, std::ostream&, const CsvOptions&)`; `CsvOptions { std::optional<std::uint16_t> depth; bool include_files, excel, include_owner; char delimiter = ','; }`.
   - **Depends on:** T1.3
   - **Acceptance:** doctest `csv_header_exact`, `csv_rfc4180_quoting`; Python `test_csv_roundtrip_with_stdlib_reader`, `test_csv_excel_bom_semicolon`.

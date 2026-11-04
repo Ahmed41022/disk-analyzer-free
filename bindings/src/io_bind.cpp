@@ -68,6 +68,23 @@ void bind_io(nb::module_ &module) {
         nb::arg("tree"), nb::arg("scopes"), nb::arg("write"), nb::arg("depth"),
         nb::arg("include_files"), nb::arg("ndjson"), nb::arg("include_owner"), nb::arg("pretty"),
         "Write JSON as bounded UTF-8 chunks to a binary write callback.");
+    module.def(
+        "write_csv",
+        [](const BoundTree &tree, const std::vector<NodeId> &scopes,
+           nb::typed<nb::callable, std::size_t(nb::bytes)> write,
+           std::optional<std::uint16_t> depth, bool include_files, bool excel, bool include_owner,
+           char delimiter) {
+            PythonOutput buffer(std::move(write));
+            std::ostream stream(&buffer);
+            stream.exceptions(std::ios::badbit | std::ios::failbit);
+            nb::gil_scoped_release release;
+            write_csv(*tree.handle, *tree.backend, scopes, stream,
+                      {depth, include_files, excel, include_owner, delimiter});
+            stream.flush();
+        },
+        nb::arg("tree"), nb::arg("scopes"), nb::arg("write"), nb::arg("depth"),
+        nb::arg("include_files"), nb::arg("excel"), nb::arg("include_owner"), nb::arg("delimiter"),
+        "Write CSV as bounded UTF-8 chunks to a binary write callback.");
 }
 
 } // namespace dafree::bindings
