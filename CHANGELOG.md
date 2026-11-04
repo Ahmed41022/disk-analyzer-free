@@ -12,6 +12,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- Completion scripts for Bash, Zsh, Fish, and PowerShell, plus a CLI reference generated from the registered commands.
+
 - Native and CLI analysis for largest files or directories, extension totals, and file age intervals.
 
 - CLI scan command with table, JSON, NDJSON, and CSV output, progress on stderr, strict access-error status, partial JSON on interrupt, and optional wall-time and peak RSS statistics.

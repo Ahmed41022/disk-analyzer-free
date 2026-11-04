@@ -139,3 +139,25 @@ error rather than silently use normal directories.
 interface. Set it to a directory created by the test: preferences use that root,
 and data/log/snapshot directories are contained below it. Tests must never write
 real user preferences. The override does not create directories until needed.
+
+## Shell completion
+
+Load the generated script in the current session. Add the same line to your
+shell startup file to enable completion in future sessions.
+
+| Shell | Load the script |
+| --- | --- |
+| Bash 4.4+ | `source <(dafree completion bash)` |
+| Zsh | `autoload -Uz compinit && compinit; source <(dafree completion zsh)` |
+| Fish | `dafree completion fish \| source` |
+| PowerShell | `dafree completion powershell \| Out-String \| Invoke-Expression` |
+
+After loading the script, type `dafree sc` and press Tab to complete `scan`.
+
+## Command reference
+
+::: mkdocs-click
+    :module: dafree.cli.main
+    :command: cli
+    :prog_name: dafree
+    :depth: 3

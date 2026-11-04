@@ -90,7 +90,7 @@ dafree config set theme dark
 dafree config set default_scan.threads 4
 ```
 
-See the [CLI reference](docs/cli.md) for global options, TOML defaults and preferences.
+See the [CLI reference](docs/cli.md) for global options, TOML defaults, preferences, and shell completion.
 
 The Python API streams scan results as [JSON or NDJSON](docs/reference/json-export.md)
 and [CSV](docs/reference/csv-export.md).

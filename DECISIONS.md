@@ -15,6 +15,16 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0067 — 2026-11-04 — Shell completion provider
+
+Question: How should the CLI generate compatible scripts for all four planned shells?
+
+Choice: Generate scripts through Click's registered completion classes and set the runtime minimum to Click 8.5, the first release with built-in PowerShell support. Click remains BSD-3-Clause and version 8.5.0 was already locked for development, documentation, and packaging. Generate the command reference from the live Click group through the planned mkdocs-click extension.
+
+Reasoning: One provider handles both script generation and interactive requests. Bash script generation uses Click's base template method so the current host need not have Bash installed. Loading it requires Bash 4.4 or later. The docs track the registered options and subcommands.
+
+Task: T2.6
+
 ## D-0066 — 2026-11-04 — Analysis scope, directory leaves, and age cutoffs
 
 Question: How should scoped analysis handle directory leaves, missing times, and reports before snapshots are available?

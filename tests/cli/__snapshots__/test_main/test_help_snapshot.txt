@@ -19,9 +19,10 @@ Options:
   --help                          Show this message and exit.
 
 Commands:
-  age     Summarize the age of files below PATH.
-  config  Read and update shared preferences.
-  gui     Launch the desktop interface.
-  scan    Scan one or more paths and report their disk usage.
-  top     List the largest files or directories below PATH.
-  types   Summarize file types below PATH.
+  age         Summarize the age of files below PATH.
+  completion  Write the completion script for SHELL to stdout.
+  config      Read and update shared preferences.
+  gui         Launch the desktop interface.
+  scan        Scan one or more paths and report their disk usage.
+  top         List the largest files or directories below PATH.
+  types       Summarize file types below PATH.

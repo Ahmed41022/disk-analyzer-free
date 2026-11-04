@@ -11,7 +11,7 @@ license = "MIT"
 authors = [{ name = "Disk Analyzer Free contributors" }]
 dependencies = [
   "numpy>=2.0",
-  "click>=8.1",
+  "click>=8.5",
   "rich>=13",
   "platformdirs>=4",
   "Send2Trash>=1.8",

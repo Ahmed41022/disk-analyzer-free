@@ -1389,8 +1389,8 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T1.4, T2.1
   - **Acceptance:** doctest `top_n_equals_sort_take` (random), `ext_breakdown_sums_to_total`, `age_buckets_partition_all_files`; CLI syrupy snapshots for each command on `small_mixed` with hidden `--now` for determinism.
 
-- [ ] **T2.6 — Shell completion and CLI docs**
-  - **Files:** C `src/dafree/cli/commands/completion.py`, `docs/cli.md` (uses `mkdocs-click` directive).
+- [x] **T2.6 — Shell completion and CLI docs**
+  - **Files:** C `src/dafree/cli/commands/completion.py`, `tests/cli/test_completion.py`. M `docs/cli.md` (uses the `mkdocs-click` directive), MkDocs configuration, CLI registration, and minimum Click version (D-0067).
   - **Depends on:** T2.1
   - **Acceptance:** `test_completion_scripts_generate` (bash, zsh, fish, powershell non-empty, exit 0); docs build includes every command.
 

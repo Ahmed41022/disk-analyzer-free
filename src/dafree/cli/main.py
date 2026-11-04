@@ -10,6 +10,7 @@ from click.core import ParameterSource
 
 from dafree import __version__, api, i18n
 from dafree.cli.commands.age import age_command
+from dafree.cli.commands.completion import completion_command
 from dafree.cli.commands.config import config_command
 from dafree.cli.commands.scan import scan_command
 from dafree.cli.commands.top import top_command
@@ -173,6 +174,7 @@ def gui_command() -> None:
     click.get_current_context().exit(exit_code)
 
 
+cli.add_command(completion_command)
 cli.add_command(config_command)
 cli.add_command(scan_command)
 cli.add_command(top_command)
