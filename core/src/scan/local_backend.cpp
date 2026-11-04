@@ -7,6 +7,9 @@ namespace {
 class LocalBackend final : public FsBackend {
   public:
     [[nodiscard]] BackendKind kind() const override { return BackendKind::Local; }
+#ifdef _WIN32
+    bool supports_local_mft() const noexcept override { return true; }
+#endif
     RawEntry stat_root(std::string_view path) override { return platform::stat_nofollow(path); }
     RawEntry stat_follow(std::string_view path) override { return platform::stat_follow(path); }
     DirListing read_dir(std::string_view path, const DirHint &hint) override {

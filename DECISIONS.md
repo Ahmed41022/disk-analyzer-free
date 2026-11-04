@@ -15,6 +15,26 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0069 — 2026-11-04 — macOS ARM64 runner capacity
+
+Question: How should T3.5 complete its macOS wheel check after repeated runner allocation failures?
+
+Choice: Run the macOS native, Python, coverage, and wheel jobs on the standard `macos-26` ARM64 image. Keep the abi3 wheel architecture and deployment target and the required checks.
+
+Reasoning: GitHub cancelled the macOS 15 wheel job before it acquired a runner in three attempts. On the next run, the macOS 15 native, Python, and coverage jobs also remained unassigned, blocking the wheel matrix. macOS 26 is a standard ARM64 runner for public repositories. The image change gives the required wheel build and test another route. [GitHub-hosted runners](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)
+
+Task: T3.5 CI
+
+## D-0068 — 2026-11-04 — Windows MFT reader and fallback boundary
+
+Question: How should the scan engine integrate raw MFT reads with the existing walk and cancellation path?
+
+Choice: Try Auto fast mode on one shallow local NTFS target. Allow explicit MFT on a deeper subtree. Requests to follow links or cross filesystems use Walk under Auto and fail in explicit MFT mode. Require an elevated token with enabled Administrators membership for raw access. Read the raw drive read-only and verify the mapping from record zero, consulting a bounded attribute list when the base data attribute does not cover the stream. Process aligned 8 MiB reads through a four-chunk queue and at most eight parser workers. Publish a completed MFT tree only after all parser batches merge. A failed Auto attempt emits FastModeUnavailable and starts the already-prepared walk, while explicit MFT reports MftUnavailable. Cancellation returns the normal partial-root report if the raw scan has no finished tree.
+
+Reasoning: These limits bound in-flight memory and preserve scan policy. A partially parsed index cannot safely replace a complete walk. Report output and notices remain on separate CLI streams. [NTFS volume data](https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ns-winioctl-ntfs_volume_data_buffer)
+
+Task: T3.5
+
 ## D-0067 — 2026-11-04 — Shell completion provider
 
 Question: How should the CLI generate compatible scripts for all four planned shells?

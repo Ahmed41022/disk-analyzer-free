@@ -1108,7 +1108,7 @@ Conventions for every task:
 - **Files:** C = create, M = modify.
 - **Interface** refers to §2 where the signature is already given; only new signatures are spelled out.
 - **Acceptance** items are automated checks; a task is done only when they pass locally _and_ in CI. Named tests are the exact test names to create (C++ doctest `TEST_CASE("name")`, Python `def test_name`).
-- "3 OSes" = `ubuntu-24.04`, `windows-2025`, `macos-15` runners.
+- "3 OSes" = `ubuntu-24.04`, `windows-2025`, `macos-26` ARM64 runners for CI (D-0069).
 - Python tests run against the _installed_ package (`pip install .[dev,gui]`), never against an in-tree build.
 
 ### M0 — Skeleton and CI
@@ -1448,8 +1448,8 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T3.2, T3.3, T1.3
   - **Acceptance:** doctest `parent_before_child`, `hardlink_multiple_parents_counted_once`, `orphans_skipped_with_issue`, `sequence_mismatch_is_orphan`, `subtree_extraction`, `random_index_invariants` (500 seeds), `utf16_to_wtf8_lone_surrogates`.
 
-- [ ] **T3.5 — Windows volume reader and Auto/MFT dispatch**
-  - **Files:** C `core/src/platform/windows/mft_reader.cpp`, `core/src/scan/mft_driver.cpp`, M `engine.cpp`, `tests/integration/test_mft_windows.py`.
+- [x] **T3.5 — Windows volume reader and Auto/MFT dispatch**
+  - **Files:** C `core/src/platform/windows/mft_reader.{cpp,hpp}`, `core/src/scan/mft_driver.{cpp,hpp}`, `tests/integration/test_mft_windows.py`, `tools/run_restricted.py`. M `engine.cpp`, backend dispatch, build wiring and CLI notices (D-0068).
   - **Interface:** `class VolumeReader { public: static Expected<VolumeReader, MftOpenError> open(std::wstring_view volume_root); std::uint64_t record_count() const; std::size_t record_size() const, sector_size() const; void read_chunks(std::size_t chunk_bytes, const std::function<bool(std::uint64_t first_record, std::span<std::byte>)>& f); };` with `MftOpenError { NotElevated, NotNtfs, AccessDenied, Io }`.
   - **Behavior:** §2.4.3 steps 1–2: sector-aligned 8 MiB reads (`_aligned_malloc`), reader thread → bounded queue (4 chunks) → parser threads with per-thread `MftIndex` merged at the end; `est_total = record_count`. Fallback policy per §2.4.3.
   - **Depends on:** T3.4, T1.11, T3.7 and T2.2 (D-0061).
@@ -2063,7 +2063,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2025, macos-15]
+        os: [ubuntu-24.04, windows-2025, macos-26]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -2151,7 +2151,7 @@ jobs:
           - { os: ubuntu-24.04, python: "3.12" }
           - { os: ubuntu-24.04, python: "3.15", perf: true }
           - { os: windows-2025, python: "3.14" }
-          - { os: macos-15, python: "3.14" }
+          - { os: macos-26, python: "3.14" }
     runs-on: ${{ matrix.os }}
     env:
       DAFREE_TEST_SCHEDULER: 1
@@ -2218,7 +2218,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2025, macos-15]
+        os: [ubuntu-24.04, windows-2025, macos-26]
     runs-on: ${{ matrix.os }}
     env:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -2278,7 +2278,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2025, macos-15]
+        os: [ubuntu-24.04, windows-2025, macos-26]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
