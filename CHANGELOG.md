@@ -12,6 +12,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- CLI scan command with table, JSON, NDJSON, and CSV output, progress on stderr, strict access-error status, partial JSON on interrupt, and optional wall-time and peak RSS statistics.
+
 - Read-only node properties with lazy owner lookup, human flag badges, timestamps and captured volume data; Issues kind filtering, clipboard copy, and exclusive new CSV reports.
 - Three-platform Python coverage gates/artifacts and conditional Codecov upload, retaining the existing native model/scanner thresholds.
 

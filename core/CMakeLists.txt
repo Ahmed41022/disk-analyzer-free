@@ -40,7 +40,9 @@ endif()
 if(WIN32)
   target_sources(dafree_core PRIVATE src/platform/windows/read_dir_win.cpp
                                     src/platform/windows/fileid.cpp
+                                    src/platform/windows/peak_rss.cpp
                                     src/platform/windows/volume_win.cpp)
+  target_link_libraries(dafree_core PRIVATE Psapi)
 endif()
 
 if(DAFREE_BUILD_TESTS)

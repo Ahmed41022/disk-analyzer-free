@@ -1,0 +1,10 @@
+# serializer version: 1
+# name: test_scan_small_mixed_table
+  '''
+   Size  Alloc                   %  Files  Dirs  Modified  Name
+   10 B   10 B     0% [----------]      2     1            <root>
+    8 B    8 B    80% [########--]      0     0              first.bin
+    2 B    2 B    20% [##--------]      0     0              second.bin
+    0 B    0 B     0% [----------]      0     0              empty
+  '''
+# ---

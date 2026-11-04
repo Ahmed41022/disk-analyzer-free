@@ -807,6 +807,12 @@ class platform:
         """List mounted volumes using the native platform implementation."""
 
     @staticmethod
+    def peak_rss() -> int | None:
+        """
+        Return the process peak working set in bytes, or None when unavailable.
+        """
+
+    @staticmethod
     def is_elevated() -> bool | None:
         """Return known elevation, or None when the platform API is unavailable."""
 

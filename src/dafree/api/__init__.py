@@ -1,5 +1,6 @@
 """Typed public facade over the native core."""
 
+import sys
 from dataclasses import dataclass
 from enum import IntEnum
 
@@ -106,6 +107,20 @@ class platform:
     def volumes() -> list[VolumeInfo]:
         """Copy native mounted-volume metadata without enumerating user files."""
         return [_volume(value) for value in _core.platform.volumes()]
+
+    @staticmethod
+    def peak_rss() -> int:
+        """Return the peak process resident set size in bytes."""
+        if sys.platform == "win32":
+            value = _core.platform.peak_rss()
+            if value is None:
+                raise Unsupported("Peak process memory is unavailable")
+            return value
+
+        import resource  # noqa: PLC0415 -- unavailable on Windows
+
+        maxrss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        return maxrss if sys.platform == "darwin" else maxrss * 1024
 
     @staticmethod
     def is_elevated() -> bool:

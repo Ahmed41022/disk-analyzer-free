@@ -21,3 +21,4 @@ Options:
 Commands:
   config  Read and update shared preferences.
   gui     Launch the desktop interface.
+  scan    Scan one or more paths and report their disk usage.

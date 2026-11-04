@@ -1,8 +1,8 @@
 # Command line interface
 
 Use `dafree --help` for the available commands and options. Global options go
-before the command name and apply to that invocation. Scanning, reporting and
-shell completion follow their planned tasks.
+before the command name and apply to that invocation. Use `dafree scan --help`
+for scan-specific options.
 
 | Option | Meaning |
 | --- | --- |
@@ -23,6 +23,39 @@ defaults. Unknown keys and malformed values report a usage error. The settings
 commands below manage persistent preferences separately from this file.
 
 See [exit codes](reference/exit-codes.md) for process status meanings.
+
+## Scan
+
+```console
+dafree --format table scan . --depth 2 --files
+dafree --format json scan source assets --depth 1 --files > report.json
+dafree --format csv --progress never scan . --stats-json scan-stats.json > report.csv
+```
+
+Depth is measured from each target. The default depth is one, and zero shows
+only target roots. Add `--files` to include file rows. The depth and file filter
+affect the report while directory totals still describe the scanned contents.
+Use `--sort size|alloc|files|dirs|name|mtime` and `--asc` to control table order.
+
+Use `--exclude GLOB`, `--exclude-path PATH`, `--exclude-hidden`, and
+`--exclude-system` to omit entries from the scan. Links and filesystem boundaries
+are respected by default. `--follow-symlinks` and `--cross-fs` opt into traversal.
+`--mode`, `--hardlinks`, `--owner`, and `--include-ads` select scanner policies.
+Eager owner lookup includes available owner names in machine reports.
+
+Reports go to stdout. `--progress auto` shows a live line on an interactive
+stderr. `--progress always` also shows progress on redirected stderr, with up to
+one line per five seconds. `--progress never` suppresses it. `--strict` returns
+status 4 after reporting a scan with access errors. Interrupting an active scan
+returns status 130 after printing the partial report. JSON sets
+`meta.cancelled` to `true` in that case.
+
+`--stats-json FILE` creates a separate JSON file with `wall_ms`,
+`peak_rss_bytes`, `nodes`, and the scan mode actually used. The node count covers
+the scanned tree and excludes the synthetic root.
+
+See the [JSON and NDJSON format](reference/json-export.md) and
+[CSV format](reference/csv-export.md) for the machine-readable fields.
 
 ## Configuration commands
 

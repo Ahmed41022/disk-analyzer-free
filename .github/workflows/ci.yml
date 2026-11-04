@@ -419,10 +419,71 @@ jobs:
           path: build/view-bench.json
           retention-days: 14
 
+  bench:
+    name: Benchmarks (PR vs base)
+    if: github.event_name == 'pull_request'
+    needs: lint
+    runs-on: ubuntu-24.04
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install build tools
+        run: python -m pip install cmake ninja Babel
+      - name: Build and measure both revisions
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/base-src" "$BASE_SHA"
+          for revision in base head; do
+            source_dir="$GITHUB_WORKSPACE"
+            if [ "$revision" = base ]; then source_dir="$RUNNER_TEMP/base-src"; fi
+            (
+              cd "$source_dir"
+              export FETCHCONTENT_BASE_DIR="$RUNNER_TEMP/deps-$revision-native"
+              cmake --preset bench -DDAFREE_BUILD_TESTS=OFF
+              cmake --build build/bench --target dafree_bench
+              ./build/bench/core/bench/dafree_bench --benchmark_repetitions=5 \
+                --benchmark_out="$RUNNER_TEMP/$revision.json" --benchmark_out_format=json
+              if [ -f src/dafree/cli/commands/scan.py ]; then
+                python -m venv "$RUNNER_TEMP/$revision"
+                FETCHCONTENT_BASE_DIR="$RUNNER_TEMP/deps-$revision-python" \
+                  "$RUNNER_TEMP/$revision/bin/pip" install .
+              fi
+            )
+          done
+      - name: Compare benchmarks on the same runner
+        run: |
+          python tools/gen_fixtures.py --preset ci_500k --out "$RUNNER_TEMP/fx"
+          baseline=()
+          if [ -x "$RUNNER_TEMP/base/bin/dafree" ]; then
+            baseline=(--base "$RUNNER_TEMP/base/bin/dafree")
+          fi
+          summary="$RUNNER_TEMP/bench-summary.md"
+          status=0
+          python tools/bench_compare.py "${baseline[@]}" --head "$RUNNER_TEMP/head/bin/dafree" \
+            --fixture "$RUNNER_TEMP/fx" --runs 5 --threshold-pct 15 --rss-threshold-pct 10 \
+            --gbench-base "$RUNNER_TEMP/base.json" --gbench-head "$RUNNER_TEMP/head.json" \
+            --summary "$summary" || status=$?
+          if [ -f "$summary" ]; then cat "$summary" >> "$GITHUB_STEP_SUMMARY"; fi
+          exit "$status"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scanner-benchmarks
+          path: |
+            ${{ runner.temp }}/base.json
+            ${{ runner.temp }}/head.json
+            ${{ runner.temp }}/bench-summary.md
+          retention-days: 14
+
   ci-success:
     name: ci-success
     if: always()
-    needs: [lint, cpp, python, sanitizers, coverage, tsan, fuzz, wheels, audit, docs, view-perf]
+    needs: [lint, cpp, python, sanitizers, coverage, tsan, fuzz, wheels, audit, docs, view-perf, bench]
     runs-on: ubuntu-24.04
     steps:
       - name: Check all jobs
@@ -431,7 +492,8 @@ jobs:
         run: |
           echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
           bad=$(echo "$RESULTS" | jq -r 'to_entries[]
-            | select(.value.result != "success") | .key')
+            | select(.value.result != "success" and
+                (.key != "bench" or .value.result != "skipped")) | .key')
           if [ -n "$bad" ]; then
             echo "::error::Failed jobs: $bad"
             exit 1

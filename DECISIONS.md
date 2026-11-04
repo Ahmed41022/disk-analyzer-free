@@ -4,17 +4,26 @@ Entries are newest-first. Product-owner overrides take precedence over earlier c
 
 ## Pending CI jobs
 
-This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when its job lands. Existing jobs: `lint`, `cpp`, `python`, `sanitizers`, `coverage`, `wheels`, `audit`, `docs`, `ci-success`; additional `tsan`, `fuzz`, and `view-perf` jobs retain their separate required gates.
+This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when its job lands. Existing jobs: `lint`, `cpp`, `python`, `sanitizers`, `coverage`, `wheels`, `audit`, `docs`, `bench`, `ci-success`; additional `tsan`, `fuzz`, and `view-perf` jobs retain their separate required gates.
 
 | Missing §7.3 job | Task that will add it | Remaining prerequisite / scope |
 | --- | --- | --- |
 | `frozen-smoke` | T10.1, using T4.14's deferred self-test hook | Build the actual frozen bundle, verify CLI/GUI fixture totals and bundle size. |
-| `bench` | T2.2, after M4-core | Add executable CLI wall-time/RSS comparison to existing `bench_compare` with full CI routing. |
 | `pr-title` | T0.5 follow-up after these prerequisites | Enforce Conventional Commits on PR titles; no feature prerequisite. |
 
 Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance lands in T4.5. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
+
+## D-0065 — 2026-11-04 — Scan report policies and first CLI benchmark baseline
+
+Question: How should the CLI handle access errors, cancellation, and benchmark comparisons when the base revision predates the scan command?
+
+Choice: Keep report data on stdout and progress on stderr. Retain and write the native partial tree after interrupting an active scan. Use exit 4 for access errors under `--strict`. Automatic progress appears on interactive stderr, and explicit `--progress always` enables five-second updates when redirected. Keep platform RSS calls behind the public API facade. Run the first PR's native benchmark comparison and absolute CLI RSS gate, then enforce the relative CLI gates once the base supplies `scan --stats-json`. The executable comparison uses a fixed walk scan so platform strategy selection does not change the workload. The strict CLI test injects an access error through the native mock backend for consistent behavior under privileged runners. The interrupt test waits for the first progress line before its 200 ms delay.
+
+Reasoning: A partial tree is useful to both people and report readers. A base without the CLI cannot supply comparable numbers. Measuring the head on the planned fixture and enforcing the absolute budget provides an initial reference.
+
+Task: T2.2
 
 ## D-0064 — 2026-11-03 — CSV dialect and locale-independent report fields
 

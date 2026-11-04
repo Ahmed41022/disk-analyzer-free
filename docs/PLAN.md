@@ -1352,8 +1352,8 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T1.13
   - **Acceptance:** `test_help_snapshot` (syrupy), `test_bad_flag_exit_2`, `test_version_matches_package`, `test_dafree_error_exit_1`.
 
-- [ ] **T2.2 — `scan` command**
-  - **Files:** C `src/dafree/cli/commands/scan.py`, `tests/cli/test_scan.py`.
+- [x] **T2.2 — `scan` command**
+  - **Files:** C `src/dafree/cli/commands/scan.py`, `tests/cli/test_scan.py`, `core/src/platform/windows/peak_rss.cpp`. M CLI registration, native platform binding and build wiring, generated stub, benchmark comparator and CI job (D-0065).
   - **Behavior:** progress on stderr via rich (single live line on a TTY; one line per 5 s otherwise). Table columns `Size  Alloc  %  Files  Dirs  Modified  Name`, depth-indented, `%` with a 10-char bar, middle-ellipsized names. JSON/CSV/NDJSON via the C++ writers (T2.3/T2.4) for the selected depth. `--stats-json FILE` writes `{wall_ms, peak_rss_bytes, nodes, mode}` (`resource.getrusage` on POSIX, `GetProcessMemoryInfo` via `_core.platform.peak_rss()` on Windows). `--save` hidden until T7.1.
   - **Depends on:** T2.1, T2.3, T2.4
   - **Acceptance:** `test_scan_small_mixed_table` (syrupy; `--units b`, timestamps masked), `test_scan_json_validates_schema`, `test_scan_ndjson_one_object_per_line`, `test_scan_csv_quotes_commas_and_newlines`, `test_scan_strict_access_denied_exit_4`, `test_scan_sigint_exit_130_json_valid` (POSIX: subprocess + SIGINT after 200 ms with hidden `--test-slow-backend`; Windows: `CTRL_BREAK_EVENT` to a new process group).
