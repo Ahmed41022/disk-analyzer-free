@@ -5,6 +5,16 @@ from dataclasses import dataclass
 from enum import IntEnum
 
 from dafree import _core
+from dafree.api.analysis import (
+    AgeBucket,
+    AgeStat,
+    ExtStat,
+    TopKind,
+    age_histogram,
+    default_age_buckets,
+    ext_breakdown,
+    top_n,
+)
 from dafree.api.errors import DafreeError, ExcludeError, ScanError, ScanErrorCode, Unsupported
 from dafree.api.export import write_csv, write_json
 from dafree.api.scan import ScanHandle, ScanResult, scan, start_scan
@@ -132,6 +142,8 @@ class platform:
 
 
 __all__ = [
+    "AgeBucket",
+    "AgeStat",
     "Backend",
     "Cmp64",
     "CmpOp",
@@ -140,6 +152,7 @@ __all__ = [
     "ExcludeError",
     "ExcludeRules",
     "ExtCategory",
+    "ExtStat",
     "FilterKind",
     "FilterSpec",
     "HardlinkMode",
@@ -165,6 +178,7 @@ __all__ = [
     "ScanSummary",
     "SortKey",
     "TimeField",
+    "TopKind",
     "Tree",
     "TreeView",
     "UnitMode",
@@ -174,11 +188,15 @@ __all__ = [
     "ViewOptions",
     "VolumeInfo",
     "__version__",
+    "age_histogram",
+    "default_age_buckets",
+    "ext_breakdown",
     "format_size",
     "parse_size",
     "platform",
     "scan",
     "start_scan",
+    "top_n",
     "write_csv",
     "write_json",
 ]

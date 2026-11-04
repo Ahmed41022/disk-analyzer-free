@@ -9,8 +9,11 @@ import click
 from click.core import ParameterSource
 
 from dafree import __version__, api, i18n
+from dafree.cli.commands.age import age_command
 from dafree.cli.commands.config import config_command
 from dafree.cli.commands.scan import scan_command
+from dafree.cli.commands.top import top_command
+from dafree.cli.commands.types import types_command
 from dafree.cli.exit_codes import Exit
 from dafree.cli.output import OutputFormat, output_format, use_color
 from dafree.cli.progress import interrupt
@@ -172,6 +175,9 @@ def gui_command() -> None:
 
 cli.add_command(config_command)
 cli.add_command(scan_command)
+cli.add_command(top_command)
+cli.add_command(types_command)
+cli.add_command(age_command)
 
 
 def main() -> int:

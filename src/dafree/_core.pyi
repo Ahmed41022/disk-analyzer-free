@@ -839,3 +839,50 @@ def write_csv(
     delimiter: str,
 ) -> None:
     """Write CSV as bounded UTF-8 chunks to a binary write callback."""
+
+class TopKind(enum.Enum):
+    FILES = 0
+
+    DIRS = 1
+
+class ExtStat:
+    @property
+    def ext(self) -> str: ...
+    @property
+    def files(self) -> int: ...
+    @property
+    def size(self) -> int: ...
+    @property
+    def alloc(self) -> int: ...
+    @property
+    def category(self) -> ExtCategory: ...
+
+class AgeBucket:
+    def __init__(self, label: str, max_age_secs: int | None) -> None: ...
+    @property
+    def label(self) -> str: ...
+    @property
+    def max_age_secs(self) -> int | None: ...
+
+class AgeStat:
+    @property
+    def bucket(self) -> int: ...
+    @property
+    def files(self) -> int: ...
+    @property
+    def size(self) -> int: ...
+    @property
+    def alloc(self) -> int: ...
+
+def top_n(
+    tree: Tree, scope: int, kind: TopKind, n: int, by: SortKey, leaf_only: bool = False
+) -> list[int]:
+    """Rank file or directory IDs within the selected scope."""
+
+def ext_breakdown(tree: Tree, scope: int) -> list[ExtStat]:
+    """Group file counts and bytes by extension."""
+
+def age_histogram(
+    tree: Tree, scope: int, field: TimeField, buckets: Sequence[AgeBucket], now: int
+) -> list[AgeStat]:
+    """Partition file counts and bytes by age."""

@@ -77,6 +77,10 @@ dafree --format table scan . --depth 2 --files
 dafree --format json scan . --depth 2 --files > report.json
 ```
 
+Use `dafree top .`, `dafree types .`, and `dafree age .` to review large
+items, extension totals, and file age. See the [CLI reference](docs/cli.md#analysis)
+for filtering and output options.
+
 Shared preferences are available now:
 
 ```console

@@ -1371,8 +1371,8 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T1.3
   - **Acceptance:** doctest `csv_header_exact`, `csv_rfc4180_quoting`; Python `test_csv_roundtrip_with_stdlib_reader`, `test_csv_excel_bom_semicolon`.
 
-- [ ] **T2.5 — top/types/age (C++) + commands**
-  - **Files:** C `core/include/dafree/analysis.hpp`, `core/src/analysis/{top.cpp,ext_stats.cpp,ext_categories.cpp,age.cpp}`, `core/tests/test_analysis.cpp`, `src/dafree/api/analysis.py`, `src/dafree/cli/commands/{top.py,types.py,age.py}`.
+- [x] **T2.5 — top/types/age (C++) + commands**
+  - **Files:** M `core/include/dafree/analysis.hpp`. C `core/src/analysis/{top.cpp,ext_stats.cpp,ext_categories.cpp,age.cpp}`, `core/tests/test_analysis.cpp`, `bindings/src/analysis_bind.cpp`, `src/dafree/api/analysis.py`, `src/dafree/cli/commands/{top.py,types.py,age.py}`, `tests/cli/test_analysis.py`. M build wiring, generated stub, CLI registration and report output (D-0066).
   - **Interface:**
     ```cpp
     enum class TopKind { Files, Dirs };

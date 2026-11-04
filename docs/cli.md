@@ -57,6 +57,32 @@ the scanned tree and excludes the synthetic root.
 See the [JSON and NDJSON format](reference/json-export.md) and
 [CSV format](reference/csv-export.md) for the machine-readable fields.
 
+## Analysis
+
+```console
+dafree --format table top . --kind dirs --leaf-only -n 10
+dafree --format table types . --by count -n 15
+dafree --format json age . --field modified --buckets 30d,90d,1y
+```
+
+`top` ranks files by logical size unless you select `--kind dirs`. Directory
+ranking includes the scan root and nested directories using their full totals.
+With `--leaf-only`, a directory qualifies if no direct subdirectory holds at
+least 1% of its logical size.
+
+`types` groups files by normalized extension. An empty extension denotes files
+without one. Sort by size (default) or count, and limit rows with `-n`.
+
+`age` groups files by modification time by default. Select `created` or
+`accessed` with `--field`. The default cutoffs are 30, 90 and 180 days, then
+one, two and five years. `--buckets` accepts increasing comma-separated day
+(`d`) or year (`y`) cutoffs. A year is 365 days. The report has a final
+unbounded interval and adds an Unknown row if any timestamps are unavailable.
+
+All three commands accept the global `--format` option. Table output applies
+the configured units. Machine-readable reports use byte counts. Excluded
+subtrees and duplicate hardlinks do not contribute.
+
 ## Configuration commands
 
 ```console

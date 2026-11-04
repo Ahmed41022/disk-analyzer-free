@@ -15,6 +15,16 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0066 — 2026-11-04 — Analysis scope, directory leaves, and age cutoffs
+
+Question: How should scoped analysis handle directory leaves, missing times, and reports before snapshots are available?
+
+Choice: Treat scope zero as all roots. Include a selected directory in top-directory results. A directory qualifies as a leaf when no direct eligible subdirectory holds at least 1% of its logical size, rounding the minimum up to a whole byte. For a zero-byte directory, any eligible subdirectory meets the zero-byte threshold. Keep the empty extension group. Age intervals use exclusive increasing cutoffs and a required unbounded final bucket, with missing timestamps in a separate Unknown bucket and future timestamps at age zero. Use 365 days per year. Accept filesystem paths now and connect snapshot input when T7.1 supplies the reader.
+
+Reasoning: These choices make scopes, threshold boundaries, and incomplete metadata deterministic. The final age interval and Unknown bucket account for every eligible file. Keep top ranking separate from the existing sibling sorter after the CI benchmark detected a cold-expansion slowdown with a shared comparator. Snapshot support depends on its planned reader.
+
+Task: T2.5
+
 ## D-0065 — 2026-11-04 — Scan report policies and first CLI benchmark baseline
 
 Question: How should the CLI handle access errors, cancellation, and benchmark comparisons when the base revision predates the scan command?
