@@ -14,6 +14,12 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- Completion scripts for Bash, Zsh, Fish, and PowerShell, plus a CLI reference generated from the registered commands.
+
+- Native and CLI analysis for largest files or directories, extension totals, and file age intervals.
+
+- CLI scan command with table, JSON, NDJSON, and CSV output, progress on stderr, strict access-error status, partial JSON on interrupt, and optional wall-time and peak RSS statistics.
+
 - NTFS mapping-pair decoding with signed-delta and sparse-extent checks, exact bounded output allocation, 1,000 roundtrip seeds and a sanitizer-backed run-list fuzzer.
 - An owned MFT index and pure in-memory tree builder with sequence validation, extension merging, hard-link accounting, subtree selection, exclusions, metafile policy and lossless WTF-8 names; randomized graph tests and a raw-record/tree fuzzer.
 - Native Windows elevation detection and an explicit elevated relaunch API with lossless argument quoting and typed cancellation. POSIX reports effective UID and raises `Unsupported` for relaunch.
@@ -42,6 +48,9 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 - Native paged tree views with natural sibling sorting, bounded regex/expression filtering, preserved expansion paths, lazy owners, and a typed Python tuple API. Release view budgets and Python sanitizer coverage join the full CI tier.
 
 - Shared typed JSON preferences with atomic saves, corruption backups, v0 migration, and `config get/set/path` commands.
+- CLI global options, TOML invocation defaults, one `Exit` enum and cancellation handling that returns exit 130.
+- Streaming JSON and NDJSON export, a versioned report schema, and lossless recovery of invalid native names and paths.
+- Streaming CSV export with RFC 4180 quoting and Excel BOM and delimiter options.
 
 - Three-platform installed abi3 wheel verification with MSVC on Windows, nightly full CI, explicit PR/full test routing, and incremental Linux contributor setup.
 

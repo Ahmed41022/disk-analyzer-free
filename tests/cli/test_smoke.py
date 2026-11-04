@@ -5,7 +5,7 @@ import builtins
 import pytest
 from click.testing import CliRunner
 
-from dafree.cli.exit_codes import ExitCode
+from dafree.cli.exit_codes import Exit
 from dafree.cli.main import cli
 
 
@@ -29,5 +29,5 @@ def test_gui_command_reports_missing_optional_dependencies(monkeypatch: pytest.M
     monkeypatch.setattr(builtins, "__import__", import_without_qt)
     result = CliRunner().invoke(cli, ["gui"])
 
-    assert result.exit_code == ExitCode.USAGE
+    assert result.exit_code == Exit.USAGE
     assert "disk-analyzer-free[gui]" in result.output

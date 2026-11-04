@@ -89,8 +89,8 @@ QT_QPA_PLATFORM=offscreen python -m pytest tests/perf/test_tree_scroll.py -m slo
 Windows offscreen tests read installed fonts from `SYSTEMROOT/Fonts` unless
 `QT_QPA_FONTDIR` is already set. No fonts are bundled. Official Windows CI and
 wheels use MSVC. The optional local MinGW GCC 15.1.0 fallback disables Release
-binding LTO to avoid an observed compiler crash; other optimization and all
-supported toolchains remain unchanged (D-0046).
+binding LTO to avoid a compiler crash (D-0046) and uses the Windows reader-writer
+lock for the tree handle to avoid the winpthreads assertion (D-0063).
 
 Filesystem tests can describe a tree with `tests.testkit.spec`, create it under pytest's `tmp_path` with `Fixture.create`, and compare logical totals with `oracle`. Keep each fixture inside the test's temporary directory. Call `fixture.caps.require("feature")` before relying on an optional OS feature; CI sets `DAFREE_REQUIRE_ALL_CAPS=1` so an unexpected missing capability fails the test.
 

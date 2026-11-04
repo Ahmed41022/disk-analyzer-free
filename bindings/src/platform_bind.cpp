@@ -1,6 +1,7 @@
 #include "bindings.hpp"
 
 #include <mutex>
+#include <nanobind/stl/optional.h>
 #include <nanobind/stl/vector.h>
 
 namespace dafree::bindings {
@@ -22,6 +23,17 @@ void bind_platform(nb::module_ &module) {
             "List mounted volumes using the native platform implementation.")
         .def_static("is_elevated", &platform::is_elevated, nb::call_guard<nb::gil_scoped_release>(),
                     "Return whether the current process is elevated.")
+        .def_static(
+            "peak_rss",
+            []() -> std::optional<std::uint64_t> {
+#ifdef _WIN32
+                return platform::peak_rss();
+#else
+                return std::nullopt;
+#endif
+            },
+            nb::call_guard<nb::gil_scoped_release>(),
+            "Return the process peak working set in bytes, or None when unavailable.")
         .def_static(
             "relaunch_elevated",
             [](const std::vector<nb::str> &args) {

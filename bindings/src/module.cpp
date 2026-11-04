@@ -41,4 +41,6 @@ NB_MODULE(_core, module) {
     dafree::bindings::bind_scan(module);
     dafree::bindings::bind_testing(module);
     dafree::bindings::bind_platform(module);
+    dafree::bindings::bind_io(module);
+    dafree::bindings::bind_analysis(module);
 }

@@ -11,6 +11,9 @@ target_sources(dafree_core PRIVATE src/mft/record.cpp src/mft/fixup.cpp src/mft/
                                   src/mft/runlist.cpp src/mft/index.cpp src/mft/build_tree.cpp)
 target_sources(dafree_core PRIVATE src/platform/windows/longpath.cpp
                                   src/platform/windows/quote_args.cpp)
+target_sources(dafree_core PRIVATE src/io/json.cpp src/io/csv.cpp)
+target_sources(dafree_core PRIVATE src/analysis/top.cpp src/analysis/ext_stats.cpp
+                                   src/analysis/ext_categories.cpp src/analysis/age.cpp)
 target_include_directories(dafree_core PUBLIC include)
 target_compile_features(dafree_core PUBLIC cxx_std_20)
 find_package(Threads REQUIRED)
@@ -20,6 +23,11 @@ target_link_libraries(dafree_core PRIVATE pcre2-8-static)
 set_target_properties(dafree_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(dafree_core PUBLIC DAFREE_VERSION="${DAFREE_VERSION}")
 dafree_enable_warnings(dafree_core)
+
+if(MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL "15.1.0")
+  target_sources(dafree_core PRIVATE src/platform/windows/tree_mutex.cpp)
+  target_compile_definitions(dafree_core PUBLIC DAFREE_MINGW_SRWLOCK=1)
+endif()
 
 if(UNIX)
   target_sources(dafree_core PRIVATE src/platform/posix/read_dir.cpp
@@ -39,13 +47,14 @@ endif()
 if(WIN32)
   target_sources(dafree_core PRIVATE src/platform/windows/read_dir_win.cpp
                                     src/platform/windows/fileid.cpp
+                                    src/platform/windows/peak_rss.cpp
                                     src/platform/windows/volume_win.cpp
                                     src/platform/windows/elevation_win.cpp)
-  target_link_libraries(dafree_core PRIVATE advapi32 ole32 shell32)
+  target_link_libraries(dafree_core PRIVATE advapi32 ole32 shell32 Psapi)
 endif()
 
 if(DAFREE_BUILD_TESTS)
-  add_executable(dafree_core_tests tests/test_smoke.cpp tests/test_names.cpp
+  add_executable(dafree_core_tests tests/test_smoke.cpp tests/test_names.cpp tests/test_analysis.cpp
                                      tests/test_memory.cpp src/testing/counting_alloc.cpp
                                      tests/test_aggregate.cpp tests/test_segvector.cpp
                                      tests/test_tree.cpp tests/test_units.cpp tests/test_longpath.cpp
@@ -55,6 +64,8 @@ if(DAFREE_BUILD_TESTS)
                                      tests/test_runlist.cpp
                                      tests/test_mft_build.cpp
                                      tests/test_elevation.cpp
+                                     tests/test_json.cpp
+                                     tests/test_csv.cpp
                                      tests/test_view.cpp
                                      tests/test_backends.cpp tests/test_exclude.cpp tests/test_engine.cpp)
   target_link_libraries(dafree_core_tests PRIVATE doctest::doctest_with_main dafree_core)
@@ -80,7 +91,12 @@ if(DAFREE_BUILD_TESTS)
   target_compile_features(dafree_core_tests PRIVATE cxx_std_20)
   target_compile_definitions(dafree_core_tests PRIVATE DAFREE_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
   dafree_enable_warnings(dafree_core_tests)
-  add_test(NAME dafree_core_tests COMMAND dafree_core_tests)
+  add_test(NAME dafree_core_tests COMMAND dafree_core_tests
+           --test-case-exclude=test_json_streaming_constant_memory)
+  add_test(NAME test_json_streaming_constant_memory
+           COMMAND "${Python_EXECUTABLE}"
+                   "${PROJECT_SOURCE_DIR}/tests/native/json_streaming.py"
+                   "$<TARGET_FILE:dafree_core_tests>")
 endif()
 
 if(DAFREE_BUILD_BENCH)

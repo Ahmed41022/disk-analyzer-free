@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dafree/detail/tree_mutex.hpp"
 #include "dafree/error.hpp"
 #include "dafree/scan_types.hpp"
 
@@ -7,12 +8,12 @@
 #include <compare>
 #include <cstddef>
 #include <cstdint>
+#include <iosfwd>
 #include <iterator>
 #include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
-#include <shared_mutex>
 #include <span>
 #include <string>
 #include <string_view>
@@ -26,6 +27,8 @@ namespace dafree {
 class FsBackend;
 class TreeHandle;
 class MftIndex;
+struct JsonOptions;
+struct CsvOptions;
 
 using NodeId = std::uint32_t;
 inline constexpr NodeId kRoot = 0;
@@ -492,8 +495,12 @@ class TreeHandle {
 
   private:
     friend void resolve_owners(TreeHandle &, std::span<const NodeId>, FsBackend &);
+    friend void write_json(TreeHandle &, FsBackend &, std::span<const NodeId>, std::ostream &,
+                           const JsonOptions &);
+    friend void write_csv(TreeHandle &, FsBackend &, std::span<const NodeId>, std::ostream &,
+                          const CsvOptions &);
     std::shared_ptr<const Tree> tree_;
-    mutable std::shared_mutex mutex_;
+    mutable detail::TreeMutex mutex_;
     std::mutex owner_resolution_mutex_;
 };
 

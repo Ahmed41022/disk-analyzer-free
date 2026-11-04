@@ -1,0 +1,84 @@
+# serializer version: 1
+# name: test_small_mixed_analysis_snapshot[age]
+  list([
+    dict({
+      'alloc': '<filesystem allocation>',
+      'files': 1,
+      'label': '<30d',
+      'size': 10,
+    }),
+    dict({
+      'alloc': '<filesystem allocation>',
+      'files': 1,
+      'label': '30–90d',
+      'size': 20,
+    }),
+    dict({
+      'alloc': '<filesystem allocation>',
+      'files': 0,
+      'label': '90–180d',
+      'size': 0,
+    }),
+    dict({
+      'alloc': '<filesystem allocation>',
+      'files': 0,
+      'label': '180d–1y',
+      'size': 0,
+    }),
+    dict({
+      'alloc': '<filesystem allocation>',
+      'files': 0,
+      'label': '1–2y',
+      'size': 0,
+    }),
+    dict({
+      'alloc': '<filesystem allocation>',
+      'files': 0,
+      'label': '2–5y',
+      'size': 0,
+    }),
+    dict({
+      'alloc': '<filesystem allocation>',
+      'files': 1,
+      'label': '>5y',
+      'size': 0,
+    }),
+  ])
+# ---
+# name: test_small_mixed_analysis_snapshot[top]
+  list([
+    dict({
+      'alloc': '<filesystem allocation>',
+      'path': 'sub/beta.bin',
+      'size': 20,
+    }),
+    dict({
+      'alloc': '<filesystem allocation>',
+      'path': 'alpha.bin',
+      'size': 10,
+    }),
+    dict({
+      'alloc': '<filesystem allocation>',
+      'path': 'sub/empty',
+      'size': 0,
+    }),
+  ])
+# ---
+# name: test_small_mixed_analysis_snapshot[types]
+  list([
+    dict({
+      'alloc': '<filesystem allocation>',
+      'category': 'executable',
+      'ext': 'bin',
+      'files': 2,
+      'size': 30,
+    }),
+    dict({
+      'alloc': '<filesystem allocation>',
+      'category': 'other',
+      'ext': '',
+      'files': 1,
+      'size': 0,
+    }),
+  ])
+# ---

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-01 15:14+0200\n"
+"POT-Creation-Date: 2026-11-04 10:11+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,6 +19,31 @@ msgstr ""
 
 #, python-format
 msgid "% of Parent"
+msgstr ""
+
+msgid "180d–1y"
+msgstr ""
+
+msgid "1–2y"
+msgstr ""
+
+msgid "2–5y"
+msgstr ""
+
+msgid "30–90d"
+msgstr ""
+
+msgid "90–180d"
+msgstr ""
+
+msgid "<30d"
+msgstr ""
+
+#, python-brace-format
+msgid "<{end}"
+msgstr ""
+
+msgid ">5y"
 msgstr ""
 
 msgid "A background thread terminated unexpectedly."
@@ -521,6 +546,9 @@ msgstr ""
 msgid "Units"
 msgstr ""
 
+msgid "Unknown"
+msgstr ""
+
 #, python-brace-format
 msgid "Unsupported settings version: {version}"
 msgstr ""
@@ -634,4 +662,12 @@ msgstr ""
 
 #, python-brace-format
 msgid "{size} ({ratio} of logical size)"
+msgstr ""
+
+#, python-brace-format
+msgid "{start}–{end}"
+msgstr ""
+
+#, python-brace-format
+msgid "≥{start}"
 msgstr ""

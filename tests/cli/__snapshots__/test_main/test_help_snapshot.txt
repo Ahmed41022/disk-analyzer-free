@@ -1,0 +1,28 @@
+Usage: dafree [OPTIONS] COMMAND [ARGS]...
+
+  Inspect disk usage from the command line or desktop interface.
+
+Options:
+  --version                       Show the version and exit.
+  --format [table|json|ndjson|csv]
+  --units [auto|b|kb|mb|gb|tb]    [default: auto]
+  --si                            Use decimal SI units.
+  --iec-labels                    Use IEC binary unit labels.
+  --no-color                      Disable colored output.
+  --locale TAG                    Select an output locale.
+  -q, --quiet                     Decrease verbosity.
+  -v, --verbose                   Increase verbosity.
+  --progress [auto|always|never]  [default: auto]
+  --threads INTEGER RANGE         Worker count, or 0 for auto.  [x>=0]
+  --config FILE                   Read global defaults from a TOML file.
+  --portable                      Request portable mode.
+  --help                          Show this message and exit.
+
+Commands:
+  age         Summarize the age of files below PATH.
+  completion  Write the completion script for SHELL to stdout.
+  config      Read and update shared preferences.
+  gui         Launch the desktop interface.
+  scan        Scan one or more paths and report their disk usage.
+  top         List the largest files or directories below PATH.
+  types       Summarize file types below PATH.
