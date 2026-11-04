@@ -12,6 +12,12 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- Completion scripts for Bash, Zsh, Fish, and PowerShell, plus a CLI reference generated from the registered commands.
+
+- Native and CLI analysis for largest files or directories, extension totals, and file age intervals.
+
+- CLI scan command with table, JSON, NDJSON, and CSV output, progress on stderr, strict access-error status, partial JSON on interrupt, and optional wall-time and peak RSS statistics.
+
 - Read-only node properties with lazy owner lookup, human flag badges, timestamps and captured volume data; Issues kind filtering, clipboard copy, and exclusive new CSV reports.
 - Three-platform Python coverage gates/artifacts and conditional Codecov upload, retaining the existing native model/scanner thresholds.
 
@@ -32,6 +38,9 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 - Native paged tree views with natural sibling sorting, bounded regex/expression filtering, preserved expansion paths, lazy owners, and a typed Python tuple API. Release view budgets and Python sanitizer coverage join the full CI tier.
 
 - Shared typed JSON preferences with atomic saves, corruption backups, v0 migration, and `config get/set/path` commands.
+- CLI global options, TOML invocation defaults, one `Exit` enum and cancellation handling that returns exit 130.
+- Streaming JSON and NDJSON export, a versioned report schema, and lossless recovery of invalid native names and paths.
+- Streaming CSV export with RFC 4180 quoting and Excel BOM and delimiter options.
 
 - Three-platform installed abi3 wheel verification with MSVC on Windows, nightly full CI, explicit PR/full test routing, and incremental Linux contributor setup.
 

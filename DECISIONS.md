@@ -4,17 +4,88 @@ Entries are newest-first. Product-owner overrides take precedence over earlier c
 
 ## Pending CI jobs
 
-This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when its job lands. Existing jobs: `lint`, `cpp`, `python`, `sanitizers`, `coverage`, `wheels`, `audit`, `docs`, `ci-success`; additional `tsan`, `fuzz`, and `view-perf` jobs retain their separate required gates.
+This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when its job lands. Existing jobs: `lint`, `cpp`, `python`, `sanitizers`, `coverage`, `wheels`, `audit`, `docs`, `bench`, `ci-success`; additional `tsan`, `fuzz`, and `view-perf` jobs retain their separate required gates.
 
 | Missing §7.3 job | Task that will add it | Remaining prerequisite / scope |
 | --- | --- | --- |
 | `frozen-smoke` | T10.1, using T4.14's deferred self-test hook | Build the actual frozen bundle, verify CLI/GUI fixture totals and bundle size. |
-| `bench` | T2.2, after M4-core | Add executable CLI wall-time/RSS comparison to existing `bench_compare`; run on main/nightly under D-0030 until M4-core completes. |
 | `pr-title` | T0.5 follow-up after these prerequisites | Enforce Conventional Commits on PR titles; no feature prerequisite. |
 
 Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance lands in T4.5. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
+
+## D-0067 — 2026-11-04 — Shell completion provider
+
+Question: How should the CLI generate compatible scripts for all four planned shells?
+
+Choice: Generate scripts through Click's registered completion classes and set the runtime minimum to Click 8.5, the first release with built-in PowerShell support. Click remains BSD-3-Clause and version 8.5.0 was already locked for development, documentation, and packaging. Generate the command reference from the live Click group through the planned mkdocs-click extension.
+
+Reasoning: One provider handles both script generation and interactive requests. Bash script generation uses Click's base template method so the current host need not have Bash installed. Loading it requires Bash 4.4 or later. The docs track the registered options and subcommands.
+
+Task: T2.6
+
+## D-0066 — 2026-11-04 — Analysis scope, directory leaves, and age cutoffs
+
+Question: How should scoped analysis handle directory leaves, missing times, and reports before snapshots are available?
+
+Choice: Treat scope zero as all roots. Include a selected directory in top-directory results. A directory qualifies as a leaf when no direct eligible subdirectory holds at least 1% of its logical size, rounding the minimum up to a whole byte. For a zero-byte directory, any eligible subdirectory meets the zero-byte threshold. Keep the empty extension group. Age intervals use exclusive increasing cutoffs and a required unbounded final bucket, with missing timestamps in a separate Unknown bucket and future timestamps at age zero. Use 365 days per year. Accept filesystem paths now and connect snapshot input when T7.1 supplies the reader.
+
+Reasoning: These choices make scopes, threshold boundaries, and incomplete metadata deterministic. The final age interval and Unknown bucket account for every eligible file. Keep top ranking separate from the existing sibling sorter after the CI benchmark detected a cold-expansion slowdown with a shared comparator. Snapshot support depends on its planned reader.
+
+Task: T2.5
+
+## D-0065 — 2026-11-04 — Scan report policies and first CLI benchmark baseline
+
+Question: How should the CLI handle access errors, cancellation, and benchmark comparisons when the base revision predates the scan command?
+
+Choice: Keep report data on stdout and progress on stderr. Retain and write the native partial tree after interrupting an active scan. Use exit 4 for access errors under `--strict`. Automatic progress appears on interactive stderr, and explicit `--progress always` enables five-second updates when redirected. Keep platform RSS calls behind the public API facade. Run the first PR's native benchmark comparison and absolute CLI RSS gate, then enforce the relative CLI gates once the base supplies `scan --stats-json`. The executable comparison uses a fixed walk scan so platform strategy selection does not change the workload. The strict CLI test injects an access error through the native mock backend for consistent behavior under privileged runners. The interrupt test waits for the first progress line before its 200 ms delay.
+
+Reasoning: A partial tree is useful to both people and report readers. A base without the CLI cannot supply comparable numbers. Measuring the head on the planned fixture and enforcing the absolute budget provides an initial reference.
+
+Task: T2.2
+
+## D-0064 — 2026-11-03 — CSV dialect and locale-independent report fields
+
+Question: How should the CSV API express scan data and Excel interoperability within the fixed column layout?
+
+Choice: Keep the exact 14 headers and scope behavior. Emit UTF-8 with CRLF, quote fields with delimiters or line breaks, and double embedded quotes. The C++ writer takes an explicit delimiter. The Python facade selects semicolon for Excel mode in a decimal-comma numeric locale unless the caller provides a delimiter. Excel mode adds a UTF-8 BOM.
+
+Choice: Write the fraction of the actual parent's logical size with zero for a scan root or a zero-sized parent. Use roundtrip precision and a reusable classic-locale stream for fractions, since Apple's floating-point `to_chars` requires macOS 13.3 and wheels target 13.0. Keep byte counts as decimal integers, optional metadata blank, and flags in stable pipe-separated order. Share path, UTF-8 validation, timestamp and owner logic with JSON. Repair invalid native text to U+FFFD within the fixed CSV fields. JSON retains the raw hex representation.
+
+Reasoning: The writer produces records that standard CSV readers can parse, with bounded stream storage and no change to the platform support floor. [RFC 4180](https://www.rfc-editor.org/rfc/rfc4180.html) · [Apple C++ library availability](https://developer.apple.com/xcode/cpp/)
+
+Task: T2.4
+
+## D-0063 — 2026-11-03 — Stream JSON with stable native-name recovery
+
+Question: How should v1 encode scope, provenance, native names and streaming guarantees?
+
+Choice: Empty scopes select scan roots. Explicit IDs preserve input order, depth starts at zero for each scope, and filters preserve the stored aggregate totals. Nested JSON includes mode, host, OS, app version, times, cancellation and issue count. NDJSON has one flat row with a path per line. Use stable lowercase type and flag labels and locale-independent numbers and UTC times. Replace malformed native bytes and lone surrogates with U+FFFD, keeping lowercase raw hex for affected names and NDJSON paths.
+
+Choice: Walk contiguous child ranges using parent IDs and a depth counter, with no recursive stack or per-node buffer. NDJSON reuses a buffer for the longest path written. Python writes bounded binary chunks outside tree locks and handles short writes. Resolve optional owner names on demand using the existing native owner cache. The pure `Tree` overload writes owner names already available to it.
+
+Choice: Use Draft 2020-12 with nested and flat row definitions. Run the million-node memory oracle under the existing C++ counting allocator through a Python CTest driver. The gate runs on every native test platform without instrumenting production wheels or estimating RSS.
+
+Reasoning: The writer's storage does not grow with node count. The schema validates both output forms, and the raw fields preserve native names. [JSON standard](https://www.rfc-editor.org/rfc/rfc8259.html)
+
+Validation follow-up: The local MinGW GCC 15.1 full native suite twice hit the shared-lock assertion reported in MSYS2 #25193 while running existing tests. Use the native SRW lock only for this compiler fallback, preserving shared readers and exclusive writers. Other toolchains retain the standard shared mutex. Keep every test and assertion. [MSYS2 report](https://github.com/msys2/MINGW-packages/issues/25193) · [Windows SRW locks](https://learn.microsoft.com/en-us/windows/win32/sync/slim-reader-writer--srw--locks)
+
+Task: T2.3
+
+## D-0062 — 2026-11-03 — CLI defaults and one exit status enum
+
+Question: How should the CLI apply per-invocation defaults while preserving existing settings commands?
+
+Choice: Replace the scaffold `ExitCode` with the single planned `Exit` enum and update all consumers. Parse the TOML file supplied to `--config` as top-level defaults keyed by long global option names, without leading dashes. Explicit flags win, including when they choose the other unit system. Reject unknown keys and invalid values as usage errors. Persistent settings keep their existing storage and commands. An explicit portable request reports the current T10.2 limitation.
+
+Choice: Put resolved options in `CliState` on the Click context. Use table output on a TTY and JSON otherwise, with color only for terminal table output when permitted. Net verbosity is verbose count minus quiet count. Register active operations in the Click context so command interruption cancels the scan and flushes streams before exit 130. Leave actual scan output and partial JSON serialization with T2.2. Run M2 in dependency order T2.1, T2.3, T2.4, T2.2, T2.5, T2.6 so T3.5 can use the real scan command.
+
+Reasoning: Click validates both TOML defaults and command-line values through the same option types. The framework keeps global configuration and interruption handling in one place and retains the CLI contract without introducing scan or portable features early.
+
+Choice: Carry the previously validated full CI routing from T3.1 into the M2 branch. The temporary light tier ended at M4-core, and this branch starts from main before the M3 commits. The branch uses the existing jobs and keeps their full test gates.
+
+Task: T2.1
 
 ## D-0053 — 2026-11-01 — Validation fixes for minimum mock delays and test method ownership
 

@@ -1,5 +1,5 @@
 import enum
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 def version() -> str:
     """Return the installed package version."""
@@ -807,5 +807,82 @@ class platform:
         """List mounted volumes using the native platform implementation."""
 
     @staticmethod
+    def peak_rss() -> int | None:
+        """
+        Return the process peak working set in bytes, or None when unavailable.
+        """
+
+    @staticmethod
     def is_elevated() -> bool | None:
         """Return known elevation, or None when the platform API is unavailable."""
+
+def write_json(
+    tree: Tree,
+    scopes: Sequence[int],
+    write: Callable[[bytes], int],
+    depth: int | None,
+    include_files: bool,
+    ndjson: bool,
+    include_owner: bool,
+    pretty: bool,
+) -> None:
+    """Write JSON as bounded UTF-8 chunks to a binary write callback."""
+
+def write_csv(
+    tree: Tree,
+    scopes: Sequence[int],
+    write: Callable[[bytes], int],
+    depth: int | None,
+    include_files: bool,
+    excel: bool,
+    include_owner: bool,
+    delimiter: str,
+) -> None:
+    """Write CSV as bounded UTF-8 chunks to a binary write callback."""
+
+class TopKind(enum.Enum):
+    FILES = 0
+
+    DIRS = 1
+
+class ExtStat:
+    @property
+    def ext(self) -> str: ...
+    @property
+    def files(self) -> int: ...
+    @property
+    def size(self) -> int: ...
+    @property
+    def alloc(self) -> int: ...
+    @property
+    def category(self) -> ExtCategory: ...
+
+class AgeBucket:
+    def __init__(self, label: str, max_age_secs: int | None) -> None: ...
+    @property
+    def label(self) -> str: ...
+    @property
+    def max_age_secs(self) -> int | None: ...
+
+class AgeStat:
+    @property
+    def bucket(self) -> int: ...
+    @property
+    def files(self) -> int: ...
+    @property
+    def size(self) -> int: ...
+    @property
+    def alloc(self) -> int: ...
+
+def top_n(
+    tree: Tree, scope: int, kind: TopKind, n: int, by: SortKey, leaf_only: bool = False
+) -> list[int]:
+    """Rank file or directory IDs within the selected scope."""
+
+def ext_breakdown(tree: Tree, scope: int) -> list[ExtStat]:
+    """Group file counts and bytes by extension."""
+
+def age_histogram(
+    tree: Tree, scope: int, field: TimeField, buckets: Sequence[AgeBucket], now: int
+) -> list[AgeStat]:
+    """Partition file counts and bytes by age."""

@@ -22,6 +22,17 @@ void bind_platform(nb::module_ &module) {
             nb::call_guard<nb::gil_scoped_release>(),
             "List mounted volumes using the native platform implementation.")
         .def_static(
+            "peak_rss",
+            []() -> std::optional<std::uint64_t> {
+#ifdef _WIN32
+                return platform::peak_rss();
+#else
+                return std::nullopt;
+#endif
+            },
+            nb::call_guard<nb::gil_scoped_release>(),
+            "Return the process peak working set in bytes, or None when unavailable.")
+        .def_static(
             "is_elevated",
             []() -> std::optional<bool> {
 #ifdef _WIN32

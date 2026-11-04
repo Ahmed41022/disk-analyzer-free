@@ -17,12 +17,16 @@ plugins:
 markdown_extensions:
   - admonition
   - attr_list
+  - mkdocs-click
   - toc:
       permalink: true
 
 nav:
   - Overview: index.md
-  - Configuration commands: cli.md
+  - Command line: cli.md
+  - Exit codes: reference/exit-codes.md
+  - JSON export: reference/json-export.md
+  - CSV export: reference/csv-export.md
   - Desktop bootstrap: gui.md
   - Performance and fixtures: performance.md
   - Implementation plan: PLAN.md

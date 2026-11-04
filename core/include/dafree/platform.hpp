@@ -100,6 +100,10 @@ RawEntry stat_follow(std::string_view path);
 std::optional<VolumeInfo> volume_info(std::string_view path);
 /// List mounted volumes for drive and mount selection.
 std::vector<VolumeInfo> list_volumes();
+#ifdef _WIN32
+/// Return the process peak working set in bytes, or no value if unavailable.
+std::optional<std::uint64_t> peak_rss();
+#endif
 /// Read an owner identity and its display name.
 std::optional<std::pair<OwnerKey, std::string>> owner_of(std::string_view path);
 /// Resolve a POSIX user ID to a display name.

@@ -18,6 +18,8 @@ The original task specifications below remain in force; this order supersedes th
 
 See DECISIONS.md for the pending §7.3 CI inventory and dependency adaptations.
 
+M4-core completed on main `b39d472`. Deferred M2 proceeds in dependency order T2.1, T2.3, T2.4, T2.2, T2.5, T2.6 so T3.5 can use the scan command. The temporary PR validation tier has expired and the full CI jobs run again (D-0062).
+
 ---
 
 ## 0. Project identity, scope and global assumptions
@@ -1343,34 +1345,34 @@ COMMANDS
 
 Machine formats write only data to stdout; progress/warnings/errors go to stderr. JSON/NDJSON/CSV are never localized. Table output honours `NO_COLOR` and `--no-color`.
 
-- [ ] **T2.1 — CLI framework, global options, exit codes**
-  - **Files:** C `src/dafree/cli/{main.py,exit_codes.py,output.py,progress.py}`, `tests/cli/test_main.py`.
+- [x] **T2.1 — CLI framework, global options, exit codes**
+  - **Files:** C `src/dafree/cli/{output.py,progress.py}`, `tests/cli/test_main.py`, `docs/reference/exit-codes.md`; M the scaffold `main.py` and `exit_codes.py`, entry points, existing CLI tests and docs (D-0062).
   - **Interface:** `class Exit(IntEnum): OK=0; RUNTIME=1; USAGE=2; ALERT=3; PARTIAL=4; FOUND=5; BLOCKED=10; INTERRUPTED=130`; `@click.group` `cli` with a `Context` object `CliState(format, units, unit_style, color, locale, verbosity, progress, threads, config, portable)`.
   - **Behavior:** usage errors exit 2 (click default); unhandled `DafreeError` → message on stderr + exit 1; `KeyboardInterrupt` → cancel active scan handle, flush, exit 130. `--config` loads TOML defaults (keys = long option names); explicit flags win.
   - **Depends on:** T1.13
   - **Acceptance:** `test_help_snapshot` (syrupy), `test_bad_flag_exit_2`, `test_version_matches_package`, `test_dafree_error_exit_1`.
 
-- [ ] **T2.2 — `scan` command**
-  - **Files:** C `src/dafree/cli/commands/scan.py`, `tests/cli/test_scan.py`.
+- [x] **T2.2 — `scan` command**
+  - **Files:** C `src/dafree/cli/commands/scan.py`, `tests/cli/test_scan.py`, `core/src/platform/windows/peak_rss.cpp`. M CLI registration, native platform binding and build wiring, generated stub, benchmark comparator and CI job (D-0065).
   - **Behavior:** progress on stderr via rich (single live line on a TTY; one line per 5 s otherwise). Table columns `Size  Alloc  %  Files  Dirs  Modified  Name`, depth-indented, `%` with a 10-char bar, middle-ellipsized names. JSON/CSV/NDJSON via the C++ writers (T2.3/T2.4) for the selected depth. `--stats-json FILE` writes `{wall_ms, peak_rss_bytes, nodes, mode}` (`resource.getrusage` on POSIX, `GetProcessMemoryInfo` via `_core.platform.peak_rss()` on Windows). `--save` hidden until T7.1.
   - **Depends on:** T2.1, T2.3, T2.4
   - **Acceptance:** `test_scan_small_mixed_table` (syrupy; `--units b`, timestamps masked), `test_scan_json_validates_schema`, `test_scan_ndjson_one_object_per_line`, `test_scan_csv_quotes_commas_and_newlines`, `test_scan_strict_access_denied_exit_4`, `test_scan_sigint_exit_130_json_valid` (POSIX: subprocess + SIGINT after 200 ms with hidden `--test-slow-backend`; Windows: `CTRL_BREAK_EVENT` to a new process group).
 
-- [ ] **T2.3 — JSON schema and streaming JSON writer (C++)**
-  - **Files:** C `schemas/report.v1.json`, `core/include/dafree/export.hpp`, `core/src/io/json.cpp`, `core/tests/test_json.cpp`, M `bindings/src/io_bind.cpp`.
+- [x] **T2.3 — JSON schema and streaming JSON writer (C++)**
+  - **Files:** C `schemas/report.v1.json`, `core/include/dafree/export.hpp`, `core/src/io/json.cpp`, `core/tests/test_json.cpp`, `bindings/src/io_bind.cpp`, the Python export facade, schema test and Python CTest driver. M build wiring and the generated stub (D-0063).
   - **Interface:** `void write_json(const Tree&, std::span<const NodeId> scopes, std::ostream&, const JsonOptions&)`; `JsonOptions { std::optional<std::uint16_t> depth; bool include_files, ndjson, include_owner, pretty; }`.
   - **Behavior:** streaming, constant memory; names not valid UTF-8 (POSIX) or containing lone surrogates (Windows) → `name` with U+FFFD replacement + `name_raw_hex`. Times ISO-8601 UTC, `null` when 0. Proper JSON string escaping incl. control characters.
   - **Depends on:** T1.3
   - **Acceptance:** doctest `json_escaping_table`, `json_non_utf8_name_hex`; Python `test_json_validates_against_schema`, `test_json_streaming_constant_memory` (1M-node mock tree, counting allocator peak delta < 8 MiB).
 
-- [ ] **T2.4 — CSV writer (C++)**
-  - **Files:** C `core/src/io/csv.cpp`, `core/tests/test_csv.cpp`.
+- [x] **T2.4 — CSV writer (C++)**
+  - **Files:** C `core/src/io/csv.cpp`, `core/src/io/io_common.hpp`, `core/tests/test_csv.cpp`, Python roundtrip tests and CSV reference. M shared writer interface, bindings, facade and build wiring (D-0064).
   - **Interface:** `void write_csv(const Tree&, std::span<const NodeId>, std::ostream&, const CsvOptions&)`; `CsvOptions { std::optional<std::uint16_t> depth; bool include_files, excel, include_owner; char delimiter = ','; }`.
   - **Depends on:** T1.3
   - **Acceptance:** doctest `csv_header_exact`, `csv_rfc4180_quoting`; Python `test_csv_roundtrip_with_stdlib_reader`, `test_csv_excel_bom_semicolon`.
 
-- [ ] **T2.5 — top/types/age (C++) + commands**
-  - **Files:** C `core/include/dafree/analysis.hpp`, `core/src/analysis/{top.cpp,ext_stats.cpp,ext_categories.cpp,age.cpp}`, `core/tests/test_analysis.cpp`, `src/dafree/api/analysis.py`, `src/dafree/cli/commands/{top.py,types.py,age.py}`.
+- [x] **T2.5 — top/types/age (C++) + commands**
+  - **Files:** M `core/include/dafree/analysis.hpp`. C `core/src/analysis/{top.cpp,ext_stats.cpp,ext_categories.cpp,age.cpp}`, `core/tests/test_analysis.cpp`, `bindings/src/analysis_bind.cpp`, `src/dafree/api/analysis.py`, `src/dafree/cli/commands/{top.py,types.py,age.py}`, `tests/cli/test_analysis.py`. M build wiring, generated stub, CLI registration and report output (D-0066).
   - **Interface:**
     ```cpp
     enum class TopKind { Files, Dirs };
@@ -1387,8 +1389,8 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T1.4, T2.1
   - **Acceptance:** doctest `top_n_equals_sort_take` (random), `ext_breakdown_sums_to_total`, `age_buckets_partition_all_files`; CLI syrupy snapshots for each command on `small_mixed` with hidden `--now` for determinism.
 
-- [ ] **T2.6 — Shell completion and CLI docs**
-  - **Files:** C `src/dafree/cli/commands/completion.py`, `docs/cli.md` (uses `mkdocs-click` directive).
+- [x] **T2.6 — Shell completion and CLI docs**
+  - **Files:** C `src/dafree/cli/commands/completion.py`, `tests/cli/test_completion.py`. M `docs/cli.md` (uses the `mkdocs-click` directive), MkDocs configuration, CLI registration, and minimum Click version (D-0067).
   - **Depends on:** T2.1
   - **Acceptance:** `test_completion_scripts_generate` (bash, zsh, fish, powershell non-empty, exit 0); docs build includes every command.
 

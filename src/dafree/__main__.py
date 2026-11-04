@@ -1,5 +1,5 @@
 """Run the command line interface as a module."""
 
-from .cli.main import cli
+from .cli.main import main
 
-cli()
+raise SystemExit(main())

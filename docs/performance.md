@@ -185,8 +185,10 @@ samples, and falls back to supplied median aggregates. A slowdown strictly above
 the threshold or a missing head benchmark exits 1. Invalid input exits 2. Existing
 summaries and linked output paths are refused. The summary is a Markdown table.
 
-M1 compares Google Benchmark JSON only. The planned `--base`, `--head`,
-`--fixture`, `--runs`, and `--rss-threshold-pct` options are accepted for interface
-compatibility; CLI warmups, alternating binary runs, wall-time medians, and peak
-RSS comparisons become active with T2.2's `scan --stats-json`. Their absence in
-M1 is the plan's explicit staging rule.
+To also compare the CLI, supply `--base BIN --head BIN --fixture DIR`.
+The comparator warms up both executables, alternates runs on the same fixture,
+and uses the median of five measurements by default. The wall-time threshold
+is 15% and the peak RSS threshold is 10%, with an absolute 120 MiB peak RSS
+budget for the head. The first PR introducing `scan` measures head against that
+absolute budget and compares the native benchmarks against the base commit.
+Relative CLI gates start once the base has the command.

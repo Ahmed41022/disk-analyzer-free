@@ -1,10 +1,22 @@
 """Typed public facade over the native core."""
 
+import sys
 from dataclasses import dataclass
 from enum import IntEnum
 
 from dafree import _core
+from dafree.api.analysis import (
+    AgeBucket,
+    AgeStat,
+    ExtStat,
+    TopKind,
+    age_histogram,
+    default_age_buckets,
+    ext_breakdown,
+    top_n,
+)
 from dafree.api.errors import DafreeError, ExcludeError, ScanError, ScanErrorCode, Unsupported
+from dafree.api.export import write_csv, write_json
 from dafree.api.scan import ScanHandle, ScanResult, scan, start_scan
 from dafree.api.tree import Tree
 from dafree.api.types import (
@@ -107,6 +119,20 @@ class platform:
         return [_volume(value) for value in _core.platform.volumes()]
 
     @staticmethod
+    def peak_rss() -> int:
+        """Return the peak process resident set size in bytes."""
+        if sys.platform == "win32":
+            value = _core.platform.peak_rss()
+            if value is None:
+                raise Unsupported("Peak process memory is unavailable")
+            return value
+
+        import resource  # noqa: PLC0415 -- unavailable on Windows
+
+        maxrss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        return maxrss if sys.platform == "darwin" else maxrss * 1024
+
+    @staticmethod
     def is_elevated() -> bool:
         """Return a known privilege level; never interpret unavailable information as false."""
         result = _core.platform.is_elevated()
@@ -116,6 +142,8 @@ class platform:
 
 
 __all__ = [
+    "AgeBucket",
+    "AgeStat",
     "Backend",
     "Cmp64",
     "CmpOp",
@@ -124,6 +152,7 @@ __all__ = [
     "ExcludeError",
     "ExcludeRules",
     "ExtCategory",
+    "ExtStat",
     "FilterKind",
     "FilterSpec",
     "HardlinkMode",
@@ -149,6 +178,7 @@ __all__ = [
     "ScanSummary",
     "SortKey",
     "TimeField",
+    "TopKind",
     "Tree",
     "TreeView",
     "UnitMode",
@@ -158,9 +188,15 @@ __all__ = [
     "ViewOptions",
     "VolumeInfo",
     "__version__",
+    "age_histogram",
+    "default_age_buckets",
+    "ext_breakdown",
     "format_size",
     "parse_size",
     "platform",
     "scan",
     "start_scan",
+    "top_n",
+    "write_csv",
+    "write_json",
 ]
