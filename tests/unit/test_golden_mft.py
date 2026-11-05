@@ -34,7 +34,10 @@ def test_golden_generator_matches_committed_bytes(tmp_path: Path) -> None:
     output = tmp_path / "generated"
     result = run_generator("--output-dir", str(output))
     assert result.returncode == 0, result.stderr
-    assert files_at(output) == files_at(_COMMITTED)
+    committed = files_at(_COMMITTED)
+    for captured in ("captured_file.bin", "captured_file.json"):
+        del committed[captured]
+    assert files_at(output) == committed
     assert run_generator("--output-dir", str(output), "--check").returncode == 0
     before = {path.name: path.stat().st_mtime_ns for path in output.iterdir()}
     assert run_generator("--output-dir", str(output)).returncode == 0
@@ -42,10 +45,10 @@ def test_golden_generator_matches_committed_bytes(tmp_path: Path) -> None:
 
 
 def test_golden_metadata_describes_bytes_and_restoration(tmp_path: Path) -> None:
-    """JSON hashes and field expectations agree with the generated little-endian record bytes."""
+    """JSON hashes and fields agree with every synthetic and captured little-endian record."""
     output = tmp_path / "generated"
     assert run_generator("--output-dir", str(output)).returncode == 0
-    for path in sorted(output.glob("*.bin")):
+    for path in [*sorted(output.glob("*.bin")), _COMMITTED / "captured_file.bin"]:
         raw = path.read_bytes()
         metadata = json.loads(path.with_suffix(".json").read_text(encoding="utf-8"))
         fields = struct.unpack_from("<HHQHHHHIIQ", raw, 4)

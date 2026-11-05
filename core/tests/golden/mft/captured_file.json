@@ -1,0 +1,27 @@
+{
+  "fixed_sha256": "47cca3f906e826b8d1207c718e5ecfebdce55dad115d7b165991e1618890d130",
+  "fixture_name": "dafree-captured-mft-fixture.bin",
+  "header": {
+    "attrs_offset": 56,
+    "base_record": 0,
+    "bytes_allocated": 1024,
+    "bytes_used": 368,
+    "flags": 1,
+    "link_count": 1,
+    "lsn": 35841153,
+    "sequence": 1,
+    "signature": "FILE",
+    "usa_count": 3,
+    "usa_offset": 48
+  },
+  "provenance": "Captured from this helper's test-created file. Unused tail bytes and their saved USA words were zeroed, retaining USA-protected sector stamps. Used bytes and their saved sector words were preserved.",
+  "record_size": 1024,
+  "saved_sector_words": [
+    0,
+    0
+  ],
+  "sector_size": 512,
+  "sha256": "455bbefa6bc4f487f24e3ea8bf144225ec27c163824b6326249ca66a64f67936",
+  "source": "https://github.com/Ahmed41022/disk-analyzer-free/actions/runs/41977022333",
+  "usa_number": 3
+}

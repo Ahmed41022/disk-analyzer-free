@@ -135,7 +135,13 @@ parse_size("500 MiB")  # 524288000
 
 ## Windows fast mode
 
-The planned Windows NTFS fast mode reads file-system metadata to avoid opening every file individually. Pure C++ parsers handle headers, sector fixups, timestamps, UTF-16 names, stream attributes and mapping pairs, including resident and sparse/compressed allocation. Its in-memory index builds breadth-first trees with hard-link accounting, subtree selection, exclusions and orphan diagnostics, preserving lone UTF-16 surrogates. Tests use synthesized records, unaligned/malformed buffers, roundtrip properties and sanitizer-backed fuzzing. Raw-volume scanning remains unavailable until the later M3 tasks. Fast scanning will require administrator privileges and Auto mode will fall back to a regular directory walk when unavailable.
+Windows NTFS fast mode reads filesystem metadata through a read-only raw-volume handle. It requires an elevated administrator token. Auto tries fast mode for one shallow local NTFS target and falls back to a directory walk with a `FastModeUnavailable` notice when raw access is unavailable. Explicit MFT mode supports deeper subtree selection and reports an error if fast scanning cannot start. Following links or crossing filesystems requires Walk mode.
+
+```powershell
+dafree scan --mode mft "D:\Media"
+```
+
+Pure C++ parsers handle headers, sector fixups, timestamps, UTF-16 names, stream attributes and mapping pairs, including resident and sparse/compressed allocation. The in-memory index builds breadth-first trees with hard-link accounting, subtree selection, exclusions and orphan diagnostics, preserving lone UTF-16 surrogates. Tests cover malformed and unaligned records, roundtrip properties, elevated and restricted-token scans, and sanitizer-backed fuzzing.
 
 The Python platform API exposes `api.platform.is_elevated()` and `api.platform.relaunch_elevated(args)`. On Windows the latter requests consent for the current executable with explicit arguments and raises `api.Cancelled` if consent is declined. The original process remains under the caller's control. POSIX reports effective UID and raises `api.Unsupported` for elevated relaunch.
 
@@ -166,8 +172,9 @@ Owner names are lazy by default: call `tree.resolve_owners(node_ids)` to resolve
 selected identities. Nodes sharing an owner identity reuse its cached display
 name. `ScanRequest(..., owner=OwnerMode.EAGER)` resolves names before completion;
 `OwnerMode.OFF` omits owner identities and lookups. Unknown POSIX UIDs display as
-decimal numbers. A cancelled eager scan skips further owner lookups. Windows SID
-resolution remains scheduled for M3.
+decimal numbers. A cancelled eager scan skips further owner lookups. Windows
+queries file SIDs when owner data is requested and caches successful qualified
+account names. `api.platform.owner_of(path)` also exposes owner lookup directly.
 
 The scanner integration suite creates every fixture in test-owned temporary
 directories. It includes 100,000 siblings, 300 nested levels, a sparse 5 GiB file,

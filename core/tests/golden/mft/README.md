@@ -1,6 +1,6 @@
-# Synthetic MFT header fixtures
+# MFT header fixtures
 
-These records are generated entirely by [tools/golden_mft.py](../../../../tools/golden_mft.py).
+The three synthetic records are generated entirely by [tools/golden_mft.py](../../../../tools/golden_mft.py).
 They contain an original deterministic byte pattern, explicit little-endian
 header values, an update-sequence array, and an attribute end marker. No record
 was captured from a disk or copied from another implementation. They are not
@@ -39,7 +39,21 @@ python tools/golden_mft.py --output-dir path/to/new/fixture-directory
 The generator writes missing files exclusively, accepts identical existing
 files without rewriting, and rejects differing existing files or final links.
 `--check` never creates or modifies anything. Runtime mutations and malformed
-vectors are built in test memory; Python filesystem tests use their own
-pytest temporary directories. T3.5 will add a separately identified record
-captured from the CI runner's own fixture, with expected JSON, when the reader
-exists. No captured record is included in T3.1.
+vectors are built in test memory. Python filesystem tests use their own
+pytest temporary directories.
+
+`captured_file.bin` is a 1,024-byte record from the Windows runner's own
+`dafree-captured-mft-fixture.bin`, created by the test-only `dafree_capture_mft`
+helper. Its companion JSON links the source CI run and records every header
+expectation and both hashes. The helper uses the production raw volume reader,
+checks the full file reference, filename, parent and deterministic resident
+contents, then emits only that verified record. Unused tail bytes and their
+saved USA words are zeroed while retaining protected sector stamps. Used bytes
+and their saved words are preserved. D-0072 documents this redaction.
+
+The synthetic generator leaves the capture intact. Native tests parse its
+header, restore its sectors and inspect its filename and data attributes on
+every OS. Python independently checks its fields, sector words and hashes.
+The Windows CI native job runs `tests/native/capture_mft.py` to capture a fresh
+fixture in a new temporary directory and retain it as the `mft-captured-fixture`
+artifact. The script also checks overwrite refusal and rejection of linked roots.

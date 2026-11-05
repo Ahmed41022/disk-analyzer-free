@@ -88,6 +88,20 @@ jobs:
         run: cmake --build --preset dev
       - name: Unit tests
         run: ctest --preset dev --output-junit cpp-junit.xml
+      - name: Capture the runner-owned NTFS fixture record
+        if: runner.os == 'Windows'
+        run: |
+          capture=$(python tests/native/capture_mft.py ./build/dev/core/dafree_capture_mft.exe)
+          echo "DAFREE_MFT_CAPTURE=$capture" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: mft-captured-fixture
+          path: |
+            ${{ env.DAFREE_MFT_CAPTURE }}/captured_file.bin
+            ${{ env.DAFREE_MFT_CAPTURE }}/captured_file.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Mock scan benchmark smoke
         run: |
           ./build/dev/core/bench/dafree_bench${{ runner.os == 'Windows' && '.exe' || '' }} \

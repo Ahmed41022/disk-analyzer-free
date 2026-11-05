@@ -1406,7 +1406,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
 ### M3 — Windows fast mode (MFT) and Windows specifics
 
 - [x] **T3.1 — NTFS record header and fixups (pure C++)**
-  - **Files:** C `core/include/dafree/mft.hpp`, `core/src/mft/{record.cpp,fixup.cpp,byte_reader.hpp}`, `core/tests/test_mft_record.cpp`, `tools/golden_mft.py`, `core/tests/golden/mft/README.md`.
+  - **Files:** C `core/include/dafree/mft.hpp`, `core/src/mft/{record.cpp,fixup.cpp,byte_reader.hpp}`, `core/tests/test_mft_record.cpp`, `tools/golden_mft.py`, `core/tests/golden/mft/README.md`. The post-T3.5 capture uses `core/tests/capture_mft.cpp` and `tests/native/capture_mft.py` (D-0072).
   - **Interface:**
     ```cpp
     struct RecordHeader { std::array<char,4> signature; std::uint16_t usa_offset, usa_count; std::uint64_t lsn; std::uint16_t sequence,
@@ -1415,7 +1415,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
     Expected<RecordHeader, MftError> parse_header(std::span<const std::byte>);
     Expected<void, MftError> apply_fixups(std::span<std::byte> rec, std::size_t sector_size); // verifies USN per sector, restores saved bytes
     ```
-  - **Behavior:** every read through a bounds-checked `ByteReader`; `usa_count == rec.size()/sector_size + 1` required. D-0055 specifies NTFS v3 prefix/USA/attribute bounds, error policy, and exact record allocation for mutation. Golden binaries are synthesized from the NTFS on-disk layout by `tools/golden_mft.py` (no copyrighted dumps); after T3.5 one record captured from the CI runner's own fixture file is added with its expected JSON.
+  - **Behavior:** every read through a bounds-checked `ByteReader`; `usa_count == rec.size()/sector_size + 1` required. D-0055 specifies NTFS v3 prefix/USA/attribute bounds, error policy, and exact record allocation for mutation. Golden binaries are synthesized from the NTFS on-disk layout by `tools/golden_mft.py` (no copyrighted dumps). After T3.5, `captured_file.bin` and its expected JSON add a runner-owned fixture record, with unused tail bytes redacted as documented in D-0072.
   - **Depends on:** T0.1
   - **Acceptance (all OSes):** doctest `golden_header`, `fixup_restores_bytes`, `fixup_mismatch_errors`, `truncated_record_errors_not_crashes`.
 
@@ -1467,7 +1467,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T0.1
   - **Acceptance:** doctest `quote_windows_args_table` (pure, all OSes: spaces, quotes, trailing backslashes); Python `test_is_elevated_true_on_ci_windows` (guarded by `CI=true` and Windows).
 
-- [ ] **T3.8 — Fuzzing targets**
+- [x] **T3.8 — Fuzzing targets**
   - **Files:** C `.github/workflows/nightly.yml`, `core/fuzz/corpus/*`. Reuse the MFT record, run-list, and glob harnesses. Add the snapshot fuzzer with the reader in T7.1 (D-0071).
   - **Behavior:** built with clang `-fsanitize=fuzzer,address,undefined` (preset `fuzz`); must never crash, hang, or allocate > 64 MiB.
   - **Depends on:** T3.4

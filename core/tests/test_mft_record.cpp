@@ -102,6 +102,46 @@ TEST_CASE("fixup_restores_bytes") {
     }
 }
 
+TEST_CASE("captured_record_header_and_fixups") {
+    auto record = golden("captured_file.bin");
+    const auto result = dafree::parse_header(record);
+    REQUIRE(result.has_value());
+    const auto &header = result.value();
+    CHECK((header.signature == std::array<char, 4>{'F', 'I', 'L', 'E'}));
+    CHECK(header.usa_offset == 48);
+    CHECK(header.usa_count == 3);
+    CHECK(header.lsn == UINT64_C(35841153));
+    CHECK(header.sequence == 1);
+    CHECK(header.link_count == 1);
+    CHECK(header.attrs_offset == 56);
+    CHECK(header.flags == 1);
+    CHECK(header.bytes_used == 368);
+    CHECK(header.bytes_allocated == 1024);
+    CHECK(header.base_record == 0);
+    auto expected = record;
+    put16(expected, 510, 0);
+    put16(expected, 1022, 0);
+    REQUIRE(dafree::apply_fixups(record, 512).has_value());
+    CHECK(record == expected);
+    CHECK(std::all_of(record.begin() + header.bytes_used, record.end(),
+                      [](std::byte value) { return value == std::byte{0}; }));
+    dafree::AttrIterator attributes(record);
+    bool filename = false, data = false;
+    for (;;) {
+        const auto attribute = attributes.next();
+        REQUIRE(attribute.has_value());
+        if (!attribute.value())
+            break;
+        if (const auto *name = std::get_if<dafree::FileNameAttr>(&*attribute.value()))
+            filename |= name->name == u"dafree-captured-mft-fixture.bin";
+        if (const auto *stream = std::get_if<dafree::DataAttr>(&*attribute.value()))
+            data |= stream->name.empty() && stream->resident && stream->size == 32 &&
+                    stream->alloc == 0;
+    }
+    CHECK(filename);
+    CHECK(data);
+}
+
 TEST_CASE("fixup_mismatch_errors") {
     for (std::size_t sector = 0; sector < 4; ++sector) {
         auto record = golden("directory_2048.bin");

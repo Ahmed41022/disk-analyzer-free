@@ -15,6 +15,16 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0072 — 2026-11-05 — Runner-owned captured MFT fixture
+
+Question: How should the post-T3.5 golden record be captured without including stale record slack?
+
+Choice: Use a Windows test-only helper with the existing raw VolumeReader. Create a deterministic resident file inside a test-created temporary directory, flush it, and identify its record by the full file reference. Verify its sequence, parent, filename, and resident contents before saving that record. Zero unused tail bytes and the corresponding saved USA words while retaining the protected sector stamps. Keep used bytes intact. Independently check fields and hashes in Python. Reject reparse-point ancestors and existing output names. Commit the reviewed capture with its expected JSON and test it on every OS alongside the synthesized records.
+
+Reasoning: The production reader supplies the original protected sector layout. Unused record space can contain stale bytes, so the captured fixture documents its limited redaction. This closes the T3.1 requirement that depends on T3.5 and keeps the synthetic generator reproducible.
+
+Task: T3.1/T3.5 golden-fixture follow-up
+
 ## D-0071 — 2026-11-05 — Nightly fuzzing and snapshot dependency
 
 Question: Which fuzz targets can run nightly before the snapshot reader exists?

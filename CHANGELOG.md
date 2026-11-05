@@ -32,7 +32,7 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 - Bounded NTFS attribute iteration for timestamps, raw UTF-16 filenames, resident and nonresident streams, sparse/compressed allocation and attribute markers; no parser heap allocations.
 
-- Bounds-checked NTFS v3 record headers and all-or-nothing sector fixups, with synthesized golden records and malformed/unaligned-input tests on every OS.
+- Bounds-checked NTFS v3 record headers and all-or-nothing sector fixups, with synthesized and runner-captured golden records and malformed/unaligned-input tests on every OS.
 
 - Read-only node properties with lazy owner lookup, human flag badges, timestamps and captured volume data; Issues kind filtering, clipboard copy, and exclusive new CSV reports.
 - Three-platform Python coverage gates/artifacts and conditional Codecov upload, retaining the existing native model/scanner thresholds.
