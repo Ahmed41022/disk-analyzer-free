@@ -1455,7 +1455,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T3.4, T1.11, T3.7 and T2.2 (D-0061).
   - **Acceptance (windows-2025; GitHub-hosted Windows runners run as an elevated administrator — the test first asserts `_core.platform.is_elevated()` and fails loudly if that changes):** `test_mft_scan_matches_walk_on_fixture` (fixture under `D:\` if present else `C:\`; MFT scan with subtree extraction vs walk scan: equal names/sizes/counts/hard-link flags; resident files: MFT alloc 0 vs walk alloc ≤ cluster size, asserted), `test_mft_unavailable_when_not_elevated` (run `dafree scan --mode auto` under a restricted token via `tools/run_restricted.py` using `CreateRestrictedToken` through `ctypes`; assert `FastModeUnavailable` notice on stderr and success), `test_mft_mode_strict_errors_when_unavailable`.
 
-- [ ] **T3.6 — Windows owner (SID) and properties dialog**
+- [x] **T3.6 — Windows owner (SID) and properties dialog**
   - **Files:** C `core/src/platform/windows/{sid_owner.cpp,properties_win.cpp}`, `tests/integration/test_owner_windows.py`. M owner resolution, native platform bindings, Python facade, and build wiring (D-0070).
   - **Behavior:** `owner_of` via `GetNamedSecurityInfoW` on the verbatim path; SID→name cache; failure → `nullopt`. `show_properties` → `SHObjectProperties(nullptr, SHOP_FILEPATH, path, nullptr)` → `true`.
   - **Depends on:** T1.8, T1.15
@@ -1468,10 +1468,10 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Acceptance:** doctest `quote_windows_args_table` (pure, all OSes: spaces, quotes, trailing backslashes); Python `test_is_elevated_true_on_ci_windows` (guarded by `CI=true` and Windows).
 
 - [ ] **T3.8 — Fuzzing targets**
-  - **Files:** C `core/fuzz/{fuzz_mft_record.cpp,fuzz_runlist.cpp,fuzz_snapshot_reader.cpp,fuzz_glob.cpp}`, `core/fuzz/corpus/*` (seeded from golden files).
+  - **Files:** C `.github/workflows/nightly.yml`, `core/fuzz/corpus/*`. Reuse the MFT record, run-list, and glob harnesses. Add the snapshot fuzzer with the reader in T7.1 (D-0071).
   - **Behavior:** built with clang `-fsanitize=fuzzer,address,undefined` (preset `fuzz`); must never crash, hang, or allocate > 64 MiB.
   - **Depends on:** T3.4
-  - **Acceptance:** nightly runs each target 300 s; crash reproducers become doctest regression cases.
+  - **Acceptance:** nightly runs each available target 300 s; crash reproducers become doctest regression cases. T7.1 adds the snapshot target to the same gate (D-0071).
 
 ### M4 — GUI shell and tree view (PySide6)
 
@@ -2690,6 +2690,8 @@ jobs:
 Notes: `tools/dist/package.py` dispatches per label — Windows: WiX v5 MSI (`dotnet tool install --global wix`), Inno Setup EXE (`iscc`, installed via Chocolatey if absent), portable ZIP, optional Authenticode signing with `signtool` when the PFX secret exists; Linux: AppImage (appimagetool, pinned version + SHA256 verified by the script), deb/rpm via nfpm (`go install github.com/goreleaser/nfpm/v2/cmd/nfpm@<pinned>`), tar.gz; macOS: codesign + notarize when secrets exist, `.dmg` (`hdiutil create`), `.app.zip` (`ditto -c -k --keepParent`). The `macos-15-intel` and `windows-11-arm` runner labels must be verified at implementation time (record in DECISIONS); if `macos-15-intel` is unavailable, build x86_64 on `macos-15` with an x86_64 Python under Rosetta.
 
 ### 7.5 `nightly.yml` (design)
+
+T3.8 adds the three available fuzz targets and their failure reporter. T7.1 adds the snapshot target when its reader exists (D-0071). The remaining jobs below land with their corresponding feature prerequisites.
 
 Jobs: `fuzz` (Linux clang, preset `fuzz`, 4 targets × 300 s, corpus cache), `property-long` (`HYPOTHESIS_PROFILE=nightly`, 10,000 examples, 3 OSes), `perf` (3 OSes: generate `1m` fixture, `dafree scan --stats-json`, C++ benchmarks, GUI scroll test; compare with `tests/perf/targets.toml`; Windows also `--mode mft` on the runner's data volume), `msvc-analyze` (`/analyze` build of core), `frozen-e2e` (PyInstaller bundle + `--self-test` on Windows and macOS), `portable-e2e` (Windows: portable ZIP writes nothing outside its folder), `dupes-throughput` (Linux 4 GiB `dupes_mix`), `report-failure` (`if: failure()`, `actions/github-script@v7` creates or updates the issue "Nightly CI failing" with the run URL and failed jobs; closes it on the next green run).
 

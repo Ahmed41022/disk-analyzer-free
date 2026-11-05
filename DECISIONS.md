@@ -15,6 +15,16 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0071 — 2026-11-05 — Nightly fuzzing and snapshot dependency
+
+Question: Which fuzz targets can run nightly before the snapshot reader exists?
+
+Choice: Run the MFT record, run-list, and glob fuzzers for 300 seconds each. Seed MFT from the existing synthesized golden records and keep representative glob and run-list seeds in the tracked corpus. Cache each mutated corpus, upload reproducer artifacts on failure, and keep one failure issue for the default branch. Add the snapshot fuzzer with its reader in T7.1.
+
+Reasoning: A snapshot harness requires the actual reader for meaningful coverage. Each available campaign uses the planned per-input timeout and process RSS limit and enforces a 64 MiB individual allocation limit. [LLVM libFuzzer options](https://llvm.org/docs/LibFuzzer.html#options)
+
+Task: T3.8
+
 ## D-0070 — 2026-11-04 — Windows owner and Properties API
 
 Question: When should Windows scan results query owner SIDs and resolve account names?

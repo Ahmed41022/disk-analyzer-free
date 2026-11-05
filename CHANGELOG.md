@@ -14,6 +14,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- Five-minute nightly sanitizer fuzzing for MFT records, run lists, and globs, with cached corpora, crash artifacts, and a labelled failure issue.
+
 - Windows SID owner lookup for scan results and reports, with cached account names and a native Properties platform API.
 
 - Windows NTFS fast scans with bounded parallel MFT parsing, subtree selection, and an Auto fallback notice on stderr.
