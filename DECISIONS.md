@@ -11,9 +11,69 @@ This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when it
 | `frozen-smoke` | T10.1, using T4.14's deferred self-test hook | Build the actual frozen bundle, verify CLI/GUI fixture totals and bundle size. |
 | `pr-title` | T0.5 follow-up after these prerequisites | Enforce Conventional Commits on PR titles; no feature prerequisite. |
 
-Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance lands in T4.5. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
+Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance is implemented in T4.5 and runs separately without instrumentation. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
+
+## D-0073 — 2026-11-05 — Activate staged Windows scan controls
+
+Question: How should the staged T4.7 controls use the M3 services now that their prerequisites exist?
+
+Choice: Enable and persist Windows MFT selection. Wire the existing administrator restart control to the native elevation API, preserving the current roots and keeping the dialog open on cancellation or failure. Source launches use a fixed Python bootstrap to execute `sys.executable` with `-m dafree.gui.app` and the roots. Frozen launches pass roots directly. Keep one application lock and IPC endpoint per data directory and Windows privilege level so an elevated replacement can start while its ordinary parent exits. Disable restart during target validation.
+
+Reasoning: D-0048 deferred this integration until the native MFT and elevation services were implemented. Separate privilege endpoints prevent the new elevated process from forwarding its targets back to the ordinary process during startup. On this Windows virtual environment, `GetModuleFileNameW` identifies the base interpreter while `sys.executable` identifies the environment's redirector. The bootstrap restores the selected environment with a subprocess argument list before starting the GUI module, preserving Windows quoting.
+
+Task: T4.7 follow-up after T3.5/T3.7
+
+## D-0072 — 2026-11-05 — Runner-owned captured MFT fixture
+
+Question: How should the post-T3.5 golden record be captured without including stale record slack?
+
+Choice: Use a Windows test-only helper with the existing raw VolumeReader. Create a deterministic resident file inside a test-created temporary directory, flush it, and identify its record by the full file reference. Verify its sequence, parent, filename, and resident contents before saving that record. Zero unused tail bytes and the corresponding saved USA words while retaining the protected sector stamps. Keep used bytes intact. Independently check fields and hashes in Python. Reject reparse-point ancestors and existing output names. Commit the reviewed capture with its expected JSON and test it on every OS alongside the synthesized records.
+
+Reasoning: The production reader supplies the original protected sector layout. Unused record space can contain stale bytes, so the captured fixture documents its limited redaction. This closes the T3.1 requirement that depends on T3.5 and keeps the synthetic generator reproducible.
+
+Task: T3.1/T3.5 golden-fixture follow-up
+
+## D-0071 — 2026-11-05 — Nightly fuzzing and snapshot dependency
+
+Question: Which fuzz targets can run nightly before the snapshot reader exists?
+
+Choice: Run the MFT record, run-list, and glob fuzzers for 300 seconds each. Seed MFT from the existing synthesized golden records and keep representative glob and run-list seeds in the tracked corpus. Cache each mutated corpus, upload reproducer artifacts on failure, and keep one failure issue for the default branch. Add the snapshot fuzzer with its reader in T7.1.
+
+Reasoning: A snapshot harness requires the actual reader for meaningful coverage. Each available campaign uses the planned per-input timeout and process RSS limit and enforces a 64 MiB individual allocation limit. [LLVM libFuzzer options](https://llvm.org/docs/LibFuzzer.html#options)
+
+Task: T3.8
+
+## D-0070 — 2026-11-04 — Windows owner and Properties API
+
+Question: When should Windows scan results query owner SIDs and resolve account names?
+
+Choice: Keep ordinary enumeration free of security-descriptor reads. Resolve owners by verbatim path when requested by a lazy view, export, or eager scan. Owner Off suppresses lookups. Cache up to 4,096 successful SID-to-account mappings per process, and leave failed lookups retryable. Return the qualified account name through the Python platform API. Expose the Windows Shell Properties call separately from the existing scanner properties dialog. T8 wires the native action into the GUI.
+
+Reasoning: Owner lookup may require a filesystem or domain call. Deferring the first SID query preserves the scan hot path, and sharing successful SID mappings avoids repeated account lookups. [GetNamedSecurityInfoW](https://learn.microsoft.com/en-us/windows/win32/api/aclapi/nf-aclapi-getnamedsecurityinfow) · [LookupAccountSidW](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-lookupaccountsidw)
+
+Task: T3.6
+
+## D-0069 — 2026-11-04 — macOS ARM64 runner capacity
+
+Question: How should T3.5 complete its macOS wheel check after repeated runner allocation failures?
+
+Choice: Run the macOS native, Python, coverage, and wheel jobs on the standard `macos-26` ARM64 image. Keep the abi3 wheel architecture and deployment target and the required checks.
+
+Reasoning: GitHub cancelled the macOS 15 wheel job before it acquired a runner in three attempts. On the next run, the macOS 15 native, Python, and coverage jobs also remained unassigned, blocking the wheel matrix. macOS 26 is a standard ARM64 runner for public repositories. The image change gives the required wheel build and test another route. [GitHub-hosted runners](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)
+
+Task: T3.5 CI
+
+## D-0068 — 2026-11-04 — Windows MFT reader and fallback boundary
+
+Question: How should the scan engine integrate raw MFT reads with the existing walk and cancellation path?
+
+Choice: Try Auto fast mode on one shallow local NTFS target. Allow explicit MFT on a deeper subtree. Requests to follow links or cross filesystems use Walk under Auto and fail in explicit MFT mode. Require an elevated token with enabled Administrators membership for raw access. Read the raw drive read-only and verify the mapping from record zero, consulting a bounded attribute list when the base data attribute does not cover the stream. Process aligned 8 MiB reads through a four-chunk queue and at most eight parser workers. Publish a completed MFT tree only after all parser batches merge. A failed Auto attempt emits FastModeUnavailable and starts the already-prepared walk, while explicit MFT reports MftUnavailable. Cancellation returns the normal partial-root report if the raw scan has no finished tree.
+
+Reasoning: These limits bound in-flight memory and preserve scan policy. A partially parsed index cannot safely replace a complete walk. Report output and notices remain on separate CLI streams. [NTFS volume data](https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ns-winioctl-ntfs_volume_data_buffer)
+
+Task: T3.5
 
 ## D-0067 — 2026-11-04 — Shell completion provider
 
@@ -86,6 +146,121 @@ Reasoning: Click validates both TOML defaults and command-line values through th
 Choice: Carry the previously validated full CI routing from T3.1 into the M2 branch. The temporary light tier ended at M4-core, and this branch starts from main before the M3 commits. The branch uses the existing jobs and keeps their full test gates.
 
 Task: T2.1
+## D-0061 — 2026-11-03 — Satisfy the Windows fast-mode test prerequisites
+
+Question: How can T3.5 keep its Windows acceptance tests now that the scan command and the native elevation API are still pending?
+
+Choice: Complete T3.7 after T3.4, then complete deferred M2 on its own branch and PR before T3.5. The M2 order is T2.1, T2.3, T2.4, T2.2, T2.5, T2.6 because T2.2 declares both exporters as prerequisites. This revises D-0054's assumed order after M4-core. The hosted runner check and the restricted-token `dafree scan --mode auto` test stay as specified. T3.6 and T3.8 still follow T3.5.
+
+Choice: Keep `platform::is_elevated()` a boolean query and raise `Unsupported` when the process token cannot be queried. Move the existing POSIX query into its planned elevation source and return a typed `Unsupported` for POSIX relaunch. Windows requests consent for the current executable through `ShellExecuteExW` and maps a declined prompt to `Cancelled`. Reuse the existing lossless Windows argument codec and the native exception translator. The portable quoting helper takes arguments after the executable name, preserves empty arguments and doubles backslashes where the Windows parser requires it. The Python caller supplies explicit arguments, including interpreter switches when needed, and controls when to exit. GUI restart wiring stays with Windows scan integration.
+
+Reasoning: T3.5's acceptance criteria explicitly invoke `dafree scan` and require an elevated native token query. Completing the missing prerequisites makes both tests possible without replacing their entry points. A separate pure quoting function lets every OS verify the command line without launching a privileged process. The Windows test also roundtrips the arguments through the OS parser. The SDK APIs are system libraries and add no third-party dependency. [Windows argument parsing](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-commandlinetoargvw) · [Shell execution](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecuteexw) · [Token elevation](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-token_elevation)
+
+Task: T3.7 and T3.5 prerequisite order
+
+## D-0060 — 2026-11-02 — Owned MFT indexing and deterministic tree construction
+
+Question: Which ownership, graph, selection and diagnostic policies complete the pure T3.4 interfaces without introducing volume I/O?
+
+Choice: Keep `MftIndex` move-only behind an opaque sparse index keyed by actual record numbers; copy retained names and stream summaries before source chunks are reused. Add a private `index.hpp`, the shared documented `IssueSink = std::function<void(ScanIssue)>` alias, and exact builder friendship in the existing model rather than new public mutators. Parse FILE records after fixups, report BAAD and malformed FILE records, quietly ignore unused signatures/deleted records. Conflicting duplicate IDs are invalid regardless of ingest/merge order. Resolve extension records after all batches merge, including a base reference whose low 48 bits are zero, and check base/parent sequences.
+
+Choice: Radix-order record IDs and bucket parent edges before BFS for deterministic linear graph construction. Retain DOS-only names unless a Win32 name exists for that same parent. Reachable repeated-directory edges report SymlinkLoop and are not traversed twice; unreachable records/components, invalid parent kinds and stale references report Orphaned. Intentional exclusions, reparse pruning and hidden metafile subtrees do not create false orphan reports. Report every issue to a nonempty sink; retain full counts and only the first 1,000 diagnostics in metadata.
+
+Choice: Require live directory record 5. Resolve relative or same-volume absolute subtree paths case/separator insensitively on every OS, then construct the selected BFS tree directly with canonical on-disk spelling and fresh hard-link primaries inside the selection. This performs planned extraction without constructing two full trees. Dedup counts the first included file link; CountAll follows the walk engine's existing flag/accounting policy. NTFS records 0–15 except the scan root, and the $Extend subtree, are System/Hidden by default and disappear with `show_ntfs_metafiles=false`. Include ADS only on request; use primary DATA extents, resident allocation zero and saturating aggregation. Never traverse reparse targets; reject follow-symlink mode.
+
+Choice: Preserve paired and lone UTF-16 surrogates through WTF-8. Reject unsafe tree components (NUL, separators, dot components), while the converter itself preserves all code units. Clamp known timestamps to [1, UINT32_MAX], reserving zero for absent standard information per A9. Apply existing compiled exclusions through a normalized host anchor plus the existing Unicode simple-fold table so pure NTFS behavior is consistent on all OSes; use NTFS attributes for hidden/system exclusions. No filesystem queries or new dependencies.
+
+Choice: Add the planned MFT record fuzzer with a valid synthesized root and a copied mutable candidate record, checking graph/aggregate invariants. Instrument the complete core call graph with libFuzzer coverage, ASan and UBSan. CI smoke uses a separate temporary golden-seeded corpus and 1,000 runs; a 1 MiB harness-input cap bounds each iteration without adding an index input cap. Longer nightly campaigns remain T3.8.
+
+Reasoning: Chunk-independent summaries support later parallel readers safely. Sparse IDs, iterative graph construction and bounded retained diagnostics avoid attacker-controlled dense allocations or recursion. Selection must establish its own dedup primaries and preserve platform-independent NTFS semantics. This task remains pure C++ with no raw-volume, CLI or elevation features.
+
+Task: T3.4
+
+## D-0059 — 2026-11-01 — Correct the MSVC debug-container allocation oracle
+
+Question: Why did T3.3's Windows native CI fail two allocation assertions while all parser values, Linux/macOS tests and sanitizer jobs passed?
+
+Choice: The failing run `41347197640` measured three allocations for an empty successful result and four for a nonempty result, instead of the test's assumed zero/one. Microsoft's [vector source](https://github.com/microsoft/STL/blob/main/stl/inc/vector) allocates checked-iterator proxies during default and move construction; its [hardening documentation](https://github.com/microsoft/STL/wiki/STL-Hardening/93f55c7d1064a03150338f5df76120c61baeabfa) explicitly describes dynamic allocations for iterator debugging. Returning the planned `Expected<vector<Run>, MftError>` inherently includes that vendor bookkeeping. No local MSVC toolchain is installed; the hosted MSVC CI run remains the platform judge.
+
+Choice: Correct the test's cross-platform assumption with an independent empty standard-result factory, containing no decoder, parser work, reserve or element allocation. Measure that same construction/move path's baseline without hard-coded OS allowances. Require the decoder's empty result to have zero capacity and add no allocations above that baseline; require a populated result to add exactly one output-buffer allocation and have capacity equal to its size. Preserve literal decoded-value tests, all malformed-input and over-budget zero-allocation assertions, every existing input vector/seed, and the 64 MiB output limit. Keep MSVC iterator debugging enabled; do not relax compiler checks or disable tests.
+
+Reasoning: Counting required library debug instrumentation as parser/output storage made the original test wrong. The independent baseline still catches extra temporaries, parser allocations, copied payload buffers and repeated vector growth. This corrects the oracle rather than accepting extra output-storage allocations. Production decoding is unchanged.
+
+Task: T3.3 CI validation follow-up
+
+## D-0058 — 2026-11-01 — Checked mapping pairs and a bounded decoder allocation
+
+Question: Which malformed-input, arithmetic, allocation and fuzz-smoke policies complete T3.3's run-list interface?
+
+Choice: Preserve `Run{optional<int64_t> lcn, uint64_t clusters}` and `decode_runlist(span<const byte>)`. Decode little-endian unsigned cluster counts and signed physical-LCN deltas from one to eight bytes. A zero offset width denotes a sparse extent and leaves the previous physical LCN unchanged; physical LCN zero remains valid. Require a zero terminator, ignoring later attribute padding. Reject missing/truncated fields, invalid widths, zero counts, negative physical starts and signed-LCN/cumulative-VCN overflow as OutOfBounds. Volume extents and byte-offset limits belong to the later volume reader.
+
+Choice: Validate/count without allocation in a first pass, then reserve exactly once and decode into the result. Reject decoded output above 64 MiB as Unsupported before allocating, using sizeof(Run) rather than assuming its layout. Empty output needs no run storage and malformed encodings allocate nothing. D-0059 corrects the original zero-total-allocation assumption for empty success: MSVC Debug's standard return container has checked-iterator bookkeeping, measured independently from parser/output storage. This supplies a concrete resource policy for the fuzz target explicitly included in T3.3 and the plan's 64 MiB parser budget; it adds no arbitrary input-size limit to the decoder. Allocation failure for otherwise valid input remains a normal system resource exception.
+
+Choice: Add the planned original run-list fuzzer and a separate temporary seeded corpus to the existing full-CI fuzz smoke job. Compile the decoder itself with libFuzzer/ASan/UBSan, run 1,000 mutations, and cap fuzz inputs at 1 MiB to bound individual smoke iterations. The 300-second nightly campaign and remaining fuzz targets stay assigned to T3.8. Native acceptance uses independent byte vectors plus a test-only encoder across 1,000 deterministic seeds, including signed deltas and sparse extents.
+
+Reasoning: Explicit sign extension and overflow checks prevent undefined arithmetic and invalid disk offsets. Preflight avoids speculative allocations on malformed input and caps successful output without a vector-growth peak above the budget. Sparse encoding and the physical-zero distinction follow mapping-pair fields; no third-party implementation is copied and no dependency is added.
+
+Task: T3.3
+
+## D-0057 — 2026-11-01 — Attribute iterator ownership and bounded optional headers
+
+Question: What constructor, marker fields, view lifetime and validation rules complete T3.2's partial interface without adding disk I/O or later parsers?
+
+Choice: Extend `mft.hpp` with the exact planned attribute types and `AttrIterator(std::span<const std::byte>)`. The caller supplies an already fixed-up record and retains it for any returned runlist spans. Parse the record header once, stop at the attribute end marker or exactly bytes_used, and make malformed-input errors sticky. Add empty attribute-list/reparse tags and `OtherAttr{type}`; resolving lists, interpreting reparse data and decoding runs remain later tasks.
+
+Choice: Names borrow a fixed 255-code-unit array owned by the iterator, valid until its next next() call or destruction. Always copy bounded UTF-16 bytes into aligned storage rather than reinterpret a byte buffer as live char16_t objects, including when the source happens to be aligned. Use memcpy on little-endian platforms and explicit little-endian decoding otherwise. Preserve code units, including lone surrogates, and namespace/flag values. This introduces no heap allocation or dependency.
+
+Choice: Require complete common/form headers, nonzero quadword-aligned attribute lengths, bounded nonoverlapping names and resident values/mapping pairs, and at least one encoded runlist byte. Ignore NameOffset when NameLength is zero, as its value is undefined. Require the 48-byte legacy standard-information prefix and 66-byte filename prefix; nonresident forms of these metadata attributes return Unsupported. Other attribute types remain distinguishable without interpreting their contents.
+
+Choice: For compressed (any low-byte compression flag) or sparse data, read total_allocated only when the actual nonresident header reaches 0x48: the first variable field (nonempty name or mapping pairs) starts at or beyond that offset. Otherwise retain allocated_size from the base header. A long attribute containing a name/runlist after a 0x40-byte header must not misinterpret those variable bytes as total_allocated. Preserve continuation lowest_vcn for the later index. Resident data has logical size equal to value length and zero cluster allocation.
+
+Choice: Convert FILETIME by unsigned division into whole seconds followed by subtraction of the 1601-to-1970 offset. This handles the full uint64 range without signed overflow and floors timestamps just before the Unix epoch. Golden table tests include both sides of second/epoch boundaries.
+
+Reasoning: The plan requires borrowed views and unaligned input support but leaves ownership and construction unspecified. Bounded fixed storage and explicit header extents prevent aliasing, alignment and out-of-range reads while keeping allocation out of the parser hot path. Layout facts are checked against Microsoft's [attribute header](https://learn.microsoft.com/en-us/windows/win32/devnotes/attribute-record-header), [filename](https://learn.microsoft.com/en-us/windows/win32/devnotes/file-name) and [standard-information](https://learn.microsoft.com/en-us/windows/win32/devnotes/standard-information) documentation; no third-party parser code is copied.
+
+Task: T3.2
+
+## D-0056 — 2026-11-01 — Reuse frame state after a Windows repaint gate failure
+
+Question: How should a full-suite Windows repaint failure discovered during T3.1 validation be handled without relaxing the existing GUI budget?
+
+Choice: Preserve the exact ten-million-row fixture, all 60 jumps, real fonts, 1280×720 viewport, actual paint checks, and 16.7 ms median / 33 ms p95 thresholds. The initial Windows run measured 19.5716 ms median / 22.8032 ms p95. Profiling a separate small diagnostic viewport found repeated context lookups in every delegate and text-cache call, plus repeated palette/state queries per row. Read each delegate's shared context once, use its owned font directly, and compute invariant palette/current-index/alternation values once per frame. Change the painter's row text pen only at selection transitions. Preserve standalone delegate behavior, clipping, bounded layouts and font ownership.
+
+Choice: Add pixel-for-pixel shared-frame versus standalone text regressions covering LTR/RTL, selected/disabled colours, two font sizes, clipping and actual nonempty glyph output. After the code change, the unchanged Windows gate measured 5.2967 ms median / 6.8978 ms p95. The final Linux gate measured 6.4630695 ms median / 14.642587 ms p95. These are observed developer-machine results, not a controlled claim that the code change explains the entire timing difference; machine load can vary. Do not retry unchanged failing code or discard the initial result.
+
+Reasoning: The failed full-suite gate must be resolved before advancing tasks. Reusing already-owned frame values removes measured repeated work without adding features, dependencies, per-node storage, or test exceptions.
+
+Task: T3.1 validation follow-up / existing T4.5 repaint gate
+
+## D-0055 — 2026-11-01 — Bounded NTFS v3 headers and atomic fixup validation
+
+Question: Which record boundaries and error policies should T3.1 enforce where the supplied interface leaves details open?
+
+Choice: Keep the exact public RecordHeader/MftError/parse_header/apply_fixups interface in namespace `dafree`. Add a private `core/src/mft/byte_reader.hpp` for shared bounds-checked little-endian reads, accepting unaligned spans and using subtraction-based range checks before access. Decode fields individually; do not reinterpret packed buffers or add dependencies.
+
+Choice: Accept the NTFS v3 fixed prefix through the next-attribute-id storage at offset 0x28 (42 bytes), though that final word is not exposed in RecordHeader. Support word-aligned USA locations including 0x2A and 0x30. Require USA storage before the aligned first-attribute offset and inside bytes_used, and bytes_used <= bytes_allocated <= supplied span. Preserve sequence, link count and unknown flags. Header inspection can use a larger containing span; fixup mutation requires the declared allocation to equal the complete supplied record span.
+
+Choice: Use the plan's caller-supplied power-of-two sector size rather than hard-coding the 512-byte stride described in Microsoft's older multi-sector notes. Reject invalid sector sizes as Unsupported, missing/nonintegral/bad ranges as OutOfBounds, and validly bounded USA-count or sector-marker mismatches as BadFixup. Require usa_count == record_size / sector_size + 1 and keep the full USA before the first sector trailer. Validate all markers before restoring any bytes, preventing partial mutation and overlap with future saved words.
+
+Choice: Generate original deterministic golden bytes/JSON from Microsoft's public FILE_RECORD_SEGMENT_HEADER and MULTI_SECTOR_HEADER layouts; do not import disk dumps. A captured CI-owned fixture record remains explicitly deferred to T3.5. Add no attribute parser, run-list decoder or disk reader in T3.1.
+
+Reasoning: Explicit boundaries prevent unaligned accesses, overflow, truncated reads, and restoration outside a record's declared extent. Verifying before mutation leaves malformed inputs unchanged. The supplied sector geometry remains authoritative while primary layout documentation supplies fixed offsets.
+
+Task: T3.1
+
+## D-0054 — 2026-11-01 — Resume M3 with parallel work inside ordered tasks
+
+Question: What follows completed M4-core, and how should the owner's new request for parallel work interact with task order and temporary CI routing?
+
+Choice: Resume M3 at T3.1, following the explicit “resume it after M4-core” instruction. T2.1–T2.6 remain queued after M4-core and will follow resumed M3; both were deferred past the same boundary without a stricter relative order. Divide independent implementation and acceptance-test files inside the current task, integrate/review centrally, and complete full validation, docs and a task commit before starting T3.2. Use the original one-branch/one-PR-per-milestone rule for resumed M3, preserving owner authorship.
+
+Choice: M4-core is complete on main `b39d472` with all 21 full CI jobs green. Its explicitly temporary light PR tier therefore expires. Run all existing gates for every configured workflow event again: PRs, merge queue, main pushes, nightly and manual runs. Preserve every threshold and assertion, the separate uninstrumented GUI performance step, and job-duration reporting. Keep the existing nightly-only additional Windows/macOS repaint legs.
+
+Choice: The owner's clarified quota limit is the primary worker plus at most two active subagents (three workers total). Reuse completed workers as needed within that cap.
+
+Reasoning: Parallel file ownership increases throughput without bringing later tasks forward. Resuming the explicitly paused milestone first is the narrowest interpretation of the recorded order. Restoring full CI at the stated boundary honors the owner's time-limited exception rather than silently extending it.
+
+Task: T3.1 / M3 resumption
 
 ## D-0053 — 2026-11-01 — Validation fixes for minimum mock delays and test method ownership
 

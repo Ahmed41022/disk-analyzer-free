@@ -26,6 +26,7 @@ namespace dafree {
 
 class FsBackend;
 class TreeHandle;
+class MftIndex;
 struct JsonOptions;
 struct CsvOptions;
 
@@ -431,6 +432,9 @@ class Tree {
   private:
     friend class TreeBuilder;
     friend class ScanEngine;
+    friend Tree build_tree_from_mft(const MftIndex &, std::string_view,
+                                    std::optional<std::string_view>, const ScanOptions &,
+                                    IssueSink &);
     friend void resolve_owners(TreeHandle &, std::span<const NodeId>, FsBackend &);
     SegVector<Node> nodes_;
     SegVector<Counts> counts_;
@@ -468,6 +472,9 @@ class TreeBuilder {
 
   private:
     friend class ScanEngine;
+    friend Tree build_tree_from_mft(const MftIndex &, std::string_view,
+                                    std::optional<std::string_view>, const ScanOptions &,
+                                    IssueSink &);
     Tree tree_;
     std::vector<bool> populated_;
 };

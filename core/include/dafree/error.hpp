@@ -36,6 +36,18 @@ class AlreadyPopulated : public Error {
     AlreadyPopulated() : Error("directory is already populated") {}
 };
 
+/// Raised when the user cancels an operation at an operating-system prompt.
+class Cancelled : public Error {
+  public:
+    using Error::Error;
+};
+
+/// Raised when a requested platform service is unavailable.
+class Unsupported : public Error {
+  public:
+    using Error::Error;
+};
+
 /// A value-or-error result for APIs that report expected failures.
 template <typename T, typename E> class Expected {
   public:

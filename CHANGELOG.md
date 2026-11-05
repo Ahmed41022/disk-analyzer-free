@@ -6,17 +6,35 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Fixed
 
+- Tree rendering reuses frame colours, font and delegate context while preserving standalone rendering, RTL, selection and disabled text.
+
 - Native mock delays now enforce their minimum steady-clock duration; completed GUI tasks and context menus release captured tree owners promptly.
 
 - Linux wheel compilation with older manylinux headers retains statx mount-root detection through the stable UAPI flag and its supported-attribute mask.
 
 ### Added
 
+- Windows scan dialog MFT selection and administrator restart, with lossless target forwarding and cancellation handling.
+
+- Five-minute nightly sanitizer fuzzing for MFT records, run lists, and globs, with cached corpora, crash artifacts, and a labelled failure issue.
+
+- Windows SID owner lookup for scan results and reports, with cached account names and a native Properties platform API.
+
+- Windows NTFS fast scans with bounded parallel MFT parsing, subtree selection, and an Auto fallback notice on stderr.
+
 - Completion scripts for Bash, Zsh, Fish, and PowerShell, plus a CLI reference generated from the registered commands.
 
 - Native and CLI analysis for largest files or directories, extension totals, and file age intervals.
 
 - CLI scan command with table, JSON, NDJSON, and CSV output, progress on stderr, strict access-error status, partial JSON on interrupt, and optional wall-time and peak RSS statistics.
+
+- NTFS mapping-pair decoding with signed-delta and sparse-extent checks, exact bounded output allocation, 1,000 roundtrip seeds and a sanitizer-backed run-list fuzzer.
+- An owned MFT index and pure in-memory tree builder with sequence validation, extension merging, hard-link accounting, subtree selection, exclusions, metafile policy and lossless WTF-8 names; randomized graph tests and a raw-record/tree fuzzer.
+- Native Windows elevation detection and an explicit elevated relaunch API with lossless argument quoting and typed cancellation. POSIX reports effective UID and raises `Unsupported` for relaunch.
+
+- Bounded NTFS attribute iteration for timestamps, raw UTF-16 filenames, resident and nonresident streams, sparse/compressed allocation and attribute markers; no parser heap allocations.
+
+- Bounds-checked NTFS v3 record headers and all-or-nothing sector fixups, with synthesized and runner-captured golden records and malformed/unaligned-input tests on every OS.
 
 - Read-only node properties with lazy owner lookup, human flag badges, timestamps and captured volume data; Issues kind filtering, clipboard copy, and exclusive new CSV reports.
 - Three-platform Python coverage gates/artifacts and conditional Codecov upload, retaining the existing native model/scanner thresholds.

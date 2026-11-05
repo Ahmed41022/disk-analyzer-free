@@ -34,8 +34,12 @@ class FsBackend {
     virtual DirListing read_dir(std::string_view dir, const DirHint &hint) = 0;
     /// Return volume properties if the backend can supply them.
     virtual std::optional<VolumeInfo> volume_info(std::string_view path) = 0;
+    /// Return whether this backend can use the host Windows NTFS reader.
+    virtual bool supports_local_mft() const noexcept { return false; }
     /// Attempt the optional fast scan protocol; false means unsupported.
     virtual bool fast_scan(std::string_view, const ScanOptions &, FastScanSink &) { return false; }
+    /// Return whether owner metadata can be read lazily by path without an identity hint.
+    virtual bool can_resolve_owner_by_path() const noexcept { return false; }
     /// Resolve an owner using an optional identity hint.
     virtual std::optional<std::pair<OwnerKey, std::string>> resolve_owner(std::string_view path,
                                                                           const OwnerKey *hint) = 0;

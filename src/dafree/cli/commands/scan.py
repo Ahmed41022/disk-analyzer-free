@@ -139,6 +139,9 @@ def _wait(ctx: click.Context, handle: api.ScanHandle, show_progress: bool) -> ap
         set_active_scan(ctx, None)
         if break_signal is not None and previous is not None:
             signal.signal(break_signal, previous)
+    for notice in handle.drain_notices():
+        if notice.kind is api.NoticeKind.FAST_MODE_UNAVAILABLE:
+            click.echo(f"FastModeUnavailable: {notice.detail}", err=True)
     return handle.take_result()
 
 

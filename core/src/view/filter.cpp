@@ -305,7 +305,9 @@ struct Expression {
             const auto owner = tree.owner_name(id);
             if (owner && !owner->empty())
                 return truth(any(*owner, context));
-            return allow_pending && node.owner != 0 ? Truth::PendingOwner : Truth::No;
+            return allow_pending && (node.owner != 0 || tree.meta().options.owner != OwnerMode::Off)
+                       ? Truth::PendingOwner
+                       : Truth::No;
         }
         case K::Time: {
             const auto value = time == TimeField::Modified  ? node.mtime

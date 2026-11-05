@@ -41,8 +41,11 @@ std::shared_ptr<BoundTree> flat_tree(std::string root, std::uint32_t visible_row
         }
         builder.add_children(1, entries);
     }
-    return std::make_shared<BoundTree>(std::make_shared<Tree>(std::move(builder).finish({})),
-                                       make_local_backend());
+    ScanMeta meta;
+    // Synthetic rows have no on-disk entries or owner identities to resolve.
+    meta.options.owner = OwnerMode::Off;
+    return std::make_shared<BoundTree>(
+        std::make_shared<Tree>(std::move(builder).finish(std::move(meta))), make_local_backend());
 }
 
 } // namespace
@@ -50,6 +53,16 @@ std::shared_ptr<BoundTree> flat_tree(std::string root, std::uint32_t visible_row
 void bind_testing(nb::module_ &module) {
     auto testing =
         nb::class_<TestingNamespace>(module, "testing", "Native test fixture namespace.");
+    testing.def_static(
+        "sid_cache_hits",
+        []() -> std::uint64_t {
+#ifdef _WIN32
+            return platform::sid_cache_hits();
+#else
+            return 0;
+#endif
+        },
+        "Count successful lookups served by the Windows SID cache.");
     nb::class_<FixtureTreeBuilder>(testing, "TreeBuilder", "MockBackend-free synthetic trees.")
         .def_static(
             "flat",

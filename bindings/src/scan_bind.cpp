@@ -190,6 +190,10 @@ void bind_scan_types(nb::module_ &module) {
             public_error("scan", static_cast<int>(error.code()), error.what());
         } catch (const ExcludeError &error) {
             public_error("exclude", 0, error.what(), {}, error.pattern);
+        } catch (const Cancelled &error) {
+            public_error("cancelled", 0, error.what());
+        } catch (const Unsupported &error) {
+            public_error("unsupported", 0, error.what());
         } catch (const Error &error) {
             public_error("core", 0, error.what());
         }

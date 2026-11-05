@@ -16,9 +16,11 @@ The original task specifications below remain in force; this order supersedes th
 5. Until M4-core completes, PRs require lint, the full Linux correctness suite, Windows/macOS C++ correctness and GUI smoke. Wide 100k, performance, coverage, and sanitizers run on main/nightly (manual full validation on main). Retain every test threshold and assertion. Report each CI job duration in the PR summary.
 6. M8 deletion/move must use the fd-relative, no-follow C++ remover only; never reuse path-based stat/remove helpers. All original trash/confirmation/dry-run safety rules remain required.
 
+M4-core completed on main `b39d472` with all 21 full jobs green. M3 resumed at T3.1. T3.7 and deferred M2 precede T3.5 because its acceptance tests require the native elevation API and scan command (D-0061). The temporary light PR CI exception above has expired. Existing gates run on every configured workflow event again.
+
 See DECISIONS.md for the pending §7.3 CI inventory and dependency adaptations.
 
-M4-core completed on main `b39d472`. Deferred M2 proceeds in dependency order T2.1, T2.3, T2.4, T2.2, T2.5, T2.6 so T3.5 can use the scan command. The temporary PR validation tier has expired and the full CI jobs run again (D-0062).
+Deferred M2 completed on main `5051c02`, supplying the scan command and restoring the PR benchmark gate. M3 uses those prerequisites for volume scans, owner lookup, elevation, and nightly fuzzing.
 
 ---
 
@@ -1106,7 +1108,7 @@ Conventions for every task:
 - **Files:** C = create, M = modify.
 - **Interface** refers to §2 where the signature is already given; only new signatures are spelled out.
 - **Acceptance** items are automated checks; a task is done only when they pass locally _and_ in CI. Named tests are the exact test names to create (C++ doctest `TEST_CASE("name")`, Python `def test_name`).
-- "3 OSes" = `ubuntu-24.04`, `windows-2025`, `macos-15` runners.
+- "3 OSes" = `ubuntu-24.04`, `windows-2025`, `macos-26` ARM64 runners for CI (D-0069).
 - Python tests run against the _installed_ package (`pip install .[dev,gui]`), never against an in-tree build.
 
 ### M0 — Skeleton and CI
@@ -1403,8 +1405,8 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
 
 ### M3 — Windows fast mode (MFT) and Windows specifics
 
-- [ ] **T3.1 — NTFS record header and fixups (pure C++)**
-  - **Files:** C `core/include/dafree/mft.hpp`, `core/src/mft/{record.cpp,fixup.cpp}`, `core/tests/test_mft_record.cpp`, `tools/golden_mft.py`, `core/tests/golden/mft/README.md`.
+- [x] **T3.1 — NTFS record header and fixups (pure C++)**
+  - **Files:** C `core/include/dafree/mft.hpp`, `core/src/mft/{record.cpp,fixup.cpp,byte_reader.hpp}`, `core/tests/test_mft_record.cpp`, `tools/golden_mft.py`, `core/tests/golden/mft/README.md`. The post-T3.5 capture uses `core/tests/capture_mft.cpp` and `tests/native/capture_mft.py` (D-0072).
   - **Interface:**
     ```cpp
     struct RecordHeader { std::array<char,4> signature; std::uint16_t usa_offset, usa_count; std::uint64_t lsn; std::uint16_t sequence,
@@ -1413,12 +1415,12 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
     Expected<RecordHeader, MftError> parse_header(std::span<const std::byte>);
     Expected<void, MftError> apply_fixups(std::span<std::byte> rec, std::size_t sector_size); // verifies USN per sector, restores saved bytes
     ```
-  - **Behavior:** every read through a bounds-checked `ByteReader`; `usa_count == rec.size()/sector_size + 1` required. Golden binaries are synthesized from the NTFS on-disk layout by `tools/golden_mft.py` (no copyrighted dumps); after T3.5 one record captured from the CI runner's own fixture file is added with its expected JSON.
+  - **Behavior:** every read through a bounds-checked `ByteReader`; `usa_count == rec.size()/sector_size + 1` required. D-0055 specifies NTFS v3 prefix/USA/attribute bounds, error policy, and exact record allocation for mutation. Golden binaries are synthesized from the NTFS on-disk layout by `tools/golden_mft.py` (no copyrighted dumps). After T3.5, `captured_file.bin` and its expected JSON add a runner-owned fixture record, with unused tail bytes redacted as documented in D-0072.
   - **Depends on:** T0.1
   - **Acceptance (all OSes):** doctest `golden_header`, `fixup_restores_bytes`, `fixup_mismatch_errors`, `truncated_record_errors_not_crashes`.
 
-- [ ] **T3.2 — Attribute iteration (pure C++)**
-  - **Files:** C `core/src/mft/attr.cpp`, `core/tests/test_mft_attr.cpp`.
+- [x] **T3.2 — Attribute iteration (pure C++)**
+  - **Files:** C `core/src/mft/attr.cpp`, `core/tests/test_mft_attr.cpp`; M `core/include/dafree/mft.hpp` and shared private `byte_reader.hpp` (D-0057).
   - **Interface:**
     ```cpp
     struct StdInfo { std::int64_t created, modified, accessed; std::uint32_t file_attributes; };   // unix seconds
@@ -1428,47 +1430,48 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
     class AttrIterator { public: Expected<std::optional<Attr>, MftError> next(); };   // stops at 0xFFFFFFFF or bytes_used
     std::int64_t filetime_to_unix(std::uint64_t filetime);
     ```
-  - **Behavior:** zero-length attribute → `OutOfBounds`; non-resident compressed/sparse use the total-allocated field when header length ≥ 0x48. `u16string_view` built via `memcpy` into aligned storage when the record buffer is unaligned (no UB).
+  - **Behavior:** zero-length attribute → `OutOfBounds`; non-resident compressed/sparse use the total-allocated field when header length ≥ 0x48. D-0057 defines construction, bounds and borrowed-view lifetime. Names always copy into aligned fixed storage, including aligned source buffers, avoiding byte-buffer aliasing as well as unaligned access (no UB).
   - **Depends on:** T3.1
   - **Acceptance:** doctest `std_info_times`, `filename_namespaces`, `data_resident_size`, `data_nonresident_sparse_alloc`, `named_stream_detected`, `filetime_table`; UBSan clean.
 
-- [ ] **T3.3 — Run-list decoding (pure C++)**
-  - **Files:** C `core/src/mft/runlist.cpp`, `core/tests/test_runlist.cpp`, `core/fuzz/fuzz_runlist.cpp`.
+- [x] **T3.3 — Run-list decoding (pure C++)**
+  - **Files:** C `core/src/mft/runlist.cpp`, `core/tests/test_runlist.cpp`, `core/fuzz/fuzz_runlist.cpp`; M `core/include/dafree/mft.hpp`, CMake and fuzz smoke CI integration (D-0058).
   - **Interface:** `struct Run { std::optional<std::int64_t> lcn; std::uint64_t clusters; }; Expected<std::vector<Run>, MftError> decode_runlist(std::span<const std::byte>);`
+  - **Behavior:** D-0058 defines checked mapping-pair fields, sparse/physical-zero semantics, termination/errors and a 64 MiB decoded-output bound with exact allocation. The short fuzz smoke lands here; T3.8 retains the longer nightly campaign.
   - **Depends on:** T3.1
   - **Acceptance:** doctest `runlist_table` (≥ 10 vectors incl. negative deltas and sparse runs), `encode_decode_roundtrip` (test-only encoder, 1,000 seeds).
 
-- [ ] **T3.4 — MFT index and tree build (pure C++)**
-  - **Files:** C `core/src/mft/{index.cpp,build_tree.cpp}`, `core/tests/test_mft_build.cpp`, `core/fuzz/fuzz_mft_record.cpp`.
+- [x] **T3.4 — MFT index and tree build (pure C++)**
+  - **Files:** C `core/src/mft/{index.hpp,index.cpp,build_tree.cpp}`, `core/tests/test_mft_build.cpp`, `core/fuzz/fuzz_mft_record.cpp`; M `core/include/dafree/{mft.hpp,model.hpp,scan_types.hpp}`, CMake and fuzz smoke CI (D-0060).
   - **Interface:** `class MftIndex { public: void ingest(std::uint64_t record_no, std::span<std::byte> rec, std::size_t sector); void merge(MftIndex&&); }`; `Tree build_tree_from_mft(const MftIndex&, std::string_view root_path, std::optional<std::string_view> subtree, const ScanOptions&, IssueSink&);`
-  - **Behavior:** §2.4.3 step "build tree": DOS-name skipping, orphans, sequence check, BFS id assignment, hard links, metafiles policy, subtree extraction. UTF-16 → WTF-8 conversion function `utf16_to_wtf8` (pure, tested).
+  - **Behavior:** §2.4.3 step "build tree": DOS-name skipping, orphans, sequence check, BFS id assignment, hard links, metafiles policy, subtree extraction. UTF-16 → WTF-8 conversion function `utf16_to_wtf8` (pure, tested). D-0060 specifies sparse owned summaries, deterministic conflicts, selection/accounting and issue policy; `IssueSink` is the shared optional `std::function<void(ScanIssue)>`. The short whole-core sanitizer-backed MFT record fuzz smoke lands here; T3.8 retains the nightly campaign.
   - **Depends on:** T3.2, T3.3, T1.3
   - **Acceptance:** doctest `parent_before_child`, `hardlink_multiple_parents_counted_once`, `orphans_skipped_with_issue`, `sequence_mismatch_is_orphan`, `subtree_extraction`, `random_index_invariants` (500 seeds), `utf16_to_wtf8_lone_surrogates`.
 
-- [ ] **T3.5 — Windows volume reader and Auto/MFT dispatch**
-  - **Files:** C `core/src/platform/windows/mft_reader.cpp`, `core/src/scan/mft_driver.cpp`, M `engine.cpp`, `tests/integration/test_mft_windows.py`.
+- [x] **T3.5 — Windows volume reader and Auto/MFT dispatch**
+  - **Files:** C `core/src/platform/windows/mft_reader.{cpp,hpp}`, `core/src/scan/mft_driver.{cpp,hpp}`, `tests/integration/test_mft_windows.py`, `tools/run_restricted.py`. M `engine.cpp`, backend dispatch, build wiring and CLI notices (D-0068).
   - **Interface:** `class VolumeReader { public: static Expected<VolumeReader, MftOpenError> open(std::wstring_view volume_root); std::uint64_t record_count() const; std::size_t record_size() const, sector_size() const; void read_chunks(std::size_t chunk_bytes, const std::function<bool(std::uint64_t first_record, std::span<std::byte>)>& f); };` with `MftOpenError { NotElevated, NotNtfs, AccessDenied, Io }`.
   - **Behavior:** §2.4.3 steps 1–2: sector-aligned 8 MiB reads (`_aligned_malloc`), reader thread → bounded queue (4 chunks) → parser threads with per-thread `MftIndex` merged at the end; `est_total = record_count`. Fallback policy per §2.4.3.
-  - **Depends on:** T3.4, T1.11
+  - **Depends on:** T3.4, T1.11, T3.7 and T2.2 (D-0061).
   - **Acceptance (windows-2025; GitHub-hosted Windows runners run as an elevated administrator — the test first asserts `_core.platform.is_elevated()` and fails loudly if that changes):** `test_mft_scan_matches_walk_on_fixture` (fixture under `D:\` if present else `C:\`; MFT scan with subtree extraction vs walk scan: equal names/sizes/counts/hard-link flags; resident files: MFT alloc 0 vs walk alloc ≤ cluster size, asserted), `test_mft_unavailable_when_not_elevated` (run `dafree scan --mode auto` under a restricted token via `tools/run_restricted.py` using `CreateRestrictedToken` through `ctypes`; assert `FastModeUnavailable` notice on stderr and success), `test_mft_mode_strict_errors_when_unavailable`.
 
-- [ ] **T3.6 — Windows owner (SID) and properties dialog**
-  - **Files:** C `core/src/platform/windows/{sid_owner.cpp,properties_win.cpp}`, `tests/integration/test_owner_windows.py`.
+- [x] **T3.6 — Windows owner (SID) and properties dialog**
+  - **Files:** C `core/src/platform/windows/{sid_owner.cpp,properties_win.cpp}`, `tests/integration/test_owner_windows.py`. M owner resolution, native platform bindings, Python facade, and build wiring (D-0070).
   - **Behavior:** `owner_of` via `GetNamedSecurityInfoW` on the verbatim path; SID→name cache; failure → `nullopt`. `show_properties` → `SHObjectProperties(nullptr, SHOP_FILEPATH, path, nullptr)` → `true`.
   - **Depends on:** T1.8, T1.15
   - **Acceptance (Windows):** `test_owner_of_temp_file_is_current_user` (case-insensitive compare with `whoami`), `test_sid_cache_hits` (test hook counter).
 
-- [ ] **T3.7 — Elevation API**
-  - **Files:** C `core/src/platform/windows/elevation_win.cpp`, `core/src/platform/posix/elevation.cpp`, `core/tests/test_elevation.cpp`.
+- [x] **T3.7 — Elevation API**
+  - **Files:** C `core/src/platform/windows/{elevation_win.cpp,quote_args.cpp}`, `core/src/platform/posix/elevation.cpp`, `core/tests/test_elevation.cpp`; M platform headers, CMake, bindings, Python facade, and `tests/unit/test_platform_api.py` (D-0061).
   - **Behavior:** Windows `is_elevated` via `GetTokenInformation(TokenElevation)`; `relaunch_elevated` → `ShellExecuteExW(L"runas", current exe, quoted args)`; `ERROR_CANCELLED` → `Cancelled` exception. POSIX: `geteuid()==0`; relaunch → `Unsupported`.
   - **Depends on:** T0.1
   - **Acceptance:** doctest `quote_windows_args_table` (pure, all OSes: spaces, quotes, trailing backslashes); Python `test_is_elevated_true_on_ci_windows` (guarded by `CI=true` and Windows).
 
-- [ ] **T3.8 — Fuzzing targets**
-  - **Files:** C `core/fuzz/{fuzz_mft_record.cpp,fuzz_runlist.cpp,fuzz_snapshot_reader.cpp,fuzz_glob.cpp}`, `core/fuzz/corpus/*` (seeded from golden files).
+- [x] **T3.8 — Fuzzing targets**
+  - **Files:** C `.github/workflows/nightly.yml`, `core/fuzz/corpus/*`. Reuse the MFT record, run-list, and glob harnesses. Add the snapshot fuzzer with the reader in T7.1 (D-0071).
   - **Behavior:** built with clang `-fsanitize=fuzzer,address,undefined` (preset `fuzz`); must never crash, hang, or allocate > 64 MiB.
   - **Depends on:** T3.4
-  - **Acceptance:** nightly runs each target 300 s; crash reproducers become doctest regression cases.
+  - **Acceptance:** nightly runs each available target 300 s; crash reproducers become doctest regression cases. T7.1 adds the snapshot target to the same gate (D-0071).
 
 ### M4 — GUI shell and tree view (PySide6)
 
@@ -1548,8 +1551,8 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Acceptance:** `test_status_bar_updates_from_progress`, `test_issue_count_click_opens_issues_tab`, `test_volume_list_populated`.
 
 - [x] **T4.7 — Scan dialog**
-  - **Files:** C `src/dafree/gui/dialogs/scan_dialog.py`, `tests/gui/test_scan_dialog.py`.
-  - **Behavior:** pick volumes (multi-select), "Add folder…" (`QFileDialog.getExistingDirectory`, repeatable), typed path with validation, remove targets; options: threads, follow symlinks, cross filesystems, exclusions editor (globs and paths tabs), exclude hidden/system, mode Auto/Walk/MFT (MFT shown on Windows only) with "Restart as administrator" button when not elevated (calls `platform.relaunch_elevated` with the current targets, then quits). Remembers last options in settings. Enter starts, Esc closes. D-0048 stages MFT/admin controls as disabled until paused M3 provides their native services.
+  - **Files:** C `src/dafree/gui/dialogs/scan_dialog.py`, `tests/gui/test_scan_dialog.py`. D-0073 also updates the GUI bootstrap, main-window wiring, bootstrap tests, and Windows argument-quoting tests when the staged native services become available.
+  - **Behavior:** pick volumes (multi-select), "Add folder…" (`QFileDialog.getExistingDirectory`, repeatable), typed path with validation, remove targets; options: threads, follow symlinks, cross filesystems, exclusions editor (globs and paths tabs), exclude hidden/system, mode Auto/Walk/MFT (MFT shown on Windows only) with "Restart as administrator" button when not elevated (calls `platform.relaunch_elevated` with the current targets, then quits). Remembers last options in settings. Enter starts, Esc closes. D-0048 staged MFT/admin controls until M3 supplied their services. D-0073 activates them with source/frozen relaunch arguments and separate Windows privilege-level instance endpoints.
   - **Depends on:** T4.6
   - **Acceptance:** `test_empty_targets_disables_start`, `test_multiple_folders_added`, `test_mft_option_only_on_windows`, `test_options_persist_to_settings`.
 
@@ -2060,7 +2063,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2025, macos-15]
+        os: [ubuntu-24.04, windows-2025, macos-26]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -2148,7 +2151,7 @@ jobs:
           - { os: ubuntu-24.04, python: "3.12" }
           - { os: ubuntu-24.04, python: "3.15", perf: true }
           - { os: windows-2025, python: "3.14" }
-          - { os: macos-15, python: "3.14" }
+          - { os: macos-26, python: "3.14" }
     runs-on: ${{ matrix.os }}
     env:
       DAFREE_TEST_SCHEDULER: 1
@@ -2215,7 +2218,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2025, macos-15]
+        os: [ubuntu-24.04, windows-2025, macos-26]
     runs-on: ${{ matrix.os }}
     env:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -2275,7 +2278,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-2025, macos-15]
+        os: [ubuntu-24.04, windows-2025, macos-26]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -2687,6 +2690,8 @@ jobs:
 Notes: `tools/dist/package.py` dispatches per label — Windows: WiX v5 MSI (`dotnet tool install --global wix`), Inno Setup EXE (`iscc`, installed via Chocolatey if absent), portable ZIP, optional Authenticode signing with `signtool` when the PFX secret exists; Linux: AppImage (appimagetool, pinned version + SHA256 verified by the script), deb/rpm via nfpm (`go install github.com/goreleaser/nfpm/v2/cmd/nfpm@<pinned>`), tar.gz; macOS: codesign + notarize when secrets exist, `.dmg` (`hdiutil create`), `.app.zip` (`ditto -c -k --keepParent`). The `macos-15-intel` and `windows-11-arm` runner labels must be verified at implementation time (record in DECISIONS); if `macos-15-intel` is unavailable, build x86_64 on `macos-15` with an x86_64 Python under Rosetta.
 
 ### 7.5 `nightly.yml` (design)
+
+T3.8 adds the three available fuzz targets and their failure reporter. T7.1 adds the snapshot target when its reader exists (D-0071). The remaining jobs below land with their corresponding feature prerequisites.
 
 Jobs: `fuzz` (Linux clang, preset `fuzz`, 4 targets × 300 s, corpus cache), `property-long` (`HYPOTHESIS_PROFILE=nightly`, 10,000 examples, 3 OSes), `perf` (3 OSes: generate `1m` fixture, `dafree scan --stats-json`, C++ benchmarks, GUI scroll test; compare with `tests/perf/targets.toml`; Windows also `--mode mft` on the runner's data volume), `msvc-analyze` (`/analyze` build of core), `frozen-e2e` (PyInstaller bundle + `--self-test` on Windows and macOS), `portable-e2e` (Windows: portable ZIP writes nothing outside its folder), `dupes-throughput` (Linux 4 GiB `dupes_mix`), `report-failure` (`if: failure()`, `actions/github-script@v7` creates or updates the issue "Nightly CI failing" with the run URL and failed jobs; closes it on the next green run).
 

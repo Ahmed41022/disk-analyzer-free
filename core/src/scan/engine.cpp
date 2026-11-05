@@ -2,6 +2,10 @@
 #include "glob.hpp"
 #include "work_queue.hpp"
 
+#ifdef _WIN32
+#include "mft_driver.hpp"
+#endif
+
 #include <algorithm>
 #include <atomic>
 #include <bit>
@@ -167,7 +171,7 @@ struct Prepared {
 Prepared prepare(ScanOptions options, FsBackend &backend) {
     if (options.targets.empty())
         throw ScanError(ScanError::Code::EmptyTargets, "at least one scan target is required");
-    if (options.mode == ScanMode::Mft)
+    if (options.mode == ScanMode::Mft && !backend.supports_local_mft())
         throw ScanError(ScanError::Code::UnsupportedMode, "MFT scanning is not available yet");
     std::vector<std::string> targets;
     for (const auto &input : options.targets) {
@@ -245,6 +249,33 @@ class ScanEngine {
                 ++pending_;
             }
         }
+#ifdef _WIN32
+        if (backend_->supports_local_mft() && input_.options.mode != ScanMode::Walk) {
+            const auto &target = input_.options.targets.front();
+            const bool explicit_mft = input_.options.mode == ScanMode::Mft;
+            const bool local_ntfs = input_.volumes.size() == 1 &&
+                                    input_.volumes.front().supports_mft &&
+                                    !input_.volumes.front().is_network;
+            bool shallow = false;
+            if (local_ntfs) {
+                const auto mount = normalize_target(input_.volumes.front().mount);
+                if (path_under(target, mount) && target.size() >= mount.size()) {
+                    auto relative = std::string_view(target).substr(mount.size());
+                    if (relative.starts_with('\\'))
+                        relative.remove_prefix(1);
+                    shallow = relative.find('\\') == std::string_view::npos;
+                }
+            }
+            if (input_.options.targets.size() == 1 && local_ntfs &&
+                !input_.options.follow_symlinks && !input_.options.cross_filesystems &&
+                !is_link(input_.roots.front()) && (explicit_mft || shallow))
+                mft_pending_ = true;
+            else if (explicit_mft)
+                throw ScanError(
+                    ScanError::Code::UnsupportedMode,
+                    "MFT requires one local NTFS target without link or filesystem traversal");
+        }
+#endif
         input_.roots.clear();
         input_.roots.shrink_to_fit();
         for (const auto &volume : input_.volumes) {
@@ -264,9 +295,8 @@ class ScanEngine {
 
     void start() {
         try {
-            workers_.reserve(input_.options.threads);
-            for (unsigned index = 0; index < input_.options.threads; ++index)
-                workers_.emplace_back([this] { run_worker(); });
+            if (!mft_pending_)
+                start_walk_workers();
             coordinator_ = std::thread([this] { run_builder(); });
         } catch (...) {
             cancel();
@@ -286,7 +316,9 @@ class ScanEngine {
         value.alloc = alloc_.load(std::memory_order_relaxed);
         value.issues = issue_count_.load(std::memory_order_relaxed);
         value.state = phase_.load(std::memory_order_acquire);
-        value.mode = backend_mode_;
+        value.mode = backend_mode_.load();
+        if (const auto estimate = estimated_records_.load(); estimate != 0)
+            value.est_total = estimate;
         value.elapsed_ms =
             terminal(value.state) ? elapsed_.load(std::memory_order_relaxed) : elapsed_now();
         {
@@ -610,7 +642,7 @@ class ScanEngine {
         ScanMeta meta;
         meta.started_at = started_at_;
         meta.finished_at = unix_now();
-        meta.mode = backend_mode_;
+        meta.mode = backend_mode_.load();
         meta.options = input_.options;
         meta.host = identity_.first;
         meta.os = identity_.second;
@@ -654,56 +686,113 @@ class ScanEngine {
         }
         last_snapshot_ = Clock::now();
     }
+    void start_walk_workers() {
+        workers_.reserve(input_.options.threads);
+        for (unsigned index = 0; index < input_.options.threads; ++index)
+            workers_.emplace_back([this] { run_worker(); });
+    }
+
+    void publish_tree(std::shared_ptr<Tree> tree) {
+        if (input_.options.owner == OwnerMode::Eager && !tree->meta().cancelled) {
+            std::vector<NodeId> ids;
+            for (NodeId id = 1; id < tree->size(); ++id)
+                ids.push_back(id);
+            TreeHandle handle(tree);
+            resolve_owners(handle, ids, *backend_);
+            tree->meta_.finished_at = metadata().finished_at;
+        }
+        const auto counts = tree->counts(kRoot);
+        ScanSummary summary{
+            counts.files,  counts.dirs,    tree->node(kRoot).size, tree->node(kRoot).alloc,
+            elapsed_now(), issue_summary_, tree->meta().cancelled};
+        files_.store(summary.files);
+        dirs_.store(summary.dirs);
+        bytes_.store(summary.bytes);
+        alloc_.store(summary.alloc);
+        elapsed_.store(summary.elapsed_ms);
+        {
+            std::lock_guard lock(snapshot_mutex_);
+            snapshot_ = tree;
+        }
+        result_ = ScanResult{std::move(tree), std::move(summary)};
+        backend_.reset();
+        input_.excludes.clear();
+        phase_.store(result_->summary.cancelled ? ScanState::Cancelled : ScanState::Done,
+                     std::memory_order_release);
+    }
+
+#ifdef _WIN32
+    bool try_mft() {
+        backend_mode_.store(ScanModeUsed::Mft);
+        const auto checkpoint = [this] {
+            std::unique_lock lock(gate_mutex_);
+            gate_.wait(lock, [this] { return !paused_ || cancelled_.load(); });
+            return !cancelled_.load();
+        };
+        std::optional<Tree> scanned;
+        try {
+            scanned = detail::scan_mft(normalize_target(input_.volumes.front().mount),
+                                       input_.options.targets.front(), input_.options, checkpoint,
+                                       [this](auto count) { estimated_records_.store(count); });
+        } catch (const Error &error) {
+            if (input_.options.mode == ScanMode::Mft)
+                throw ScanError(ScanError::Code::UnsupportedMode, error.what());
+            std::lock_guard lock(notice_mutex_);
+            notices_.push_back({Notice::FastModeUnavailable, error.what()});
+        }
+        if (!scanned) {
+            backend_mode_.store(ScanModeUsed::Walk);
+            estimated_records_.store(0);
+            return false;
+        }
+        issue_summary_ = std::move(scanned->meta_.issues);
+        issue_count_.store(issue_summary_.total);
+        {
+            std::lock_guard lock(issue_mutex_);
+            issues_.assign(issue_summary_.first.begin(), issue_summary_.first.end());
+        }
+        scanned->meta_ = metadata();
+        phase_.store(ScanState::Finalizing);
+        publish_tree(std::make_shared<Tree>(std::move(*scanned)));
+        return true;
+    }
+#endif
+
+    void complete_scan() {
+#ifdef _WIN32
+        if (mft_pending_) {
+            if (try_mft())
+                return;
+            start_walk_workers();
+        }
+#endif
+        while (!results_.drained()) {
+            if (auto result = results_.pop_for(std::chrono::milliseconds(20)))
+                consume(std::move(*result));
+            maybe_snapshot();
+        }
+        for (auto &worker : workers_)
+            if (worker.joinable())
+                worker.join();
+        {
+            std::lock_guard lock(failure_mutex_);
+            if (failure_)
+                std::rethrow_exception(failure_);
+        }
+        phase_.store(ScanState::Finalizing, std::memory_order_release);
+        IdentitySet{}.swap(seen_files_);
+        IdentitySet{}.swap(seen_directories_);
+        if (cancelled_.load(std::memory_order_acquire)) {
+            for (NodeId id = 1; id < builder_.tree_.size(); ++id)
+                if ((builder_.tree_.nodes_[id].flags & kDir) != 0 && !builder_.populated_[id])
+                    builder_.mark(id, kPartial);
+        }
+        publish_tree(std::make_shared<Tree>(std::move(builder_).finish(metadata())));
+    }
+
     void run_builder() noexcept {
         try {
-            while (!results_.drained()) {
-                if (auto result = results_.pop_for(std::chrono::milliseconds(20)))
-                    consume(std::move(*result));
-                maybe_snapshot();
-            }
-            for (auto &worker : workers_)
-                if (worker.joinable())
-                    worker.join();
-            {
-                std::lock_guard lock(failure_mutex_);
-                if (failure_)
-                    std::rethrow_exception(failure_);
-            }
-            phase_.store(ScanState::Finalizing, std::memory_order_release);
-            IdentitySet{}.swap(seen_files_);
-            IdentitySet{}.swap(seen_directories_);
-            if (cancelled_.load(std::memory_order_acquire)) {
-                for (NodeId id = 1; id < builder_.tree_.size(); ++id)
-                    if ((builder_.tree_.nodes_[id].flags & kDir) != 0 && !builder_.populated_[id])
-                        builder_.mark(id, kPartial);
-            }
-            auto tree = std::make_shared<Tree>(std::move(builder_).finish(metadata()));
-            if (input_.options.owner == OwnerMode::Eager && !tree->meta().cancelled) {
-                std::vector<NodeId> ids;
-                for (NodeId id = 1; id < tree->size(); ++id)
-                    ids.push_back(id);
-                TreeHandle handle(tree);
-                resolve_owners(handle, ids, *backend_);
-                tree->meta_.finished_at = metadata().finished_at;
-            }
-            const auto counts = tree->counts(kRoot);
-            ScanSummary summary{
-                counts.files,  counts.dirs,    tree->node(kRoot).size, tree->node(kRoot).alloc,
-                elapsed_now(), issue_summary_, tree->meta().cancelled};
-            files_.store(summary.files);
-            dirs_.store(summary.dirs);
-            bytes_.store(summary.bytes);
-            alloc_.store(summary.alloc);
-            elapsed_.store(summary.elapsed_ms);
-            {
-                std::lock_guard lock(snapshot_mutex_);
-                snapshot_ = tree;
-            }
-            result_ = ScanResult{std::move(tree), std::move(summary)};
-            backend_.reset();
-            input_.excludes.clear();
-            phase_.store(result_->summary.cancelled ? ScanState::Cancelled : ScanState::Done,
-                         std::memory_order_release);
+            complete_scan();
         } catch (...) {
             fail(std::current_exception());
             results_.close(true);
@@ -743,7 +832,9 @@ class ScanEngine {
     std::atomic<ScanState> phase_{ScanState::Running};
     std::atomic<std::uint64_t> files_{0}, dirs_{0}, bytes_{0}, alloc_{0}, issue_count_{0},
         elapsed_{0};
-    ScanModeUsed backend_mode_ = ScanModeUsed::Walk;
+    std::atomic<ScanModeUsed> backend_mode_{ScanModeUsed::Walk};
+    std::atomic<std::uint64_t> estimated_records_{0};
+    bool mft_pending_ = false;
     std::string current_;
     mutable std::atomic<bool> snapshot_requested_{false};
     std::shared_ptr<const Tree> snapshot_;

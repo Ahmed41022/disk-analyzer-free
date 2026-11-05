@@ -6,7 +6,11 @@ target_sources(dafree_core PRIVATE src/scan/exclude.cpp src/scan/glob.cpp)
 target_sources(dafree_core PRIVATE src/scan/engine.cpp src/scan/owner_resolve.cpp)
 target_sources(dafree_core PRIVATE src/view/tree_view.cpp src/view/sort.cpp
                                   src/view/filter.cpp src/view/natural_compare.cpp)
-target_sources(dafree_core PRIVATE src/platform/windows/longpath.cpp)
+
+target_sources(dafree_core PRIVATE src/mft/record.cpp src/mft/fixup.cpp src/mft/attr.cpp
+                                  src/mft/runlist.cpp src/mft/index.cpp src/mft/build_tree.cpp)
+target_sources(dafree_core PRIVATE src/platform/windows/longpath.cpp
+                                  src/platform/windows/quote_args.cpp)
 target_sources(dafree_core PRIVATE src/io/json.cpp src/io/csv.cpp)
 target_sources(dafree_core PRIVATE src/analysis/top.cpp src/analysis/ext_stats.cpp
                                    src/analysis/ext_categories.cpp src/analysis/age.cpp)
@@ -29,6 +33,7 @@ if(UNIX)
   target_sources(dafree_core PRIVATE src/platform/posix/read_dir.cpp
                                     src/platform/posix/stat.cpp
                                     src/platform/posix/owner.cpp
+                                    src/platform/posix/elevation.cpp
                                     src/platform/common/volume.cpp)
   if(APPLE)
     target_sources(dafree_core PRIVATE src/platform/macos/getattrlistbulk.cpp
@@ -43,8 +48,13 @@ if(WIN32)
   target_sources(dafree_core PRIVATE src/platform/windows/read_dir_win.cpp
                                     src/platform/windows/fileid.cpp
                                     src/platform/windows/peak_rss.cpp
-                                    src/platform/windows/volume_win.cpp)
-  target_link_libraries(dafree_core PRIVATE Psapi)
+                                    src/platform/windows/volume_win.cpp
+                                    src/platform/windows/elevation_win.cpp
+                                    src/platform/windows/mft_reader.cpp
+                                    src/platform/windows/sid_owner.cpp
+                                    src/platform/windows/properties_win.cpp
+                                    src/scan/mft_driver.cpp)
+  target_link_libraries(dafree_core PRIVATE advapi32 ole32 shell32 Psapi)
 endif()
 
 if(DAFREE_BUILD_TESTS)
@@ -53,6 +63,11 @@ if(DAFREE_BUILD_TESTS)
                                      tests/test_aggregate.cpp tests/test_segvector.cpp
                                      tests/test_tree.cpp tests/test_units.cpp tests/test_longpath.cpp
                                      tests/test_statx_compat.cpp
+                                     tests/test_mft_record.cpp
+                                     tests/test_mft_attr.cpp
+                                     tests/test_runlist.cpp
+                                     tests/test_mft_build.cpp
+                                     tests/test_elevation.cpp
                                      tests/test_json.cpp
                                      tests/test_csv.cpp
                                      tests/test_view.cpp
@@ -76,8 +91,17 @@ if(DAFREE_BUILD_TESTS)
   endif()
   if(WIN32)
     target_sources(dafree_core_tests PRIVATE tests/test_windows_enum.cpp)
+    # Explicitly invoked helper for capturing only its own temporary fixture record.
+    add_executable(dafree_capture_mft tests/capture_mft.cpp)
+    target_link_libraries(dafree_capture_mft PRIVATE dafree_core)
+    target_compile_features(dafree_capture_mft PRIVATE cxx_std_20)
+    if(MINGW)
+      target_link_options(dafree_capture_mft PRIVATE -municode)
+    endif()
+    dafree_enable_warnings(dafree_capture_mft)
   endif()
   target_compile_features(dafree_core_tests PRIVATE cxx_std_20)
+  target_compile_definitions(dafree_core_tests PRIVATE DAFREE_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
   dafree_enable_warnings(dafree_core_tests)
   add_test(NAME dafree_core_tests COMMAND dafree_core_tests
            --test-case-exclude=test_json_streaming_constant_memory)
@@ -95,10 +119,29 @@ if(DAFREE_BUILD_FUZZ)
   if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(FATAL_ERROR "Fuzz targets require Clang and libFuzzer")
   endif()
+  # Instrument the complete tree-builder call graph, including model/exclusion code.
+  target_compile_options(dafree_core PRIVATE -fsanitize=fuzzer-no-link,address,undefined
+                                             -fno-omit-frame-pointer)
+  target_link_options(dafree_core INTERFACE -fsanitize=fuzzer-no-link,address,undefined)
   add_executable(fuzz_glob fuzz/fuzz_glob.cpp src/scan/glob.cpp)
   target_include_directories(fuzz_glob PRIVATE include)
   target_compile_features(fuzz_glob PRIVATE cxx_std_20)
   dafree_enable_warnings(fuzz_glob)
   target_compile_options(fuzz_glob PRIVATE -fsanitize=fuzzer,address,undefined -fno-omit-frame-pointer)
   target_link_options(fuzz_glob PRIVATE -fsanitize=fuzzer,address,undefined)
+
+  add_executable(fuzz_runlist fuzz/fuzz_runlist.cpp src/mft/runlist.cpp)
+  target_include_directories(fuzz_runlist PRIVATE include)
+  target_compile_features(fuzz_runlist PRIVATE cxx_std_20)
+  dafree_enable_warnings(fuzz_runlist)
+  target_compile_options(fuzz_runlist PRIVATE -fsanitize=fuzzer,address,undefined
+                                              -fno-omit-frame-pointer)
+  target_link_options(fuzz_runlist PRIVATE -fsanitize=fuzzer,address,undefined)
+
+  add_executable(fuzz_mft_record fuzz/fuzz_mft_record.cpp)
+  target_link_libraries(fuzz_mft_record PRIVATE dafree_core)
+  dafree_enable_warnings(fuzz_mft_record)
+  target_compile_options(fuzz_mft_record PRIVATE -fsanitize=fuzzer,address,undefined
+                                                -fno-omit-frame-pointer)
+  target_link_options(fuzz_mft_record PRIVATE -fsanitize=fuzzer,address,undefined)
 endif()

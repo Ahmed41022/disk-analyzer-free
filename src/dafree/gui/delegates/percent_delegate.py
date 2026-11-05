@@ -10,7 +10,6 @@ from dafree.gui.delegates import (
     paint_background,
     paint_context,
     paint_focus,
-    paint_state,
 )
 from dafree.gui.models.tree_model import TreeTableModel
 
@@ -39,8 +38,10 @@ class PercentDelegate(QStyledItemDelegate):
         item = option
         rect = frame.rect if frame is not None else option.rect
         direction = frame.direction if frame is not None else option.direction
-        state = paint_state(option)
-        text = display_text(index, option)
+        state = frame.state if frame is not None else option.state.value
+        text = (
+            model.display_value(value, frame.column) if frame is not None else display_text(index)
+        )
         painter.save()
         painter.setClipRect(rect)
         paint_background(painter, item, state)

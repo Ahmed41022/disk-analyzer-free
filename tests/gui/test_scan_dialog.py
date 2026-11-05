@@ -1,8 +1,10 @@
-"""Target validation, keyboard behavior, deferred modes, and persisted scan defaults."""
+"""Target validation, keyboard behavior, Windows modes, and persisted scan defaults."""
 
 # ruff: noqa: PLR2004 -- fixture option values and target counts are contract assertions.
 
+import json
 import os
+import subprocess
 import threading
 from collections.abc import Callable, Iterator
 from importlib.util import find_spec
@@ -81,7 +83,7 @@ def test_multiple_folders_added(dialog_factory, tmp_path: Path, qtbot: QtBot, mo
 
 @pytest.mark.parametrize("windows", [False, True])
 def test_mft_option_only_on_windows(dialog_factory, monkeypatch, windows: bool) -> None:
-    """Only Windows lists MFT, explicitly disabled while the native fast engine is paused."""
+    """Only Windows lists MFT; unknown privilege status disables administrator restart."""
     monkeypatch.setattr(module, "_WINDOWS", windows)
 
     def unavailable():
@@ -91,7 +93,7 @@ def test_mft_option_only_on_windows(dialog_factory, monkeypatch, windows: bool) 
     index = dialog.mode.findData(api.ScanMode.MFT)
     assert (index >= 0) is windows
     if windows:
-        assert not dialog.mode.model().item(index).isEnabled()
+        assert dialog.mode.model().item(index).isEnabled()
         assert dialog.restart.isVisible() and not dialog.restart.isEnabled()
     else:
         assert dialog.restart.isHidden()
@@ -179,7 +181,8 @@ def test_validation_does_not_block_qt(
         return True
 
     monkeypatch.setattr(module, "_directory", check)
-    dialog = dialog_factory()
+    monkeypatch.setattr(module, "_WINDOWS", True)
+    dialog = dialog_factory(elevation_provider=lambda: False)
     try:
         dialog.add_target(str(tmp_path))
         qtbot.waitUntil(entered.is_set)
@@ -187,9 +190,11 @@ def test_validation_does_not_block_qt(
         QTimer.singleShot(0, lambda: heartbeat.append(True))
         qtbot.waitUntil(lambda: bool(heartbeat))
         assert not dialog.start.isEnabled()
+        assert not dialog.restart.isEnabled()
     finally:
         release.set()
     qtbot.waitUntil(dialog.start.isEnabled)
+    assert dialog.restart.isEnabled()
 
 
 def test_escape_does_not_persist(dialog_factory, tmp_path: Path, qtbot: QtBot) -> None:
@@ -301,3 +306,139 @@ def test_thread_control_preserves_full_saved_range(dialog_factory) -> None:
     """The integer-valued control cannot truncate the public uint32 settings range."""
     dialog = dialog_factory(settings=Settings(default_scan=ScanOptionsModel(threads=(1 << 32) - 1)))
     assert dialog.threads.decimals() == 0 and dialog.threads.value() == (1 << 32) - 1
+
+
+def test_windows_mft_request_and_defaults(dialog_factory, tmp_path: Path, qtbot, monkeypatch):
+    """A saved Windows MFT choice can be accepted and reopened without changing modes."""
+    monkeypatch.setattr(module, "_WINDOWS", True)
+    settings = Settings(default_scan=ScanOptionsModel(mode=api.ScanMode.MFT))
+    dialog = dialog_factory(
+        settings=settings, targets=[str(tmp_path)], elevation_provider=lambda: True
+    )
+    qtbot.waitUntil(dialog.start.isEnabled)
+    assert dialog.mode.currentData() == api.ScanMode.MFT
+    assert dialog.restart.isHidden()
+    dialog.accept()
+    assert dialog.request is not None and dialog.request.mode == api.ScanMode.MFT
+    assert settings.default_scan.mode == api.ScanMode.MFT
+    reopened = dialog_factory(settings=settings, elevation_provider=lambda: True)
+    qtbot.waitUntil(reopened.start.isEnabled)
+    assert reopened.mode.currentData() == api.ScanMode.MFT
+
+
+@pytest.mark.parametrize("frozen", [False, True])
+def test_default_relaunch_arguments(monkeypatch, frozen: bool) -> None:
+    """Source restarts re-enter the chosen interpreter and frozen builds receive raw roots."""
+    monkeypatch.setattr(module.sys, "frozen", frozen, raising=False)
+    calls = []
+    monkeypatch.setattr(api.platform, "relaunch_elevated", calls.append)
+    targets = ["folder with spaces", "العربية", "bad-\ud800"]
+    module._relaunch_elevated(targets)
+    assert len(calls) == 1
+    if frozen:
+        assert calls == [targets]
+    else:
+        arguments = calls[0]
+        assert arguments[0] == "-c"
+        assert arguments[2:] == [module.sys.executable, *targets]
+        executed = []
+        monkeypatch.setattr(module.sys, "argv", ["-c", *arguments[2:]])
+
+        def launch(argv):
+            executed.append(argv)
+            return 0
+
+        monkeypatch.setattr(subprocess, "call", launch)
+        with pytest.raises(SystemExit) as exit_status:
+            exec(arguments[1], {})  # noqa: S102 -- exercise the application's fixed bootstrap code.
+        assert exit_status.value.code == 0
+        assert executed == [[module.sys.executable, "-m", "dafree.gui.app", *targets]]
+    assert targets == ["folder with spaces", "العربية", "bad-\ud800"]
+
+
+def test_source_restart_reenters_virtual_environment(tmp_path, monkeypatch, qtbot):
+    """Starting from the base image reaches the selected interpreter with intact arguments."""
+    monkeypatch.setattr(module.sys, "frozen", False, raising=False)
+    package = tmp_path / "dafree"
+    gui = package / "gui"
+    gui.mkdir(parents=True)
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    (gui / "__init__.py").write_text("", encoding="utf-8")
+    # Isolate the child's fake GUI package from editable-install import hooks.
+    (tmp_path / "sitecustomize.py").write_text(
+        "import sys\n"
+        "from importlib.machinery import BuiltinImporter, FrozenImporter, PathFinder\n"
+        "sys.meta_path[:] = [BuiltinImporter, FrozenImporter, PathFinder]\n",
+        encoding="utf-8",
+    )
+    (gui / "app.py").write_text(
+        "import json, sys\n"
+        "from pathlib import Path\n"
+        "result = json.dumps([sys.executable, sys.argv[2:]])\n"
+        "Path(sys.argv[1]).write_text(result, encoding='utf-8')\n",
+        encoding="utf-8",
+    )
+    marker = tmp_path / "launched.json"
+    targets = [str(marker), "folder with spaces", "العربية", 'quote"and\\slash\\']
+    calls = []
+    monkeypatch.setattr(api.platform, "relaunch_elevated", calls.append)
+    module._relaunch_elevated(targets)
+    base = getattr(module.sys, "_base_executable", module.sys.executable)
+    result = subprocess.run(  # noqa: S603 -- fixed bootstrap and test-owned module/arguments.
+        [base, *calls[0]],
+        env=os.environ | {"PYTHONPATH": str(tmp_path), "DAFREE_CONFIG_DIR": str(tmp_path)},
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    qtbot.waitUntil(marker.exists)
+    interpreter, received = json.loads(marker.read_text(encoding="utf-8"))
+    assert os.path.normcase(interpreter) == os.path.normcase(module.sys.executable)
+    assert received == targets[1:]
+
+
+@pytest.mark.parametrize("error", [api.Cancelled("Consent declined"), OSError("Restart failed")])
+def test_relaunch_failure_keeps_dialog(dialog_factory, tmp_path, qtbot, monkeypatch, error):
+    """Consent cancellation or a launch error preserves the current usable window."""
+    monkeypatch.setattr(module, "_WINDOWS", True)
+    quits = []
+    monkeypatch.setattr(QApplication, "quit", lambda: quits.append(True))
+
+    def fail(targets):
+        raise error
+
+    dialog = dialog_factory(
+        targets=[str(tmp_path)], elevation_provider=lambda: False, relaunch=fail
+    )
+    qtbot.waitUntil(dialog.start.isEnabled)
+    dialog.restart.click()
+    assert dialog.isVisible() and dialog.start.isEnabled() and not quits
+    assert str(error) in dialog.error.text()
+
+
+def test_main_window_wires_native_restart(qtbot, tmp_path, monkeypatch):
+    """The production dialog reaches the native relaunch seam with its validated roots."""
+    monkeypatch.setattr(module, "_WINDOWS", True)
+    monkeypatch.setattr(module.sys, "frozen", False, raising=False)
+    calls, quits = [], []
+    monkeypatch.setattr(api.platform, "relaunch_elevated", calls.append)
+    monkeypatch.setattr(QApplication, "quit", lambda: quits.append(True))
+    window = MainWindow(volume_provider=lambda: [], elevation_provider=lambda: False)
+
+    def finish(widget):
+        window.close()
+        qtbot.waitUntil(lambda: not window.runner.busy, timeout=5000)
+
+    qtbot.addWidget(window, before_close_func=finish)
+    window.show()
+    window.open_scan_dialog([str(tmp_path)])
+    dialog = window._scan_dialog
+    assert dialog is not None
+    qtbot.waitUntil(dialog.start.isEnabled)
+    assert dialog.restart.isVisible() and dialog.restart.isEnabled()
+    dialog.restart.click()
+    assert len(calls) == 1 and calls[0][0] == "-c"
+    assert calls[0][2:] == [module.sys.executable, str(tmp_path)] and quits == [True]

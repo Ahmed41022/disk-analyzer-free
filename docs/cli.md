@@ -43,6 +43,13 @@ are respected by default. `--follow-symlinks` and `--cross-fs` opt into traversa
 `--mode`, `--hardlinks`, `--owner`, and `--include-ads` select scanner policies.
 Eager owner lookup includes available owner names in machine reports.
 
+On Windows, `--mode auto` tries the MFT reader on an eligible local NTFS volume
+root or its immediate child. It reports `FastModeUnavailable` on stderr if the
+attempt fails, then scans with Walk. `--mode mft` also accepts deeper NTFS
+subtrees and exits with an error if it cannot use the MFT. Raw-volume access
+requires an elevated process. Requests to follow links or cross filesystems
+use Walk in Auto mode.
+
 Reports go to stdout. `--progress auto` shows a live line on an interactive
 stderr. `--progress always` also shows progress on redirected stderr, with up to
 one line per five seconds. `--progress never` suppresses it. `--strict` returns

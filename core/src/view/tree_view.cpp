@@ -328,9 +328,11 @@ struct TreeView::Impl {
     }
     void resolve(std::span<const NodeId> ids, bool required = false) {
         const bool missing = handle->read([&](const Tree &tree) {
+            const bool by_path = backend && backend->can_resolve_owner_by_path() &&
+                                 tree.meta().options.owner != OwnerMode::Off;
             return std::any_of(ids.begin(), ids.end(), [&](NodeId id) {
                 const auto name = tree.owner_name(id);
-                return tree.node(id).owner != 0 && (!name || name->empty());
+                return (tree.node(id).owner != 0 || by_path) && (!name || name->empty());
             });
         });
         if (!missing)

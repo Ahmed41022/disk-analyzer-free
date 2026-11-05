@@ -106,11 +106,20 @@ std::optional<std::uint64_t> peak_rss();
 #endif
 /// Read an owner identity and its display name.
 std::optional<std::pair<OwnerKey, std::string>> owner_of(std::string_view path);
+/// Open the native Windows property sheet for an absolute path, or return false.
+bool show_properties(std::string_view path);
+#ifdef _WIN32
+/// Count SID-to-account cache hits for test verification.
+std::uint64_t sid_cache_hits();
+#endif
 /// Resolve a POSIX user ID to a display name.
 std::optional<std::string> name_for_uid(std::uint32_t uid);
 /// Report whether the process has elevated privileges.
 bool is_elevated();
-/// Relaunch with elevated privileges, or throw when unsupported.
+/// Quote arguments (excluding argv[0]) for a Windows command line.
+std::wstring quote_windows_args(std::span<const std::wstring> args);
+/// Relaunch the current executable with explicit native arguments and request elevation.
+/// Throws Cancelled if the request is declined and Unsupported on POSIX.
 void relaunch_elevated(std::span<const std::string> args);
 
 } // namespace platform

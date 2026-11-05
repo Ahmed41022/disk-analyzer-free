@@ -257,7 +257,9 @@ class TreeTableView(QTableView):
         option._dafree_row_background = True
         return context
 
-    def paintEvent(self, event: QPaintEvent) -> None:
+    def paintEvent(  # noqa: PLR0915 -- one clipped frame shares Qt state across its visible cells.
+        self, event: QPaintEvent
+    ) -> None:
         """Paint only the viewport, avoiding per-cell native/Python index-count callbacks.
 
         Qt still owns layout, scrolling, selection, navigation, headers and accessibility.
@@ -287,25 +289,32 @@ class TreeTableView(QTableView):
             base_state = option.state.value & ~(_SELECTED | _FOCUSED | _HOVERED)
             base_features = option.features.value & ~_ALTERNATE
             current = self.currentIndex()
+            current_row, current_column = current.row(), current.column()
             focused = self.hasFocus() or self.viewport().hasFocus()
+            alternating = self.alternatingRowColors()
+            group = (
+                QPalette.ColorGroup.Disabled
+                if not self.isEnabled()
+                else palette.currentColorGroup()
+            )
+            text_color = palette.color(group, QPalette.ColorRole.Text)
+            selected_text_color = palette.color(group, QPalette.ColorRole.HighlightedText)
+            previous_selected: bool | None = None
             previous_state: int | None = None
             for row in range(first, last + 1):
                 if row != first:
                     context.row = self.tree_model.row_data(row)
                 selected = self._tree_selection.isRowSelected(row)
                 state = base_state | (_SELECTED if selected else 0)
-                context.text_color = palette.color(
-                    QPalette.ColorGroup.Disabled
-                    if not self.isEnabled()
-                    else palette.currentColorGroup(),
-                    QPalette.ColorRole.HighlightedText if selected else QPalette.ColorRole.Text,
-                )
-                painter.setPen(context.text_color)
+                context.text_color = selected_text_color if selected else text_color
+                if selected != previous_selected:
+                    painter.setPen(context.text_color)
+                    previous_selected = selected
                 option.features = QStyleOptionViewItem.ViewItemFeature(
-                    base_features | (_ALTERNATE if self.alternatingRowColors() and row % 2 else 0)
+                    base_features | (_ALTERNATE if alternating and row % 2 else 0)
                 )
                 y, height = self.rowViewportPosition(row), self.rowHeight(row)
-                if selected or (self.alternatingRowColors() and row % 2):
+                if selected or (alternating and row % 2):
                     painter.fillRect(
                         QRect(left, y, right - left, height),
                         selection_brush if selected else alternate_brush,
@@ -313,7 +322,7 @@ class TreeTableView(QTableView):
                 for logical, x, width, delegate in columns:
                     cell_state = state | (
                         _FOCUSED
-                        if focused and current.row() == row and current.column() == logical
+                        if focused and current_row == row and current_column == logical
                         else 0
                     )
                     if cell_state != previous_state:

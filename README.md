@@ -9,7 +9,7 @@ Find out what's using your disk space — fast, free and open source.
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 
-> **Project status:** early development. The Python API supports cross-platform walk scanning, progress controls, link policies, exclusions, owner resolution, and native paged views. Desktop bootstrap, background scanning, the virtual tree table, and the main-window/sidebar integration are implemented; the scan dialog, detailed progress panel, properties inspection, and Issues actions are available. Deferred analysis, settings, and file actions remain in development. The CLI scans one or more paths and streams table, JSON, NDJSON, and CSV reports. Packaged releases are planned.
+> **Project status:** early development. The Python API supports cross-platform walk scanning, progress controls, link policies, exclusions, owner resolution, and native paged views. Desktop bootstrap, background scanning, the virtual tree table, and the main-window/sidebar integration are implemented; the scan dialog, detailed progress panel, properties inspection, and Issues actions are available. Deferred analysis, settings, and file actions remain in development. The CLI scans one or more paths and streams table, JSON, NDJSON, and CSV reports. Windows supports elevated NTFS MFT scans with automatic Walk fallback. Packaged releases are planned.
 
 ## Screenshots
 
@@ -135,7 +135,17 @@ parse_size("500 MiB")  # 524288000
 
 ## Windows fast mode
 
-The planned Windows NTFS fast mode reads file-system metadata to avoid opening every file individually. It can require administrator privileges and will fall back to a regular directory walk when unavailable.
+Windows NTFS fast mode reads filesystem metadata through a read-only raw-volume handle. It requires an elevated administrator token. Auto tries fast mode for one shallow local NTFS target and falls back to a directory walk with a `FastModeUnavailable` notice when raw access is unavailable. Explicit MFT mode supports deeper subtree selection and reports an error if fast scanning cannot start. Following links or crossing filesystems requires Walk mode.
+
+```powershell
+dafree scan --mode mft "D:\Media"
+```
+
+The Windows scan dialog also offers MFT selection and **Restart as administrator**. Restart forwards the selected roots and keeps the current dialog open if consent is declined.
+
+Pure C++ parsers handle headers, sector fixups, timestamps, UTF-16 names, stream attributes and mapping pairs, including resident and sparse/compressed allocation. The in-memory index builds breadth-first trees with hard-link accounting, subtree selection, exclusions and orphan diagnostics, preserving lone UTF-16 surrogates. Tests cover malformed and unaligned records, roundtrip properties, elevated and restricted-token scans, and sanitizer-backed fuzzing.
+
+The Python platform API exposes `api.platform.is_elevated()` and `api.platform.relaunch_elevated(args)`. On Windows the latter requests consent for the current executable with explicit arguments and raises `api.Cancelled` if consent is declined. The original process remains under the caller's control. POSIX reports effective UID and raises `api.Unsupported` for elevated relaunch.
 
 ## Safety
 
@@ -164,8 +174,9 @@ Owner names are lazy by default: call `tree.resolve_owners(node_ids)` to resolve
 selected identities. Nodes sharing an owner identity reuse its cached display
 name. `ScanRequest(..., owner=OwnerMode.EAGER)` resolves names before completion;
 `OwnerMode.OFF` omits owner identities and lookups. Unknown POSIX UIDs display as
-decimal numbers. A cancelled eager scan skips further owner lookups. Windows SID
-resolution remains scheduled for M3.
+decimal numbers. A cancelled eager scan skips further owner lookups. Windows
+queries file SIDs when owner data is requested and caches successful qualified
+account names. `api.platform.owner_of(path)` also exposes owner lookup directly.
 
 The scanner integration suite creates every fixture in test-owned temporary
 directories. It includes 100,000 siblings, 300 nested levels, a sparse 5 GiB file,

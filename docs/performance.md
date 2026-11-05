@@ -122,8 +122,8 @@ when comparing revisions.
 
 The full CI tier builds the view benchmarks in Release and checks the median of
 five repetitions against strict limits of 150 ms for cold expansion and 2 ms for
-a 100-row window starting at row 9,999,900. PRs leave these heavy checks to
-main/nightly under the product-owner policy; correctness assertions remain on PRs.
+a 100-row window starting at row 9,999,900. After M4-core, these heavy checks run on every configured CI event, including PRs;
+the temporary main/nightly-only exception has expired.
 
 ```console
 dafree_bench --benchmark_filter='BM_(Expand100kChildren|RowsWindow10M)' --benchmark_min_time=0.2s --benchmark_repetitions=5 --benchmark_out=build/view-bench.json --benchmark_out_format=json
@@ -192,3 +192,14 @@ is 15% and the peak RSS threshold is 10%, with an absolute 120 MiB peak RSS
 budget for the head. The first PR introducing `scan` measures head against that
 absolute budget and compares the native benchmarks against the base commit.
 Relative CLI gates start once the base has the command.
+
+## Nightly fuzzing
+
+The nightly workflow runs the Clang ASan and UBSan builds of the glob, run-list,
+and MFT record fuzzers for five minutes each. It starts with the tracked seeds
+and restores the previous corpus when available. The run uploads a reproducer
+and campaign log on failure and updates the repository's nightly failure issue.
+
+Reproduce a failure by configuring the `fuzz` preset with Clang, building
+`fuzz_<target>`, and passing the downloaded reproducer file to that executable.
+Turn each confirmed crash into a regression test before rerunning the campaign.

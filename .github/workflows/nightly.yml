@@ -1,0 +1,123 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  pull_request:
+    paths:
+      - '.github/workflows/nightly.yml'
+      - 'core/fuzz/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fuzz:
+    name: Fuzz ${{ matrix.target }} (300 seconds)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: glob, max_len: 4096 }
+          - { target: runlist, max_len: 1048576 }
+          - { target: mft_record, max_len: 1048576 }
+    env:
+      FUZZ_TARGET: ${{ matrix.target }}
+      FUZZ_MAX_LEN: ${{ matrix.max_len }}
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install build tools
+        run: python -m pip install cmake ninja Babel
+      - name: Build sanitizer-instrumented fuzzer
+        run: |
+          cmake --preset fuzz -DCMAKE_CXX_COMPILER=clang++
+          cmake --build build/fuzz --target "fuzz_${FUZZ_TARGET}" --parallel 3
+      - uses: actions/cache@v4
+        with:
+          path: build/fuzz-corpus/${{ matrix.target }}
+          key: fuzz-${{ runner.os }}-${{ matrix.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: fuzz-${{ runner.os }}-${{ matrix.target }}-
+      - name: Seed the corpus
+        run: |
+          corpus="build/fuzz-corpus/$FUZZ_TARGET"
+          mkdir -p "$corpus" "build/fuzz-crashes/$FUZZ_TARGET"
+          if [[ "$FUZZ_TARGET" == mft_record ]]; then
+            cp core/tests/golden/mft/*.bin "$corpus/"
+          else
+            cp core/fuzz/corpus/"$FUZZ_TARGET"/* "$corpus/"
+          fi
+      - name: Run the nightly campaign
+        run: |
+          set -o pipefail
+          "./build/fuzz/core/fuzz_${FUZZ_TARGET}" "build/fuzz-corpus/$FUZZ_TARGET" \
+            -max_total_time=300 -timeout=10 -max_len="$FUZZ_MAX_LEN" \
+            -rss_limit_mb=2048 -malloc_limit_mb=64 \
+            -artifact_prefix="build/fuzz-crashes/$FUZZ_TARGET/" \
+            2>&1 | tee "build/fuzz-crashes/$FUZZ_TARGET/campaign.log"
+      - name: Summarize the campaign
+        if: always()
+        run: |
+          {
+            printf '## Fuzz %s\n\nBudget 300 seconds.\n\n' "$FUZZ_TARGET"
+            if [[ -f "build/fuzz-crashes/$FUZZ_TARGET/campaign.log" ]]; then
+              printf '```text\n'
+              tail -n 8 "build/fuzz-crashes/$FUZZ_TARGET/campaign.log"
+              printf '```\n'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: fuzz-crash-${{ matrix.target }}-${{ github.run_attempt }}
+          path: build/fuzz-crashes/${{ matrix.target }}/
+          if-no-files-found: ignore
+
+  report-failure:
+    if: always() && github.ref == 'refs/heads/main' && (needs.fuzz.result == 'failure' || needs.fuzz.result == 'success')
+    needs: fuzz
+    runs-on: ubuntu-24.04
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        env:
+          FUZZ_RESULT: ${{ needs.fuzz.result }}
+        with:
+          script: |
+            const repository = context.repo;
+            const title = 'Nightly CI failing';
+            const label = 'ci-nightly-failure';
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              ...repository, state: 'open', per_page: 100,
+            });
+            const issue = open.find(item => item.title === title && !item.pull_request);
+            if (process.env.FUZZ_RESULT === 'failure') {
+              try {
+                await github.rest.issues.getLabel({ ...repository, name: label });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                await github.rest.issues.createLabel({ ...repository, name: label, color: 'd73a4a' });
+              }
+              const url = `${context.serverUrl}/${repository.owner}/${repository.repo}/actions/runs/${context.runId}`;
+              const body = `[Nightly fuzzing failed](${url}). Check the failed target's log and reproducer artifact.`;
+              if (issue) {
+                await github.rest.issues.update({ ...repository, issue_number: issue.number, body });
+                await github.rest.issues.addLabels({ ...repository, issue_number: issue.number, labels: [label] });
+              } else {
+                await github.rest.issues.create({ ...repository, title, body, labels: [label] });
+              }
+            } else if (issue) {
+              await github.rest.issues.update({ ...repository, issue_number: issue.number, state: 'closed' });
+            }
+            await core.summary.addHeading('Nightly fuzzing').addRaw(`Result ${process.env.FUZZ_RESULT}`).write();

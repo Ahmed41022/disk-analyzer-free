@@ -12,18 +12,24 @@ void resolve_owners(TreeHandle &handle, std::span<const NodeId> ids, FsBackend &
     std::lock_guard batch_lock(handle.owner_resolution_mutex_);
     struct Lookup {
         NodeId node;
-        OwnerKey key;
+        std::optional<OwnerKey> key;
         std::string path;
         std::optional<std::pair<OwnerKey, std::string>> result;
     };
     std::vector<Lookup> lookups;
     handle.read([&](const Tree &tree) {
+        if (tree.meta().options.owner == OwnerMode::Off)
+            return;
         std::unordered_set<std::uint32_t> seen;
         for (const auto id : ids) {
             const auto owner = tree.node(id).owner;
-            if (owner == 0 || !tree.owners_.get(owner).empty() || !seen.insert(owner).second)
-                continue;
-            lookups.push_back({id, *tree.owners_.key(owner), tree.path_bytes(id), {}});
+            if (owner == 0) {
+                if (id != kRoot && backend.can_resolve_owner_by_path() &&
+                    (tree.node(id).flags & kExcluded) == 0)
+                    lookups.push_back({id, std::nullopt, tree.path_bytes(id), {}});
+            } else if (tree.owners_.get(owner).empty() && seen.insert(owner).second) {
+                lookups.push_back({id, *tree.owners_.key(owner), tree.path_bytes(id), {}});
+            }
         }
     });
     if (lookups.empty())
@@ -39,7 +45,8 @@ void resolve_owners(TreeHandle &handle, std::span<const NodeId> ids, FsBackend &
                     break;
                 auto &lookup = lookups[index];
                 try {
-                    lookup.result = backend.resolve_owner(lookup.path, &lookup.key);
+                    lookup.result =
+                        backend.resolve_owner(lookup.path, lookup.key ? &*lookup.key : nullptr);
                 } catch (const IoError &) {
                     // A vanished path does not invalidate the rest of this batch.
                 }

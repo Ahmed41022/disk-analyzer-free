@@ -82,11 +82,16 @@ TEST_CASE("local_followed_metadata_and_owner_lookup_contract") {
     CHECK(from_hint->first == from_path->first);
     CHECK(from_hint->second == from_path->second);
     CHECK_FALSE(from_hint->second.empty());
+#else
+    CHECK_FALSE(listing.entries[0].owner.has_value());
+    const auto from_path = backend->resolve_owner(path, nullptr);
+    REQUIRE(from_path.has_value());
+    CHECK(from_path->first.kind == dafree::OwnerKey::Kind::WindowsSid);
+    CHECK_FALSE(from_path->first.value.empty());
+    CHECK_FALSE(from_path->second.empty());
+#endif
     CHECK_FALSE(
         backend->resolve_owner(native_path(temporary.root / "missing"), nullptr).has_value());
-#else
-    CHECK_FALSE(backend->resolve_owner(path, nullptr).has_value());
-#endif
 }
 
 TEST_CASE("mock_serves_tree") {

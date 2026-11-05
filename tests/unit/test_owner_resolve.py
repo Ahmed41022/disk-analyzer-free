@@ -14,7 +14,8 @@ RESOLVED_IDENTITIES = 2
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="POSIX owner lookup; Windows SID support is later"
+    sys.platform == "win32",
+    reason="POSIX account name; Windows SID lookup has separate integration tests",
 )
 @pytest.mark.parametrize("mode", [OwnerMode.LAZY, OwnerMode.EAGER])
 def test_owner_current_user_resolves(tmp_path: Path, mode: OwnerMode) -> None:
@@ -94,3 +95,14 @@ def test_eager_and_off_owner_policies(tmp_path: Path) -> None:
     tree.resolve_owners(list(range(len(tree))))
     assert off.owner_resolution_calls == 0
     assert all(tree.node(i).owner is None for i in range(len(tree)))
+
+
+def test_synthetic_tree_has_no_filesystem_owner_queries(tmp_path: Path) -> None:
+    from dafree.api import TreeView, ViewOptions  # noqa: PLC0415
+    from dafree.api.testing import TreeBuilder  # noqa: PLC0415
+
+    tree = TreeBuilder.flat(tmp_path / "synthetic-not-on-disk", 5)
+    assert tree.meta().options.owner is OwnerMode.OFF
+    view = TreeView(tree, ViewOptions(resolve_owner=True))
+    view.expand(tree.roots()[0])
+    assert all(row[11] is None for row in view.rows(0, 10))

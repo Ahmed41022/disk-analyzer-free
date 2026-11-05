@@ -11,7 +11,7 @@ std::mutex volumes_mutex;
 } // namespace
 
 void bind_platform(nb::module_ &module) {
-    nb::class_<PlatformNamespace>(module, "platform", "Native read-only platform services.")
+    nb::class_<PlatformNamespace>(module, "platform", "Native platform services.")
         .def_static(
             "volumes",
             [] {
@@ -21,6 +21,8 @@ void bind_platform(nb::module_ &module) {
             },
             nb::call_guard<nb::gil_scoped_release>(),
             "List mounted volumes using the native platform implementation.")
+        .def_static("is_elevated", &platform::is_elevated, nb::call_guard<nb::gil_scoped_release>(),
+                    "Return whether the current process is elevated.")
         .def_static(
             "peak_rss",
             []() -> std::optional<std::uint64_t> {
@@ -33,16 +35,37 @@ void bind_platform(nb::module_ &module) {
             nb::call_guard<nb::gil_scoped_release>(),
             "Return the process peak working set in bytes, or None when unavailable.")
         .def_static(
-            "is_elevated",
-            []() -> std::optional<bool> {
-#ifdef _WIN32
-                // The actual Windows token API belongs to paused T3.7. Unknown is not false.
-                return std::nullopt;
-#else
-                return platform::is_elevated();
-#endif
+            "relaunch_elevated",
+            [](const std::vector<nb::str> &args) {
+                const auto native = encode_strings(args);
+                nb::gil_scoped_release release;
+                platform::relaunch_elevated(native);
             },
-            nb::call_guard<nb::gil_scoped_release>(),
-            "Return known elevation, or None when the platform API is unavailable.");
+            nb::arg("args"),
+            "Relaunch the current executable with elevation and explicit arguments.")
+        .def_static(
+            "owner_of",
+            [](nb::str path) -> std::optional<nb::str> {
+                const auto native = encode_native(path);
+                std::optional<std::pair<OwnerKey, std::string>> owner;
+                {
+                    nb::gil_scoped_release release;
+                    try {
+                        owner = platform::owner_of(native);
+                    } catch (const IoError &) {
+                        return std::nullopt;
+                    }
+                }
+                return owner ? std::optional(decode_native(owner->second)) : std::nullopt;
+            },
+            nb::arg("path"), "Return the file owner's account name when available.")
+        .def_static(
+            "show_properties",
+            [](nb::str path) {
+                const auto native = encode_native(path);
+                nb::gil_scoped_release release;
+                return platform::show_properties(native);
+            },
+            nb::arg("path"), "Open a native Windows property sheet when available.");
 }
 } // namespace dafree::bindings

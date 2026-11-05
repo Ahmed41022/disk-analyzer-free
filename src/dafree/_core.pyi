@@ -680,6 +680,10 @@ def start_scan(options: ScanOptions, backend: Backend | None = None) -> ScanHand
 class testing:
     """Native test fixture namespace."""
 
+    @staticmethod
+    def sid_cache_hits() -> int:
+        """Count successful lookups served by the Windows SID cache."""
+
     class TreeBuilder:
         """MockBackend-free synthetic trees."""
 
@@ -800,11 +804,15 @@ def make_mock_backend(spec: MockSpec) -> Backend:
     """Build an immutable native test backend."""
 
 class platform:
-    """Native read-only platform services."""
+    """Native platform services."""
 
     @staticmethod
     def volumes() -> list[VolumeInfo]:
         """List mounted volumes using the native platform implementation."""
+
+    @staticmethod
+    def is_elevated() -> bool:
+        """Return whether the current process is elevated."""
 
     @staticmethod
     def peak_rss() -> int | None:
@@ -813,8 +821,16 @@ class platform:
         """
 
     @staticmethod
-    def is_elevated() -> bool | None:
-        """Return known elevation, or None when the platform API is unavailable."""
+    def relaunch_elevated(args: Sequence[str]) -> None:
+        """Relaunch the current executable with elevation and explicit arguments."""
+
+    @staticmethod
+    def owner_of(path: str) -> str | None:
+        """Return the file owner's account name when available."""
+
+    @staticmethod
+    def show_properties(path: str) -> bool:
+        """Open a native Windows property sheet when available."""
 
 def write_json(
     tree: Tree,

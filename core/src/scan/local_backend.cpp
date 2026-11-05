@@ -7,6 +7,10 @@ namespace {
 class LocalBackend final : public FsBackend {
   public:
     [[nodiscard]] BackendKind kind() const override { return BackendKind::Local; }
+#ifdef _WIN32
+    bool supports_local_mft() const noexcept override { return true; }
+    bool can_resolve_owner_by_path() const noexcept override { return true; }
+#endif
     RawEntry stat_root(std::string_view path) override { return platform::stat_nofollow(path); }
     RawEntry stat_follow(std::string_view path) override { return platform::stat_follow(path); }
     DirListing read_dir(std::string_view path, const DirHint &hint) override {
@@ -18,10 +22,8 @@ class LocalBackend final : public FsBackend {
     std::optional<std::pair<OwnerKey, std::string>> resolve_owner(std::string_view path,
                                                                   const OwnerKey *hint) override {
 #ifdef _WIN32
-        // SID resolution is introduced by T3.6.
-        (void)path;
         (void)hint;
-        return std::nullopt;
+        return platform::owner_of(path);
 #else
         try {
             if (hint != nullptr && hint->kind == OwnerKey::Kind::PosixUid)

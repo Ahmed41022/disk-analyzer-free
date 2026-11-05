@@ -31,7 +31,7 @@ from PySide6.QtCore import (
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-from dafree import __version__
+from dafree import __version__, api
 from dafree.gui import _display_text
 from dafree.gui.main_window import create_main_window
 from dafree.gui.theme.palette import apply_palette
@@ -153,19 +153,29 @@ class _ApplicationState(QObject):
 
 
 class _SingleInstance(QObject):
-    """Hold the data-directory lock and forward bounded JSON arguments over local IPC."""
+    """Hold a data-directory lock per privilege level and forward bounded JSON arguments."""
 
     argumentsReceived = Signal(object)
 
-    def __init__(self, paths: AppPaths, parent: QObject | None = None) -> None:
+    def __init__(
+        self,
+        paths: AppPaths,
+        parent: QObject | None = None,
+        *,
+        elevated: bool | None = None,
+    ) -> None:
         super().__init__(parent)
         if paths.data.is_symlink() or paths.data.is_junction():
             raise OSError("application data directory must not be a link")
         paths.data.mkdir(parents=True, exist_ok=True)
-        self._lock = QLockFile(str(paths.data / "instance.lock"))
+        if elevated is None:
+            elevated = sys.platform == "win32" and api.platform.is_elevated()
+        # An elevated replacement must not hand its roots back to the exiting ordinary process.
+        suffix = "-admin" if elevated else ""
+        self._lock = QLockFile(str(paths.data / f"instance{suffix}.lock"))
         self._lock.setStaleLockTime(0)  # A running application must not expire by file age.
         identity = os.path.normcase(str(paths.data.absolute())).encode("utf-8", "surrogatepass")
-        name = "dafree-" + hashlib.sha256(identity).hexdigest()[:16]
+        name = "dafree-" + hashlib.sha256(identity).hexdigest()[:16] + suffix
         # Keep Unix socket names short even when the application data path is long.
         self._name = name if sys.platform == "win32" else str(Path(QDir.tempPath()) / name)
         self._server = QLocalServer(self)
@@ -331,3 +341,7 @@ def main(argv: list[str] | None = None) -> int:
             state.setParent(None)
             state.deleteLater()
         QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

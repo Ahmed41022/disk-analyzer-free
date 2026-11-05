@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
 #include <vector>
@@ -60,6 +61,9 @@ struct ScanIssue {
     IssueKind kind = IssueKind::Other;
     std::string message;
 };
+
+/// Receive each recoverable issue; an empty callback is allowed.
+using IssueSink = std::function<void(ScanIssue)>;
 
 /// All issue counts and the first 1,000 diagnostics, independent of live draining.
 struct IssueSummary {

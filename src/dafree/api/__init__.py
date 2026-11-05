@@ -1,6 +1,8 @@
 """Typed public facade over the native core."""
 
+import os
 import sys
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import IntEnum
 
@@ -15,7 +17,14 @@ from dafree.api.analysis import (
     ext_breakdown,
     top_n,
 )
-from dafree.api.errors import DafreeError, ExcludeError, ScanError, ScanErrorCode, Unsupported
+from dafree.api.errors import (
+    Cancelled,
+    DafreeError,
+    ExcludeError,
+    ScanError,
+    ScanErrorCode,
+    Unsupported,
+)
 from dafree.api.export import write_csv, write_json
 from dafree.api.scan import ScanHandle, ScanResult, scan, start_scan
 from dafree.api.tree import Tree
@@ -42,6 +51,7 @@ from dafree.api.types import (
     ScanSummary,
     TimeField,
     VolumeInfo,
+    _absolute,
     _volume,
 )
 from dafree.api.view import (
@@ -111,7 +121,7 @@ def parse_size(text: str, style: UnitStyle = _DEFAULT_STYLE) -> int:
 
 
 class platform:
-    """Read-only host services; unavailable operations raise Unsupported explicitly."""
+    """Native host services with typed errors for unavailable operations."""
 
     @staticmethod
     def volumes() -> list[VolumeInfo]:
@@ -134,17 +144,34 @@ class platform:
 
     @staticmethod
     def is_elevated() -> bool:
-        """Return a known privilege level; never interpret unavailable information as false."""
-        result = _core.platform.is_elevated()
-        if result is None:
-            raise Unsupported("Privilege information is unavailable in this build")
-        return result
+        """Return the process privilege level, or raise Unsupported if it cannot be queried."""
+        return _core.platform.is_elevated()
+
+    @staticmethod
+    def relaunch_elevated(args: Sequence[str]) -> None:
+        """Relaunch the current executable with explicit arguments, excluding its name.
+
+        Windows requests consent and raises Cancelled if the user declines. POSIX
+        raises Unsupported. The caller controls when to exit the original process.
+        """
+        _core.platform.relaunch_elevated(list(args))
+
+    @staticmethod
+    def owner_of(path: str | os.PathLike[str]) -> str | None:
+        """Return the account name that owns a file or directory, when available."""
+        return _core.platform.owner_of(_absolute(path))
+
+    @staticmethod
+    def show_properties(path: str | os.PathLike[str]) -> bool:
+        """Open the Windows Properties sheet and report whether it was invoked."""
+        return _core.platform.show_properties(_absolute(path))
 
 
 __all__ = [
     "AgeBucket",
     "AgeStat",
     "Backend",
+    "Cancelled",
     "Cmp64",
     "CmpOp",
     "DafreeError",
