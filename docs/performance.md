@@ -198,7 +198,9 @@ Relative CLI gates start once the base has the command.
 The nightly workflow runs the Clang ASan and UBSan builds of the glob, run-list,
 and MFT record fuzzers for five minutes each. It starts with the tracked seeds
 and restores the previous corpus when available. The run uploads a reproducer
-and campaign log on failure and updates the repository's nightly failure issue.
+and campaign log on failure and updates the repository's nightly failure issue
+with links to the failed jobs from the latest run attempt.
+Crash artifacts are retained for 14 days.
 
 Reproduce a failure by configuring the `fuzz` preset with Clang, building
 `fuzz_<target>`, and passing the downloaded reproducer file to that executable.

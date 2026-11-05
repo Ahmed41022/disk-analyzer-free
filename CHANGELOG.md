@@ -16,7 +16,7 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 - Windows scan dialog MFT selection and administrator restart, with lossless target forwarding and cancellation handling.
 
-- Five-minute nightly sanitizer fuzzing for MFT records, run lists, and globs, with cached corpora, crash artifacts, and a labelled failure issue.
+- Five-minute nightly sanitizer fuzzing for MFT records, run lists, and globs, with cached corpora, crash artifacts, and a labelled failure issue linking the failed jobs.
 
 - Windows SID owner lookup for scan results and reports, with cached account names and a native Properties platform API.
 

@@ -15,6 +15,16 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0074 — 2026-11-05 — Nightly failure job links
+
+Question: How should nightly failure reporting complete the requirements in sections 7.3 and 7.5?
+
+Choice: Read the current workflow run's latest job attempts with Actions read permission and include links for failed or timed-out jobs in the existing labelled issue. Keep creation, updates, and closure on the default branch. Retain crash artifacts for 14 days.
+
+Reasoning: Section 7.5 requires failed jobs alongside the run URL. The original failure message linked the full run. Explicit job links complete that reporting requirement, and the retention setting matches section 7.3.
+
+Task: T3.8 reporting follow-up
+
 ## D-0073 — 2026-11-05 — Activate staged Windows scan controls
 
 Question: How should the staged T4.7 controls use the M3 services now that their prerequisites exist?
