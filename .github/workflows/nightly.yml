@@ -33,7 +33,7 @@ jobs:
       FUZZ_MAX_LEN: ${{ matrix.max_len }}
       UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
