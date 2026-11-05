@@ -43,7 +43,7 @@ jobs:
         run: |
           cmake --preset fuzz -DCMAKE_CXX_COMPILER=clang++
           cmake --build build/fuzz --target "fuzz_${FUZZ_TARGET}" --parallel 3
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: build/fuzz-corpus/${{ matrix.target }}
           key: fuzz-${{ runner.os }}-${{ matrix.target }}-${{ github.run_id }}-${{ github.run_attempt }}
