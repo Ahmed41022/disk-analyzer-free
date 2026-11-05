@@ -141,6 +141,8 @@ Windows NTFS fast mode reads filesystem metadata through a read-only raw-volume 
 dafree scan --mode mft "D:\Media"
 ```
 
+The Windows scan dialog also offers MFT selection and **Restart as administrator**. Restart forwards the selected roots and keeps the current dialog open if consent is declined.
+
 Pure C++ parsers handle headers, sector fixups, timestamps, UTF-16 names, stream attributes and mapping pairs, including resident and sparse/compressed allocation. The in-memory index builds breadth-first trees with hard-link accounting, subtree selection, exclusions and orphan diagnostics, preserving lone UTF-16 surrogates. Tests cover malformed and unaligned records, roundtrip properties, elevated and restricted-token scans, and sanitizer-backed fuzzing.
 
 The Python platform API exposes `api.platform.is_elevated()` and `api.platform.relaunch_elevated(args)`. On Windows the latter requests consent for the current executable with explicit arguments and raises `api.Cancelled` if consent is declined. The original process remains under the caller's control. POSIX reports effective UID and raises `api.Unsupported` for elevated relaunch.

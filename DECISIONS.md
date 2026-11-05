@@ -15,6 +15,16 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0073 — 2026-11-05 — Activate staged Windows scan controls
+
+Question: How should the staged T4.7 controls use the M3 services now that their prerequisites exist?
+
+Choice: Enable and persist Windows MFT selection. Wire the existing administrator restart control to the native elevation API, preserving the current roots and keeping the dialog open on cancellation or failure. Source launches use a fixed Python bootstrap to execute `sys.executable` with `-m dafree.gui.app` and the roots. Frozen launches pass roots directly. Keep one application lock and IPC endpoint per data directory and Windows privilege level so an elevated replacement can start while its ordinary parent exits. Disable restart during target validation.
+
+Reasoning: D-0048 deferred this integration until the native MFT and elevation services were implemented. Separate privilege endpoints prevent the new elevated process from forwarding its targets back to the ordinary process during startup. On this Windows virtual environment, `GetModuleFileNameW` identifies the base interpreter while `sys.executable` identifies the environment's redirector. The bootstrap restores the selected environment with a subprocess argument list before starting the GUI module, preserving Windows quoting.
+
+Task: T4.7 follow-up after T3.5/T3.7
+
 ## D-0072 — 2026-11-05 — Runner-owned captured MFT fixture
 
 Question: How should the post-T3.5 golden record be captured without including stale record slack?

@@ -23,6 +23,7 @@ TEST_CASE("quote_windows_args_table") {
         Case{{L""}, L"\"\""},
         Case{{L"plain", L"two words"}, LR"("plain" "two words")"},
         Case{{L"a\tb"}, L"\"a\tb\""},
+        Case{{L"one\ntwo"}, L"\"one\ntwo\""},
         Case{{LR"(C:\folder\file)"}, LR"("C:\folder\file")"},
         Case{{LR"(C:\folder with spaces\)"}, LR"("C:\folder with spaces\\")"},
         Case{{LR"(a"b)"}, LR"("a\"b")"},

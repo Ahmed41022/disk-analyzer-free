@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-04 10:11+0200\n"
+"POT-Creation-Date: 2026-11-05 07:59+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -70,7 +70,7 @@ msgstr ""
 msgid "Administrator"
 msgstr ""
 
-msgid "Administrator relaunch is unavailable in this build."
+msgid "Administrator status is unavailable."
 msgstr ""
 
 msgid "Age"
@@ -225,9 +225,6 @@ msgid "Exporting issues…"
 msgstr ""
 
 msgid "Extension"
-msgstr ""
-
-msgid "Fast scanning is unavailable in this build."
 msgstr ""
 
 msgid "File"

@@ -14,7 +14,7 @@ translator when available, and the initial layout direction. New custom strings
 are marked for translation; full GUI translations and RTL refinement remain
 T4.12 work.
 
-Only one desktop instance owns each application data directory. A second launch
+One desktop instance owns each application data directory and Windows privilege level. A second launch at the same privilege level
 passes its arguments through local IPC and exits after acknowledgment. The first
 window is activated and opens a target-selection dialog for forwarded targets;
 scanning requires explicit acceptance.
@@ -110,8 +110,7 @@ and filesystem traversal, hidden/system exclusions, and Globs/Paths editors with
 one entry per line. Existing unedited exclusions retain their raw native values.
 **Start scan** (Enter) saves these defaults and starts scanning; Escape cancels
 without saving. A failed preference write keeps the dialog open with its error.
-Windows lists MFT as disabled until its fast engine is implemented. Administrator
-relaunch is also disabled until the paused Windows privilege task supplies it.
+Windows offers MFT mode for elevated local NTFS scans. **Restart as administrator** requests consent and opens the current targets in an elevated instance. Declining consent keeps the current dialog open. Auto can fall back to Walk when fast scanning is unavailable.
 
 
 During a scan, the progress panel shows files, folders, logical bytes, elapsed
@@ -122,8 +121,7 @@ location controls the same scan. Cancel is immediate and needs no confirmation
 because scanning is read-only; partial results remain available on completion.
 
 Walk scans show an indeterminate bar. A supplied native total enables bounded
-percentage display from processed files/folders; the MFT engine that supplies
-these estimates remains deferred. Start and terminal states issue accessible
+percentage display from processed files/folders using the MFT record estimate. Start and terminal states issue accessible
 alerts, while regular progress ticks update ordinary labels. A new scan clears
 old rates, errors, and partial status.
 

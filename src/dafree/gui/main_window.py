@@ -78,6 +78,7 @@ class MainWindow(QMainWindow):
         self._settings = settings if settings is not None else Settings()
         self._paths = paths
         self._volume_provider = volume_provider
+        self._elevation_provider = elevation_provider
         self._scan_dialog: ScanDialog | None = None
         self._properties_dialogs: list[PropertiesDialog] = []
         self._pending_launch_arguments: list[str] = []
@@ -347,6 +348,7 @@ class MainWindow(QMainWindow):
             paths=self._paths,
             targets=targets or None,
             volume_provider=self._volume_provider,
+            elevation_provider=self._elevation_provider,
         )
         self._scan_dialog = dialog
         dialog.accepted.connect(self._accept_scan_dialog)

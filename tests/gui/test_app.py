@@ -257,7 +257,7 @@ def test_single_instance_lock(
         first, second = _SingleInstance(paths), _SingleInstance(paths)
         try:
             assert first.acquire()
-            os.utime(paths.data / "instance.lock", (1, 1))
+            os.utime(first._lock.fileName(), (1, 1))
             assert first._lock.staleLockTime() == second._lock.staleLockTime() == 0
             assert not second.acquire()
             arguments = ["folder with space", "العربية", "bad-\ud800"]
@@ -345,6 +345,47 @@ def test_first_window_retains_lossless_launch_arguments(
 
         monkeypatch.setattr(QApplication, "exec", event_loop)
         assert bootstrap.main(initial) == 0
+
+
+def test_elevated_instance_does_not_forward_to_restarting_process(qtbot, tmp_path, monkeypatch):
+    """The elevated child can acquire its lock while the ordinary parent is still running."""
+    with TemporaryDirectory(prefix="da-") as directory:
+        monkeypatch.setattr(QDir, "tempPath", lambda: directory)
+        paths = paths_at(tmp_path)
+        ordinary = _SingleInstance(paths, elevated=False)
+        elevated = _SingleInstance(paths, elevated=True)
+        elevated_peer = _SingleInstance(paths, elevated=True)
+        try:
+            assert ordinary.acquire()
+            assert elevated.acquire()
+            assert ordinary._name != elevated._name
+            assert not elevated_peer.acquire()
+            ordinary.close()
+            assert not elevated_peer.acquire()
+            elevated.close()
+            assert elevated_peer.acquire()
+        finally:
+            elevated_peer.close()
+            elevated.close()
+            ordinary.close()
+
+
+def test_gui_module_entry_point(qtbot, tmp_path):
+    """The source-mode relaunch module actually enters and shuts down the GUI."""
+    script = """
+import os
+import runpy
+from pathlib import Path
+from PySide6.QtWidgets import QApplication
+def event_loop():
+    Path(os.environ['DAFREE_CONFIG_DIR'], 'entered').write_text('yes', encoding='utf-8')
+    return 0
+QApplication.exec = event_loop
+runpy.run_module('dafree.gui.app', run_name='__main__')
+"""
+    env = os.environ | {"DAFREE_CONFIG_DIR": str(tmp_path), "QT_QPA_PLATFORM": "offscreen"}
+    run_child(qtbot, script, env)
+    assert (tmp_path / "entered").read_text(encoding="utf-8") == "yes"
 
 
 @pytest.mark.parametrize("failed", [False, True])

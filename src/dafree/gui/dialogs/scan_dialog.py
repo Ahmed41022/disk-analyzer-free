@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QStandardItemModel
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -44,6 +43,11 @@ from dafree.settings import ExcludeRulesModel, ScanOptionsModel, Settings, save_
 
 _WINDOWS = sys.platform == "win32"
 _MAX_THREADS = (1 << 32) - 1
+_GUI_RELAUNCH = (
+    "import subprocess\n"
+    "import sys\n"
+    "raise SystemExit(subprocess.call([sys.argv[1], '-m', 'dafree.gui.app', *sys.argv[2:]]))\n"
+)
 
 
 @dataclass(frozen=True)
@@ -59,6 +63,17 @@ class _Validation:
 
 def _directory(path: str) -> bool:
     return Path(path).is_dir()
+
+
+def _relaunch_elevated(targets: list[str]) -> None:
+    """Relaunch the GUI with arguments appropriate to its current Python or frozen image."""
+    # Windows venv redirectors run inside the base Python image. Re-enter the chosen environment.
+    arguments = (
+        targets
+        if getattr(sys, "frozen", False)
+        else ["-c", _GUI_RELAUNCH, sys.executable, *targets]
+    )
+    api.platform.relaunch_elevated(arguments)
 
 
 class ScanDialog(QDialog):
@@ -82,7 +97,7 @@ class ScanDialog(QDialog):
         self._settings, self._runner, self._paths = settings, runner, paths
         self._owner = object()
         self._pending: set[str] = set()
-        self._relaunch = relaunch
+        self._relaunch = relaunch or _relaunch_elevated
         self.request: api.ScanRequest | None = None
         self._defaults = deepcopy(settings.default_scan)
         layout = QVBoxLayout(self)
@@ -157,11 +172,7 @@ class ScanDialog(QDialog):
         self.mode.addItem(_("Walk"), api.ScanMode.WALK)
         if _WINDOWS:
             self.mode.addItem(_("MFT"), api.ScanMode.MFT)
-            model = self.mode.model()
-            if isinstance(model, QStandardItemModel):
-                model.item(2).setEnabled(False)
-                model.item(2).setToolTip(_("Fast scanning is unavailable in this build."))
-        self.mode.setCurrentIndex(1 if options.mode == api.ScanMode.WALK else 0)
+        self.mode.setCurrentIndex(max(0, self.mode.findData(options.mode)))
         form.addRow(_("Mode"), self.mode)
         self.follow_symlinks = QCheckBox(_("Follow symbolic links"), self)
         self.follow_symlinks.setChecked(options.follow_symlinks)
@@ -194,8 +205,10 @@ class ScanDialog(QDialog):
             with suppress(api.Unsupported):
                 known_elevated = (elevation_provider or api.platform.is_elevated)()
         self.restart.setVisible(_WINDOWS and known_elevated is not True)
-        self.restart.setEnabled(known_elevated is False and self._relaunch is not None)
-        self.restart.setToolTip(_("Administrator relaunch is unavailable in this build."))
+        self._can_restart = known_elevated is False
+        self.restart.setEnabled(self._can_restart)
+        if known_elevated is None:
+            self.restart.setToolTip(_("Administrator status is unavailable."))
         self.restart.clicked.connect(self._restart)
         layout.addWidget(self.restart)
 
@@ -247,6 +260,7 @@ class ScanDialog(QDialog):
 
     def _update_start(self) -> None:
         self.start.setEnabled(self.targets.count() > 0 and not self._pending)
+        self.restart.setEnabled(self._can_restart and not self._pending)
 
     def _add_typed(self) -> None:
         self.add_target(self.path.text())
@@ -282,9 +296,6 @@ class ScanDialog(QDialog):
             return
         previous = self._defaults
         mode = api.ScanMode(self.mode.currentData())
-        if mode == api.ScanMode.MFT:
-            self.error.setText(_("Fast scanning is unavailable in this build."))
-            return
         options = ScanOptionsModel(
             targets=self.target_paths(),
             mode=mode,
@@ -333,7 +344,7 @@ class ScanDialog(QDialog):
         super().accept()
 
     def _restart(self) -> None:
-        if self._relaunch is not None and self.restart.isEnabled():
+        if self.restart.isEnabled():
             try:
                 self._relaunch(self.target_paths())
             except (api.DafreeError, OSError) as error:

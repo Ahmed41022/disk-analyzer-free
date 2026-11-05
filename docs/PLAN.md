@@ -20,7 +20,7 @@ M4-core completed on main `b39d472` with all 21 full jobs green. M3 resumed at T
 
 See DECISIONS.md for the pending §7.3 CI inventory and dependency adaptations.
 
-Deferred M2 completed on main `5051c02`, supplying the scan command and restoring the PR benchmark gate. M3 continues with T3.5.
+Deferred M2 completed on main `5051c02`, supplying the scan command and restoring the PR benchmark gate. M3 uses those prerequisites for volume scans, owner lookup, elevation, and nightly fuzzing.
 
 ---
 
@@ -1551,8 +1551,8 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Acceptance:** `test_status_bar_updates_from_progress`, `test_issue_count_click_opens_issues_tab`, `test_volume_list_populated`.
 
 - [x] **T4.7 — Scan dialog**
-  - **Files:** C `src/dafree/gui/dialogs/scan_dialog.py`, `tests/gui/test_scan_dialog.py`.
-  - **Behavior:** pick volumes (multi-select), "Add folder…" (`QFileDialog.getExistingDirectory`, repeatable), typed path with validation, remove targets; options: threads, follow symlinks, cross filesystems, exclusions editor (globs and paths tabs), exclude hidden/system, mode Auto/Walk/MFT (MFT shown on Windows only) with "Restart as administrator" button when not elevated (calls `platform.relaunch_elevated` with the current targets, then quits). Remembers last options in settings. Enter starts, Esc closes. D-0048 stages MFT/admin controls as disabled until paused M3 provides their native services.
+  - **Files:** C `src/dafree/gui/dialogs/scan_dialog.py`, `tests/gui/test_scan_dialog.py`. D-0073 also updates the GUI bootstrap, main-window wiring, bootstrap tests, and Windows argument-quoting tests when the staged native services become available.
+  - **Behavior:** pick volumes (multi-select), "Add folder…" (`QFileDialog.getExistingDirectory`, repeatable), typed path with validation, remove targets; options: threads, follow symlinks, cross filesystems, exclusions editor (globs and paths tabs), exclude hidden/system, mode Auto/Walk/MFT (MFT shown on Windows only) with "Restart as administrator" button when not elevated (calls `platform.relaunch_elevated` with the current targets, then quits). Remembers last options in settings. Enter starts, Esc closes. D-0048 staged MFT/admin controls until M3 supplied their services. D-0073 activates them with source/frozen relaunch arguments and separate Windows privilege-level instance endpoints.
   - **Depends on:** T4.6
   - **Acceptance:** `test_empty_targets_disables_start`, `test_multiple_folders_added`, `test_mft_option_only_on_windows`, `test_options_persist_to_settings`.
 
