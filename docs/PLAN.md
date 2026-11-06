@@ -1593,9 +1593,9 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T4.6
   - **Acceptance:** `test_flags_render_human_labels`, `test_issues_filter_by_kind`.
 
-- [ ] **T4.14 — Frozen-app self-test hook**
-  - **Files:** M `src/dafree/gui/app.py` (`--self-test <dir>`), C `tests/e2e/test_frozen_selftest.py`.
-  - **Behavior:** `--self-test DIR` starts the GUI offscreen, scans DIR, waits for completion, asserts the first tree row equals DIR's name with the expected size passed via `--expect-size`, writes a JSON result to stdout, exits 0/1. Used by CI against PyInstaller builds.
+- [x] **T4.14 — Frozen-app self-test hook**
+  - **Files:** M `src/dafree/gui/app.py` (`--self-test <dir>`), C `tests/e2e/test_frozen_selftest.py`, `tools/dist/{build_frozen.py,gui_entry.py}`, `packaging/licenses/{LGPL-3.0.txt,GPL-3.0.txt}`, `.github/workflows/release.yml`; M `tests/gui/test_app.py`, `ci.yml`, `.gitignore`, docs.
+  - **Behavior:** `--self-test DIR` starts the GUI offscreen, scans DIR, waits for completion, asserts the first tree row equals DIR's name with the expected size passed via `--expect-size`, writes a JSON result to stdout, exits 0/1. Used by CI against actual PyInstaller onedir GUI builds. D-0081 checks the existing full displayed root path and its basename, isolates all application files, emits one JSON result with exit 0/1, and reuses the installed-package e2e tests against frozen executables. The console-enabled smoke builder, LGPL texts/source notices, Linux CI job, and read-only all-OS release verification are implemented here; full dual-executable release packaging and size optimization remain the whole T10.1 task.
   - **Depends on:** T4.6
   - **Acceptance:** passes against the installed package in CI (all OSes) and against the frozen build on Linux in `ci.yml` and all OSes in `release.yml`.
 

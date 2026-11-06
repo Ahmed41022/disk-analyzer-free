@@ -4,16 +4,25 @@ Entries are newest-first. Product-owner overrides take precedence over earlier c
 
 ## Pending CI jobs
 
-This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when its job lands. Existing jobs: `lint`, `cpp`, `python`, `sanitizers`, `coverage`, `wheels`, `audit`, `docs`, `bench`, `ci-success`; additional `tsan`, `fuzz`, and `view-perf` jobs retain their separate required gates.
+This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when its job lands. Existing jobs: `frozen-smoke`, `lint`, `cpp`, `python`, `sanitizers`, `coverage`, `wheels`, `audit`, `docs`, `bench`, `ci-success`; additional `tsan`, `fuzz`, and `view-perf` jobs retain their separate required gates.
 
 | Missing §7.3 job | Task that will add it | Remaining prerequisite / scope |
 | --- | --- | --- |
-| `frozen-smoke` | T10.1, using T4.14's deferred self-test hook | Build the actual frozen bundle, verify CLI/GUI fixture totals and bundle size. |
 | `pr-title` | T0.5 follow-up after these prerequisites | Enforce Conventional Commits on PR titles; no feature prerequisite. |
 
-Partial job scope still pending (these are existing jobs, not missing rows): `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance is implemented in T4.5 and runs separately without instrumentation. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
+Partial job scope still pending (these are existing jobs, not missing rows): `frozen-smoke` verifies the actual GUI bundle in T4.14; its dual GUI/CLI bundle, installer/archive production, and 90 MB release-size gate remain T10.1. `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance is implemented in T4.5 and runs separately without instrumentation. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
+
+## D-0081 — 2026-11-06 — Verify the frozen GUI before release packaging
+
+Question: How should T4.14 verify real frozen applications without implementing the later release-packaging milestone or changing the existing full-path root display?
+
+Choice: Add an opt-in offscreen self-test with isolated temporary preferences/logs, no instance IPC, explicit Walk/no-follow scanning, a bounded completion timer, raw model/summary byte checks, one JSON result, and exit 0/1. Reject linked/missing/non-directory roots and invalid uint64 expectations; normalize paths lexically. Verify the first displayed full root path, then its basename against DIR's name, preserving the tested full-path GUI contract. Run the same tests against installed packages and actual PyInstaller onedir GUI executables. Activate `frozen-smoke` on Linux CI and a read-only `release.yml` verification matrix for Linux, Windows/MSVC, and macOS; this workflow cannot publish. Build a console-enabled smoke GUI so JSON stdout is observable on Windows. Keep Qt libraries separately replaceable, include the LGPL-3.0 and incorporated GPL-3.0 texts from GNU's official URLs, and provide matching Qt/PySide source pointers. Restrict the Windows build subprocess's DLL search PATH to Qt, Python, and Windows locations: an unrelated Poppler ICU DLL on the local PATH caused the initial frozen startup failure. Keep generated work/spec files under repo/build and refuse to overwrite a bundle. Activate the already locked PyInstaller 6.22.3 (GPL-2.0 with bootloader exception, build-only); add no new dependencies.
+
+Reasoning: The acceptance test must exercise the delivered native extension, Qt plugins/data, asynchronous scan, and real table model. Reusing identical e2e tests catches frozen-only startup errors. The full dual-executable/windowed bundle, installers, all architectures, signing/publication, and 90 MB size optimization belong to the whole deferred T10.1 task; no existing threshold is lowered. The frozen CI job now exists, so its missing-job inventory row is removed and its remaining packaging scope is listed explicitly above.
+
+Task: T4.14
 
 ## D-0080 — 2026-11-06 — Complete GUI catalogs and exact localized size display
 
