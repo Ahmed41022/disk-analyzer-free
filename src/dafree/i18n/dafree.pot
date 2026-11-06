@@ -73,6 +73,9 @@ msgstr ""
 msgid "Administrator status is unavailable."
 msgstr ""
 
+msgid "Advanced"
+msgstr ""
+
 msgid "Age"
 msgstr ""
 
@@ -88,10 +91,19 @@ msgstr ""
 msgid "An unexpected error occurred. Details were saved to the application log."
 msgstr ""
 
+msgid "Arabic"
+msgstr ""
+
 msgid "Auto"
 msgstr ""
 
 msgid "Automatic"
+msgstr ""
+
+msgid "BLAKE3"
+msgstr ""
+
+msgid "Binary (KB, MB)"
 msgstr ""
 
 msgid "Bytes"
@@ -131,6 +143,12 @@ msgstr ""
 msgid "Combined scan"
 msgstr ""
 
+msgid "Comfortable"
+msgstr ""
+
+msgid "Compact"
+msgstr ""
+
 msgid "Compare"
 msgstr ""
 
@@ -155,6 +173,9 @@ msgid ""
 "are preserved."
 msgstr ""
 
+msgid "Could not open the log folder."
+msgstr ""
+
 msgid "Could not pass arguments to the other instance."
 msgstr ""
 
@@ -171,7 +192,17 @@ msgid "Could not save scan options: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid "Could not save settings: {error}"
+msgstr ""
+
+#, python-brace-format
 msgid "Could not validate folder: {error}"
+msgstr ""
+
+msgid "Count every link"
+msgstr ""
+
+msgid "Count once"
 msgstr ""
 
 msgid "Created"
@@ -180,13 +211,32 @@ msgstr ""
 msgid "Cross filesystems"
 msgstr ""
 
+#, python-brace-format
+msgid "Current language: {locale}"
+msgstr ""
+
+msgid "Dark"
+msgstr ""
+
 msgid "Directory tree"
 msgstr ""
 
 msgid "Disk Analyzer Free"
 msgstr ""
 
+msgid "Duplicate I/O threads"
+msgstr ""
+
+msgid "Duplicate filter"
+msgstr ""
+
 msgid "Duplicates"
+msgstr ""
+
+msgid "Duplicates defaults"
+msgstr ""
+
+msgid "Eager"
 msgstr ""
 
 #, python-brace-format
@@ -194,6 +244,9 @@ msgid "Elapsed: {time}"
 msgstr ""
 
 msgid "Empty"
+msgstr ""
+
+msgid "English"
 msgstr ""
 
 msgid "Enter a valid folder path."
@@ -281,6 +334,12 @@ msgstr ""
 msgid "Full path"
 msgstr ""
 
+msgid "General"
+msgstr ""
+
+msgid "German"
+msgstr ""
+
 msgid "Gigabytes"
 msgstr ""
 
@@ -290,10 +349,25 @@ msgstr ""
 msgid "Hard link — not counted in totals"
 msgstr ""
 
+msgid "Hard links"
+msgstr ""
+
+msgid "Hash algorithm"
+msgstr ""
+
 msgid "Hidden"
 msgstr ""
 
 msgid "I/O error"
+msgstr ""
+
+msgid "IEC (KiB, MiB)"
+msgstr ""
+
+msgid "Include alternate data streams (Windows only)"
+msgstr ""
+
+msgid "Include hidden files"
 msgstr ""
 
 msgid "Invalid name"
@@ -315,13 +389,31 @@ msgstr ""
 msgid "Issues: {count}"
 msgstr ""
 
+msgid "Keep duplicate groups on the same volume"
+msgstr ""
+
+msgid "Keyboard shortcut customization is not available yet."
+msgstr ""
+
 msgid "Kilobytes"
 msgstr ""
 
 msgid "Kind"
 msgstr ""
 
+msgid "Language"
+msgstr ""
+
+msgid "Language changes take effect after restarting the application."
+msgstr ""
+
 msgid "Last Modified"
+msgstr ""
+
+msgid "Lazy"
+msgstr ""
+
+msgid "Light"
 msgstr ""
 
 msgid "Loading volumes…"
@@ -333,10 +425,19 @@ msgstr ""
 msgid "MFT"
 msgstr ""
 
+msgid "MFT (Windows only)"
+msgstr ""
+
+msgid "Maximum size (blank for no limit)"
+msgstr ""
+
 msgid "Megabytes"
 msgstr ""
 
 msgid "Message"
+msgstr ""
+
+msgid "Minimum size (bytes or size with unit)"
 msgstr ""
 
 msgid "Mode"
@@ -363,6 +464,12 @@ msgstr ""
 msgid "Not found"
 msgstr ""
 
+msgid "Off"
+msgstr ""
+
+msgid "Open log folder"
+msgstr ""
+
 msgid "Orphaned entry"
 msgstr ""
 
@@ -370,6 +477,9 @@ msgid "Other"
 msgstr ""
 
 msgid "Owner"
+msgstr ""
+
+msgid "Owner lookup"
 msgstr ""
 
 msgid "Parent folder"
@@ -400,6 +510,9 @@ msgid "Petabytes"
 msgstr ""
 
 msgid "Portable mode is not available yet"
+msgstr ""
+
+msgid "Prefix bytes"
 msgstr ""
 
 msgid "Preparing scan…"
@@ -447,7 +560,16 @@ msgstr ""
 msgid "Resume"
 msgstr ""
 
+msgid "Row density"
+msgstr ""
+
 msgid "Running as administrator"
+msgstr ""
+
+msgid "SHA-256"
+msgstr ""
+
+msgid "SI (kB, MB)"
 msgstr ""
 
 msgid "Scan"
@@ -477,13 +599,25 @@ msgstr ""
 msgid "Scan progress"
 msgstr ""
 
+msgid "Scan scheduling is not available yet."
+msgstr ""
+
 msgid "Scan started."
 msgstr ""
 
 msgid "Scan targets"
 msgstr ""
 
+msgid "Scan threads"
+msgstr ""
+
+msgid "Scanning defaults"
+msgstr ""
+
 msgid "Scanning…"
+msgstr ""
+
+msgid "Scheduled scans"
 msgstr ""
 
 msgid "Search"
@@ -502,6 +636,15 @@ msgid "Select a row to inspect it."
 msgstr ""
 
 msgid "Settings"
+msgstr ""
+
+msgid "Settings pages"
+msgstr ""
+
+msgid "Shortcuts"
+msgstr ""
+
+msgid "Show NTFS metafiles (Windows only)"
 msgstr ""
 
 #, python-brace-format
@@ -529,11 +672,20 @@ msgstr ""
 msgid "System"
 msgstr ""
 
+msgid "System language"
+msgstr ""
+
 msgid "Terabytes"
 msgstr ""
 
 #, python-brace-format
 msgid "The new report may be incomplete: {error}"
+msgstr ""
+
+msgid "Theme"
+msgstr ""
+
+msgid "These defaults will be used when duplicate analysis is available."
 msgstr ""
 
 msgid "Threads"
@@ -570,6 +722,9 @@ msgstr ""
 msgid "Unexpected error"
 msgstr ""
 
+msgid "Unit labels"
+msgstr ""
+
 msgid "Units"
 msgstr ""
 
@@ -586,6 +741,9 @@ msgstr ""
 msgid "Validate and save a setting."
 msgstr ""
 
+msgid "Verify matching bytes"
+msgstr ""
+
 msgid "Volume"
 msgstr ""
 
@@ -593,6 +751,9 @@ msgid "Volumes"
 msgstr ""
 
 msgid "Walk"
+msgstr ""
+
+msgid "XXH3 128"
 msgstr ""
 
 msgid "dotted setting name"

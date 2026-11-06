@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from typing import Literal
 
 from PySide6.QtCore import QPoint, QRect, Qt, QTimer, Signal
 from PySide6.QtGui import QCloseEvent, QFont, QKeyEvent, QPainter, QPaintEvent, QPalette
@@ -87,7 +88,7 @@ class TreeTableView(QTableView):
         self.setShowGrid(False)
         vertical = self.verticalHeader()
         vertical.setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
-        vertical.setDefaultSectionSize(_ROW_HEIGHT)
+        self.set_row_density(settings.row_density)
         vertical.hide()
         header = self.horizontalHeader()
         header.setSectionsMovable(True)
@@ -178,6 +179,10 @@ class TreeTableView(QTableView):
         resolve = self._base_resolve_owner or visible
         if options.resolve_owner != resolve:
             self.tree_model.set_options(replace(options, resolve_owner=resolve))
+
+    def set_row_density(self, density: Literal["compact", "comfortable"]) -> None:
+        """Change one default section height without allocating per-row header state."""
+        self.verticalHeader().setDefaultSectionSize(_ROW_HEIGHT if density == "compact" else 32)
 
     def save_preferences(self) -> None:
         """Flush a pending application-settings save, including when the table closes."""

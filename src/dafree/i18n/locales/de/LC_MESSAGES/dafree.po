@@ -42,3 +42,162 @@ msgstr ""
 
 msgid "Terabytes"
 msgstr ""
+
+msgid "Advanced"
+msgstr ""
+
+msgid "Arabic"
+msgstr ""
+
+msgid "BLAKE3"
+msgstr ""
+
+msgid "Binary (KB, MB)"
+msgstr ""
+
+msgid "Comfortable"
+msgstr ""
+
+msgid "Compact"
+msgstr ""
+
+msgid "Could not open the log folder."
+msgstr ""
+
+msgid "Could not save settings: {error}"
+msgstr ""
+
+msgid "Count every link"
+msgstr ""
+
+msgid "Count once"
+msgstr ""
+
+msgid "Current language: {locale}"
+msgstr ""
+
+msgid "Dark"
+msgstr ""
+
+msgid "Duplicate I/O threads"
+msgstr ""
+
+msgid "Duplicate filter"
+msgstr ""
+
+msgid "Duplicates defaults"
+msgstr ""
+
+msgid "Eager"
+msgstr ""
+
+msgid "English"
+msgstr ""
+
+msgid "General"
+msgstr ""
+
+msgid "German"
+msgstr ""
+
+msgid "Hard links"
+msgstr ""
+
+msgid "Hash algorithm"
+msgstr ""
+
+msgid "IEC (KiB, MiB)"
+msgstr ""
+
+msgid "Include alternate data streams (Windows only)"
+msgstr ""
+
+msgid "Include hidden files"
+msgstr ""
+
+msgid "Keep duplicate groups on the same volume"
+msgstr ""
+
+msgid "Keyboard shortcut customization is not available yet."
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+msgid "Language changes take effect after restarting the application."
+msgstr ""
+
+msgid "Lazy"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+msgid "MFT (Windows only)"
+msgstr ""
+
+msgid "Maximum size (blank for no limit)"
+msgstr ""
+
+msgid "Minimum size (bytes or size with unit)"
+msgstr ""
+
+msgid "Off"
+msgstr ""
+
+msgid "Open log folder"
+msgstr ""
+
+msgid "Owner lookup"
+msgstr ""
+
+msgid "Prefix bytes"
+msgstr ""
+
+msgid "Row density"
+msgstr ""
+
+msgid "SHA-256"
+msgstr ""
+
+msgid "SI (kB, MB)"
+msgstr ""
+
+msgid "Scan scheduling is not available yet."
+msgstr ""
+
+msgid "Scan threads"
+msgstr ""
+
+msgid "Scanning defaults"
+msgstr ""
+
+msgid "Scheduled scans"
+msgstr ""
+
+msgid "Settings pages"
+msgstr ""
+
+msgid "Shortcuts"
+msgstr ""
+
+msgid "Show NTFS metafiles (Windows only)"
+msgstr ""
+
+msgid "System language"
+msgstr ""
+
+msgid "Theme"
+msgstr ""
+
+msgid "These defaults will be used when duplicate analysis is available."
+msgstr ""
+
+msgid "Unit labels"
+msgstr ""
+
+msgid "Verify matching bytes"
+msgstr ""
+
+msgid "XXH3 128"
+msgstr ""

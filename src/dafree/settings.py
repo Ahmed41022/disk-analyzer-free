@@ -137,6 +137,7 @@ class Settings:
     shortcuts: dict[str, str] = field(default_factory=dict)
     treemap: TreemapSettings = field(default_factory=TreemapSettings)
     show_ntfs_metafiles: bool = True
+    row_density: Literal["compact", "comfortable"] = "compact"
 
 
 class UnsupportedSettingsVersion(ValueError):
@@ -303,9 +304,14 @@ def load_settings(paths: AppPaths) -> Settings:
         return Settings()
 
 
+def validate_settings(settings: Settings) -> Settings:
+    """Return an independent, normalized preference snapshot without writing files."""
+    return _from_data(_encode(settings))
+
+
 def save_settings(settings: Settings, paths: AppPaths) -> None:
     """Validate and atomically replace settings using a flushed sibling temp file."""
-    data = _encode(_from_data(_encode(settings)))
+    data = _encode(validate_settings(settings))
     paths.config.mkdir(parents=True, exist_ok=True)
     path = paths.config / "settings.json"
     temporary: Path | None = None

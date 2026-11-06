@@ -9,7 +9,7 @@ Find out what's using your disk space — fast, free and open source.
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 
-> **Project status:** early development. The Python API supports cross-platform walk scanning, progress controls, link policies, exclusions, owner resolution, and native paged views. Desktop bootstrap, background scanning, the virtual tree table, and the main-window/sidebar integration are implemented; the scan dialog, detailed progress panel, properties inspection, and Issues actions are available. Deferred analysis, settings, and file actions remain in development. The CLI scans one or more paths and streams table, JSON, NDJSON, and CSV reports. Windows supports elevated NTFS MFT scans with automatic Walk fallback. Packaged releases are planned.
+> **Project status:** early development. The Python API supports cross-platform walk scanning, progress controls, link policies, exclusions, owner resolution, and native paged views. Desktop bootstrap, background scanning, the virtual tree table, the transactional settings dialog, and the main-window/sidebar integration are implemented; the scan dialog, detailed progress panel, properties inspection, and Issues actions are available. Analysis, shortcut customization, scheduling, and file actions remain in development. The CLI scans one or more paths and streams table, JSON, NDJSON, and CSV reports. Windows supports elevated NTFS MFT scans with automatic Walk fallback. Packaged releases are planned.
 
 ## Screenshots
 
@@ -60,8 +60,10 @@ dafree --version
 dafree gui
 ```
 
-The scaffold now applies shared theme/locale settings, forwards repeat launches
-to the first instance, and records diagnostic logs with an error-details dialog.
+The desktop app now provides transactional settings for theme, language, units,
+row density, scan defaults, duplicate defaults, and advanced options. It also
+forwards repeat launches to the first instance and records diagnostic logs with
+an error-details dialog.
 See [desktop bootstrap](docs/gui.md) for the current behavior and remaining UI work.
 
 Use `dafree --help` for available commands and global options, or check the installed version:

@@ -42,3 +42,162 @@ msgstr "Search text cannot contain a NUL character."
 
 msgid "Terabytes"
 msgstr "Terabytes"
+
+msgid "Advanced"
+msgstr "Advanced"
+
+msgid "Arabic"
+msgstr "Arabic"
+
+msgid "BLAKE3"
+msgstr "BLAKE3"
+
+msgid "Binary (KB, MB)"
+msgstr "Binary (KB, MB)"
+
+msgid "Comfortable"
+msgstr "Comfortable"
+
+msgid "Compact"
+msgstr "Compact"
+
+msgid "Could not open the log folder."
+msgstr "Could not open the log folder."
+
+msgid "Could not save settings: {error}"
+msgstr "Could not save settings: {error}"
+
+msgid "Count every link"
+msgstr "Count every link"
+
+msgid "Count once"
+msgstr "Count once"
+
+msgid "Current language: {locale}"
+msgstr "Current language: {locale}"
+
+msgid "Dark"
+msgstr "Dark"
+
+msgid "Duplicate I/O threads"
+msgstr "Duplicate I/O threads"
+
+msgid "Duplicate filter"
+msgstr "Duplicate filter"
+
+msgid "Duplicates defaults"
+msgstr "Duplicates defaults"
+
+msgid "Eager"
+msgstr "Eager"
+
+msgid "English"
+msgstr "English"
+
+msgid "General"
+msgstr "General"
+
+msgid "German"
+msgstr "German"
+
+msgid "Hard links"
+msgstr "Hard links"
+
+msgid "Hash algorithm"
+msgstr "Hash algorithm"
+
+msgid "IEC (KiB, MiB)"
+msgstr "IEC (KiB, MiB)"
+
+msgid "Include alternate data streams (Windows only)"
+msgstr "Include alternate data streams (Windows only)"
+
+msgid "Include hidden files"
+msgstr "Include hidden files"
+
+msgid "Keep duplicate groups on the same volume"
+msgstr "Keep duplicate groups on the same volume"
+
+msgid "Keyboard shortcut customization is not available yet."
+msgstr "Keyboard shortcut customization is not available yet."
+
+msgid "Language"
+msgstr "Language"
+
+msgid "Language changes take effect after restarting the application."
+msgstr "Language changes take effect after restarting the application."
+
+msgid "Lazy"
+msgstr "Lazy"
+
+msgid "Light"
+msgstr "Light"
+
+msgid "MFT (Windows only)"
+msgstr "MFT (Windows only)"
+
+msgid "Maximum size (blank for no limit)"
+msgstr "Maximum size (blank for no limit)"
+
+msgid "Minimum size (bytes or size with unit)"
+msgstr "Minimum size (bytes or size with unit)"
+
+msgid "Off"
+msgstr "Off"
+
+msgid "Open log folder"
+msgstr "Open log folder"
+
+msgid "Owner lookup"
+msgstr "Owner lookup"
+
+msgid "Prefix bytes"
+msgstr "Prefix bytes"
+
+msgid "Row density"
+msgstr "Row density"
+
+msgid "SHA-256"
+msgstr "SHA-256"
+
+msgid "SI (kB, MB)"
+msgstr "SI (kB, MB)"
+
+msgid "Scan scheduling is not available yet."
+msgstr "Scan scheduling is not available yet."
+
+msgid "Scan threads"
+msgstr "Scan threads"
+
+msgid "Scanning defaults"
+msgstr "Scanning defaults"
+
+msgid "Scheduled scans"
+msgstr "Scheduled scans"
+
+msgid "Settings pages"
+msgstr "Settings pages"
+
+msgid "Shortcuts"
+msgstr "Shortcuts"
+
+msgid "Show NTFS metafiles (Windows only)"
+msgstr "Show NTFS metafiles (Windows only)"
+
+msgid "System language"
+msgstr "System language"
+
+msgid "Theme"
+msgstr "Theme"
+
+msgid "These defaults will be used when duplicate analysis is available."
+msgstr "These defaults will be used when duplicate analysis is available."
+
+msgid "Unit labels"
+msgstr "Unit labels"
+
+msgid "Verify matching bytes"
+msgstr "Verify matching bytes"
+
+msgid "XXH3 128"
+msgstr "XXH3 128"

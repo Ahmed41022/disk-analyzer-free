@@ -6,10 +6,12 @@ import sys
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
+from typing import cast
 
 from PySide6.QtCore import QLocale, QPoint, QSignalBlocker, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QCloseEvent
 from PySide6.QtWidgets import (
+    QApplication,
     QComboBox,
     QDockWidget,
     QLabel,
@@ -32,6 +34,8 @@ from dafree.gui.controllers.scan_controller import ScanController
 from dafree.gui.controllers.task_runner import TaskRunner
 from dafree.gui.dialogs.properties_dialog import PropertiesDialog
 from dafree.gui.dialogs.scan_dialog import ScanDialog
+from dafree.gui.dialogs.settings_dialog import SettingsDialog
+from dafree.gui.theme.palette import ThemeController
 from dafree.gui.views.issues_tab import IssuesTab
 from dafree.gui.views.tree_tab import TreeTab
 from dafree.gui.widgets.breadcrumb import ElidedPathLabel
@@ -81,6 +85,10 @@ class MainWindow(QMainWindow):
         self._volume_provider = volume_provider
         self._elevation_provider = elevation_provider
         self._scan_dialog: ScanDialog | None = None
+        self._settings_dialog: SettingsDialog | None = None
+        self._theme = ThemeController(
+            cast(QApplication, QApplication.instance()), self._settings.theme, self
+        )
         self._properties_dialogs: list[PropertiesDialog] = []
         self._pending_launch_arguments: list[str] = []
         self._latest_tree: api.Tree | None = None
@@ -160,7 +168,8 @@ class MainWindow(QMainWindow):
         self.query_edit = QueryEdit(toolbar)
         self.query_edit.filterChanged.connect(self._filter_changed)
         toolbar.addWidget(self.query_edit)
-        toolbar.addAction(_("Settings")).setEnabled(False)
+        self.settings_action = toolbar.addAction(_("Settings"))
+        self.settings_action.triggered.connect(self.open_settings)
         for action in toolbar.actions():
             widget = toolbar.widgetForAction(action)
             if widget is not None and action.text():
@@ -170,6 +179,33 @@ class MainWindow(QMainWindow):
         page = self._pages.get("tree")
         if isinstance(page, TreeTab):
             page.set_filter(spec)
+
+    def open_settings(self) -> None:
+        """Open one transactional dialog using the shared application preferences."""
+        if self._settings_dialog is not None:
+            self._settings_dialog.raise_()
+            self._settings_dialog.activateWindow()
+            return
+        dialog = SettingsDialog(
+            self._settings, self, paths=self._paths, theme_controller=self._theme
+        )
+        self._settings_dialog = dialog
+        dialog.accepted.connect(self._settings_changed)
+
+        def finished(result: int) -> None:
+            self._settings_dialog = None
+            dialog.deleteLater()
+
+        dialog.finished.connect(finished)
+        dialog.open()
+
+    def _settings_changed(self) -> None:
+        with QSignalBlocker(self.units):
+            self.units.setCurrentIndex(list(api.UnitMode).index(self._settings.units))
+        self._units_changed(self.units.currentIndex())
+        page = self._pages.get("tree")
+        if isinstance(page, TreeTab) and page.table is not None:
+            page.table.set_row_density(self._settings.row_density)
 
     def _units_changed(self, index: int) -> None:
         self._settings.units = api.UnitMode(self.units.currentData())
@@ -497,6 +533,8 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """Cancel read-only work and keep servicing Qt until workers deliver their results."""
+        if self._settings_dialog is not None:
+            self._settings_dialog.reject()
         for dialog in tuple(self._properties_dialogs):
             dialog.reject()
         if self.controller.running or self.runner.busy:
@@ -516,6 +554,7 @@ class MainWindow(QMainWindow):
                 self.isMaximized(),
             )
             save_settings(self._settings, self._paths)
+        self._theme.close()
         event.accept()
         self.closed.emit()
         super().closeEvent(event)
