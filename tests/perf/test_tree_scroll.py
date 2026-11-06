@@ -6,6 +6,9 @@ import json
 import math
 import os
 import statistics
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from importlib.util import find_spec
 from pathlib import Path
@@ -45,6 +48,50 @@ class PaintCounter(QObject):
         return False
 
 
+def _isolated_scroll(tmp_path: Path, record_property: Callable[[str, object], None]) -> None:
+    """Keep earlier GUI tests' application state out of the measured Qt process."""
+    report = tmp_path / "scroll.xml"
+    completed = subprocess.run(  # noqa: S603 -- fixed test node and test-owned output paths.
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            str(Path(__file__).resolve()) + "::test_scroll_10m_rows_frame_times",
+            "-q",
+            "-s",
+            "-o",
+            "junit_family=xunit1",
+            "--junitxml",
+            str(report),
+            "--basetemp",
+            str(tmp_path / "worker"),
+        ],
+        env=os.environ | {"_DAFREE_SCROLL_WORKER": "1"},
+        capture_output=True,
+        text=True,
+        timeout=110,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    document = ET.parse(report)  # noqa: S314 -- JUnit produced by our fixed child test.
+    cases = document.findall(".//testcase")
+    assert len(cases) == 1
+    assert cases[0].find("skipped") is None
+    metrics = {
+        item.attrib["name"]: item.attrib["value"]
+        for item in cases[0].findall("properties/property")
+    }
+    assert int(metrics["visible_rows"]) == 10_000_000
+    assert int(metrics["jumps"]) == 60
+    assert len(json.loads(metrics["all_repaint_ms"])) == 60
+    assert len(json.loads(metrics["paint_events_per_jump"])) == 60
+    assert float(metrics["median_repaint_ms"]) <= 16.7
+    assert float(metrics["p95_repaint_ms"]) <= 33
+    for key, value in metrics.items():
+        record_property(key, value)
+    print(completed.stdout, end="")
+
+
 @pytest.mark.gui
 @pytest.mark.slow
 def test_scroll_10m_rows_frame_times(
@@ -53,6 +100,9 @@ def test_scroll_10m_rows_frame_times(
     record_property: Callable[[str, object], None],
 ) -> None:
     """Time all 60 jumps including page fetch, painting, and pending Qt events."""
+    if os.environ.get("_DAFREE_SCROLL_WORKER") != "1":
+        _isolated_scroll(tmp_path, record_property)
+        return
     profile = tmp_path / "profile"
     paths = AppPaths(profile, profile / "data", profile / "logs", profile / "snapshots", False)
     settings = Settings(locale="en_US")

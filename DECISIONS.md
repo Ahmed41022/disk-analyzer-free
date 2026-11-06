@@ -15,6 +15,16 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0076 — 2026-11-06 — Isolate the repaint benchmark's Qt process
+
+Question: How should the repaint gate run reliably alongside the full local correctness suite?
+
+Choice: Execute the existing ten-million-row, 60-jump repaint scenario in a fresh pytest/Qt process. Preserve every measurement and original assertion in the child; require its success, reject a skipped child, validate the sample counts and timing limits again in the parent, and forward all recorded properties into the parent JUnit report. Use only test-created temporary paths. Retain the median 16.7 ms and p95 33 ms budgets.
+
+Reasoning: The combined local run passed 329 correctness tests but measured a 35.78 ms repaint median after preceding GUI tests shared the session QApplication. The unchanged unprofiled scenario passed repeatedly in a separate process (3.36–3.62 ms median). The new wrapper measured 3.653 ms median and 4.330 ms p95, forwarding all 60 samples to the parent report. CI already invokes the repaint scenario separately from correctness and coverage. A fresh application makes that isolation explicit when running the entire suite together as well; this changes test setup, not the workload or thresholds.
+
+Task: Dependency-maintenance validation follow-up before T4.9
+
 ## D-0075 — 2026-11-06 — Review pending dependency updates together
 
 Question: How should the eight pending Dependabot updates be reviewed and integrated?
