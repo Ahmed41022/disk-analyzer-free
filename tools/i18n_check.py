@@ -38,6 +38,7 @@ def _extract_pot(source_dir: Path, output_file: Path) -> None:
             "babel.messages.frontend",
             "extract",
             "--keywords=_",
+            "--keywords=N_",
             "--keywords=ngettext:1,2",
             "--no-location",
             "--sort-output",

@@ -615,11 +615,11 @@ Examples: `size>1GB ext:iso,img`, `modified>2y -path:*/node_modules/*`, `regex:"
 
 ```python
 # src/dafree/query/__init__.py
-@dataclass(frozen=True)
 class QueryError(Exception):
     span: tuple[int, int]          # character offsets for UI underline
     message_id: str                # gettext msgid
-    args: Mapping[str, str]
+    arguments: Mapping[str, str]    # read-only interpolation data (D-0077)
+    # Constructor accepts args=; inherited Exception.args remains a tuple.
 
 def parse(text: str, *, si: bool = False, now: datetime | None = None, max_depth: int = 32) -> Query: ...
 class Query:
@@ -1562,9 +1562,9 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T4.3
   - **Acceptance:** `test_rate_smoothing`, `test_pause_button_toggles_and_calls_controller`, `test_cancel_shows_partial_badge`.
 
-- [ ] **T4.9 — Query box and unit switching**
-  - **Files:** C `src/dafree/gui/widgets/query_edit.py`, `tests/gui/test_query_edit.py`.
-  - **Behavior:** `QLineEdit` with debounced (250 ms) parsing via `dafree.query.parse`; invalid input shows a red wavy underline at `QueryError.span` (custom paint) and the localized message as tooltip; valid input applies `view.set_options(filter=...)`. Until T6.1 lands, accepts plain substring → name glob. Units dropdown changes only formatting (delegates use `_core.format_size`; no row re-fetch).
+- [x] **T4.9 — Query box and unit switching**
+  - **Files:** M `src/dafree/gui/main_window.py`, `src/dafree/gui/views/tree_tab.py`, `src/dafree/gui/models/tree_model.py`, `src/dafree/i18n/__init__.py`, `src/dafree/api/{errors.py,__init__.py}`, `tools/i18n_check.py`; C `src/dafree/gui/widgets/query_edit.py`, `src/dafree/query/__init__.py`, `tests/gui/test_query_edit.py`.
+  - **Behavior:** `QLineEdit` with debounced (250 ms) parsing via `dafree.query.parse`; invalid input shows a red wavy underline at `QueryError.span` (custom paint) and the localized message as tooltip; valid input applies a literal, case-insensitive name-substring filter (compiled to the existing native name-glob filter). Until T6.1 lands, no structured grammar is interpreted. Units dropdown changes only formatting of cached rows, details, and scan total; it does not re-fetch rows or rescan.
   - **Depends on:** T4.5
   - **Acceptance:** `test_invalid_query_underlines_span`, `test_valid_query_filters_rows`, `test_unit_switch_does_not_refetch`.
 
@@ -1649,7 +1649,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
 ### M6 — Search and analysis
 
 - [ ] **T6.1 — Query lexer and parser (Python)**
-  - **Files:** C `src/dafree/query/{lexer.py,parser.py,compile.py,__init__.py}`, `docs/reference/query-language.md`, `tests/unit/test_query.py`, `tests/property/test_query_props.py`.
+  - **Files:** M `src/dafree/query/__init__.py`; C `src/dafree/query/{lexer.py,parser.py,compile.py}`, `docs/reference/query-language.md`, `tests/unit/test_query.py`, `tests/property/test_query_props.py`.
   - **Interface:** §2.8. AST: `And(items)`, `Or(items)`, `Not(item)`, `Term(field, op, value)`; `compile.to_filter_spec(ast) -> api.FilterSpec`.
   - **Behavior:** recursive descent; nesting ≤ 32; regex validated by compiling through `_core.validate_regex(pattern)` (PCRE2, same engine as evaluation; size limit 1 MiB; case-insensitive by default, `(?-i)` to override); durations relative to `now`; dates are local midnight; error messages are gettext msgids with spans.
   - **Depends on:** T1.5

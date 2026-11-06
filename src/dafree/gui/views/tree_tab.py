@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from PySide6.QtCore import QLocale, QModelIndex, Qt, Signal
 from PySide6.QtWidgets import QLabel, QSplitter, QVBoxLayout, QWidget
@@ -50,6 +50,7 @@ class TreeTab(QWidget):
         self._settings, self._runner, self._paths = settings, runner, paths
         self._owner, self._generation = object(), 0
         self._building = False
+        self._filter: api.FilterSpec | None = None
         self._pending: tuple[_ViewJob, api.Tree, api.ViewOptions, int | None] | None = None
         self.tree: api.Tree | None = None
         self.requested_tree: api.Tree | None = None
@@ -93,7 +94,11 @@ class TreeTab(QWidget):
             return
         self.requested_tree = tree
         self._generation += 1
-        options = self.table.tree_model.view.options if self.table else api.ViewOptions()
+        options = (
+            self.table.tree_model.view.options
+            if self.table
+            else api.ViewOptions(filter=self._filter)
+        )
         node = None
         if self.table and (index := self.table.currentIndex()).isValid():
             node = self.table.tree_model.node_at(index.row())
@@ -125,6 +130,8 @@ class TreeTab(QWidget):
             return
         self._building = False
         if job.generation == self._generation and isinstance(result, _PreparedView):
+            if result.view.options.filter != self._filter:
+                result.view.set_options(replace(result.view.options, filter=self._filter))
             if self.table is not None:
                 self.table.save_preferences()
                 self.table.setParent(None)
@@ -164,6 +171,20 @@ class TreeTab(QWidget):
             row = self.table.tree_model.row_of(node)
             if row is not None:
                 self.table.setCurrentIndex(self.table.tree_model.index(row, 0))
+
+    def set_filter(self, spec: api.FilterSpec | None) -> None:
+        """Retain the latest valid filter across pending snapshots and new scans."""
+        self._filter = spec
+        if self.table is not None:
+            model = self.table.tree_model
+            if model.view.options.filter != spec:
+                model.set_options(replace(model.view.options, filter=spec))
+
+    def refresh_units(self) -> None:
+        """Reformat cached table values and the current selection details."""
+        if self.table is not None:
+            self.table.tree_model.set_units(self._settings.units, self._settings.unit_style)
+            self._selected(self.table.currentIndex(), QModelIndex())
 
     def _selected(self, current: QModelIndex, previous: QModelIndex) -> None:
         if self.table is None or self.tree is None or not current.isValid():

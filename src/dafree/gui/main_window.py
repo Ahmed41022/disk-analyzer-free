@@ -10,9 +10,9 @@ from dataclasses import dataclass
 from PySide6.QtCore import QLocale, QPoint, QSignalBlocker, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QCloseEvent
 from PySide6.QtWidgets import (
+    QComboBox,
     QDockWidget,
     QLabel,
-    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QMainWindow,
@@ -36,6 +36,7 @@ from dafree.gui.views.issues_tab import IssuesTab
 from dafree.gui.views.tree_tab import TreeTab
 from dafree.gui.widgets.breadcrumb import ElidedPathLabel
 from dafree.gui.widgets.progress_panel import ProgressPanel, elapsed_text
+from dafree.gui.widgets.query_edit import QueryEdit
 from dafree.gui.widgets.volume_list import VolumeList
 from dafree.i18n import _
 from dafree.paths import AppPaths
@@ -83,6 +84,7 @@ class MainWindow(QMainWindow):
         self._properties_dialogs: list[PropertiesDialog] = []
         self._pending_launch_arguments: list[str] = []
         self._latest_tree: api.Tree | None = None
+        self._total_bytes = 0
         self._issues: list[ScanIssue] = []
         self._issue_total = 0
         self._pages: dict[str, TreeTab | IssuesTab] = {}
@@ -134,19 +136,53 @@ class MainWindow(QMainWindow):
         self.cancel = QAction(_("Cancel"), self)
         self.cancel.setEnabled(False)
         toolbar.addAction(self.cancel)
-        for caption in (_("Refresh"), _("Units")):
-            action = toolbar.addAction(caption)
-            action.setEnabled(False)
-        self.query_placeholder = QLineEdit(toolbar)
-        self.query_placeholder.setPlaceholderText(_("Search"))
-        self.query_placeholder.setAccessibleName(_("Search results"))
-        self.query_placeholder.setEnabled(False)
-        toolbar.addWidget(self.query_placeholder)
+        toolbar.addAction(_("Refresh")).setEnabled(False)
+        self.units = QComboBox(toolbar)
+        self.units.setAccessibleName(_("Units"))
+        for mode, caption in zip(
+            api.UnitMode,
+            (
+                _("Automatic"),
+                _("Bytes"),
+                _("Kilobytes"),
+                _("Megabytes"),
+                _("Gigabytes"),
+                _("Terabytes"),
+                _("Petabytes"),
+                _("Exabytes"),
+            ),
+            strict=True,
+        ):
+            self.units.addItem(caption, mode)
+        self.units.setCurrentIndex(list(api.UnitMode).index(self._settings.units))
+        self.units.currentIndexChanged.connect(self._units_changed)
+        toolbar.addWidget(self.units)
+        self.query_edit = QueryEdit(toolbar)
+        self.query_edit.filterChanged.connect(self._filter_changed)
+        toolbar.addWidget(self.query_edit)
         toolbar.addAction(_("Settings")).setEnabled(False)
         for action in toolbar.actions():
             widget = toolbar.widgetForAction(action)
-            if widget is not None:
+            if widget is not None and action.text():
                 widget.setAccessibleName(action.text())
+
+    def _filter_changed(self, spec: api.FilterSpec | None) -> None:
+        page = self._pages.get("tree")
+        if isinstance(page, TreeTab):
+            page.set_filter(spec)
+
+    def _units_changed(self, index: int) -> None:
+        self._settings.units = api.UnitMode(self.units.currentData())
+        page = self._pages.get("tree")
+        if isinstance(page, TreeTab):
+            page.refresh_units()
+        self.total_label.setText(
+            _("Total: {size}").format(
+                size=api.format_size(
+                    self._total_bytes, self._settings.units, self._settings.unit_style
+                )
+            )
+        )
 
     def _build_sidebar(self, provider: Callable[[], list[api.VolumeInfo]] | None) -> None:
         dock = QDockWidget(_("Locations"), self)
@@ -376,6 +412,7 @@ class MainWindow(QMainWindow):
 
     def _started(self, request: api.ScanRequest) -> None:
         self._latest_tree = None
+        self._total_bytes = 0
         self._issues.clear()
         self._issue_total = 0
         self.new_scan.setEnabled(False)
@@ -398,6 +435,7 @@ class MainWindow(QMainWindow):
             issues_page.set_issues([], 0)
 
     def _progress(self, progress: api.ScanProgress) -> None:
+        self._total_bytes = progress.bytes
         locale = QLocale()
         self.mode_label.setText(_("MFT") if progress.mode == api.ScanModeUsed.MFT else _("Walk"))
         self.files_label.setText(_("Files: {count}").format(count=locale.toString(progress.files)))
