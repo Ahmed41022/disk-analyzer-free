@@ -15,6 +15,26 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0076 — 2026-11-06 — Isolate the repaint benchmark's Qt process
+
+Question: How should the repaint gate run reliably alongside the full local correctness suite?
+
+Choice: Execute the existing ten-million-row, 60-jump repaint scenario in a fresh pytest/Qt process. Preserve every measurement and original assertion in the child; require its success, reject a skipped child, validate the sample counts and timing limits again in the parent, and forward all recorded properties into the parent JUnit report. Use only test-created temporary paths. Retain the median 16.7 ms and p95 33 ms budgets.
+
+Reasoning: The combined local run passed 329 correctness tests but measured a 35.78 ms repaint median after preceding GUI tests shared the session QApplication. The unchanged unprofiled scenario passed repeatedly in a separate process (3.36–3.62 ms median). The new wrapper measured 3.653 ms median and 4.330 ms p95, forwarding all 60 samples to the parent report. CI already invokes the repaint scenario separately from correctness and coverage. A fresh application makes that isolation explicit when running the entire suite together as well; this changes test setup, not the workload or thresholds.
+
+Task: Dependency-maintenance validation follow-up before T4.9
+
+## D-0075 — 2026-11-06 — Review pending dependency updates together
+
+Question: How should the eight pending Dependabot updates be reviewed and integrated?
+
+Choice: Consolidate PRs #1–#4 and #16–#19 into one maintenance PR, retaining their exact package versions and hashes and testing their combined state through every existing CI gate. Update checkout to v7, setup-python to v7, cache to v6, upload-artifact to v7, and github-script to v9. Update platformdirs to 4.14.3 (MIT), filelock to 4.2.7 (MIT), pip to 26.3 (MIT), watchdog to 7.0.0 (Apache-2.0), and python-dateutil to 4.0.0 (BSD-3-Clause), using the installed distributions' declared license metadata. Close the superseded bot PRs only after the combined change passes and merges. Retain the weekly Dependabot schedule and all test thresholds.
+
+Reasoning: These are existing dependencies. platformdirs supplies application paths; filelock and pip support development tooling; watchdog and python-dateutil support the documentation toolchain. The Actions updates remain compatible with the hosted runners and the workflow inputs in use: no removed pip-install input, fork checkout from privileged events, github-script require('@actions/github'), or getOctokit redeclaration is used. Watchdog's pattern changes concern the documentation watcher; dateutil's stricter parser concerns documentation dependencies. Two individual PRs reported native benchmark timing regressions despite leaving all measured C++ code unchanged; rerun their failed checks and require the unchanged performance gates on the combined update as well. Dependency review requests are normal scheduled maintenance notifications.
+
+Task: Dependency maintenance before resuming T4.9
+
 ## D-0074 — 2026-11-05 — Nightly failure job links
 
 Question: How should nightly failure reporting complete the requirements in sections 7.3 and 7.5?

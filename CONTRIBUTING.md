@@ -79,7 +79,10 @@ The GUI tests run offscreen in CI. Set `QT_QPA_PLATFORM=offscreen` when running 
 The GUI repaint benchmark runs in Release, with real system fonts, exactly ten
 million native rows, and 60 viewport jumps. It retains every sample and enforces
 median ≤16.7 ms and p95 ≤33 ms. CI runs its Linux leg on every event and all
-three OSes nightly. For local Linux verification, reuse the repo's caches:
+three OSes nightly. The test creates a fresh Qt subprocess so earlier GUI tests
+cannot change its application state when running the full suite together. All
+samples are forwarded to the parent JUnit report. For local Linux verification,
+reuse the repo's caches:
 
 ```sh
 SKBUILD_CMAKE_BUILD_TYPE=Release python -m pip install ".[gui]" --no-build-isolation -Cbuild-dir=build/gui-scroll-release
