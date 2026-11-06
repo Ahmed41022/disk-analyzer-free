@@ -4,6 +4,10 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ## [Unreleased]
 
+### Changed
+
+- Refreshed CI actions and the locked development/documentation dependencies after reviewing the pending automated update PRs.
+
 ### Fixed
 
 - Tree rendering reuses frame colours, font and delegate context while preserving standalone rendering, RTL, selection and disabled text.

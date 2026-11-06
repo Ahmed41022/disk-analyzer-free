@@ -33,8 +33,8 @@ jobs:
       FUZZ_MAX_LEN: ${{ matrix.max_len }}
       UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Install build tools
@@ -43,7 +43,7 @@ jobs:
         run: |
           cmake --preset fuzz -DCMAKE_CXX_COMPILER=clang++
           cmake --build build/fuzz --target "fuzz_${FUZZ_TARGET}" --parallel 3
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: build/fuzz-corpus/${{ matrix.target }}
           key: fuzz-${{ runner.os }}-${{ matrix.target }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -76,7 +76,7 @@ jobs:
               printf '```\n'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: fuzz-crash-${{ matrix.target }}-${{ github.run_attempt }}
@@ -92,7 +92,7 @@ jobs:
       actions: read
       issues: write
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v9
         env:
           FUZZ_RESULT: ${{ needs.fuzz.result }}
         with:
