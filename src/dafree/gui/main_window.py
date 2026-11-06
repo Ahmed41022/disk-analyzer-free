@@ -6,10 +6,11 @@ import sys
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
+from functools import partial
 from typing import cast
 
-from PySide6.QtCore import QLocale, QPoint, QSignalBlocker, Qt, QTimer, Signal
-from PySide6.QtGui import QAction, QCloseEvent
+from PySide6.QtCore import QLocale, QPoint, QSignalBlocker, Qt, QTimer, QUrl, Signal
+from PySide6.QtGui import QAction, QCloseEvent, QDesktopServices
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -35,6 +36,7 @@ from dafree.gui.controllers.task_runner import TaskRunner
 from dafree.gui.dialogs.properties_dialog import PropertiesDialog
 from dafree.gui.dialogs.scan_dialog import ScanDialog
 from dafree.gui.dialogs.settings_dialog import SettingsDialog
+from dafree.gui.shortcuts import ShortcutRegistry, shortcut_specs
 from dafree.gui.theme.palette import ThemeController
 from dafree.gui.views.issues_tab import IssuesTab
 from dafree.gui.views.tree_tab import TreeTab
@@ -110,6 +112,7 @@ class MainWindow(QMainWindow):
         self._build_tabs()
         self._build_progress()
         self._build_status(elevation_provider)
+        self._build_shortcuts()
         self._close_timer = QTimer(self)
         self._close_timer.setInterval(50)
         self._close_timer.timeout.connect(self._try_close)
@@ -144,7 +147,8 @@ class MainWindow(QMainWindow):
         self.cancel = QAction(_("Cancel"), self)
         self.cancel.setEnabled(False)
         toolbar.addAction(self.cancel)
-        toolbar.addAction(_("Refresh")).setEnabled(False)
+        self.refresh_selection = toolbar.addAction(_("Refresh"))
+        self.refresh_selection.setEnabled(False)
         self.units = QComboBox(toolbar)
         self.units.setAccessibleName(_("Units"))
         for mode, caption in zip(
@@ -180,6 +184,47 @@ class MainWindow(QMainWindow):
         if isinstance(page, TreeTab):
             page.set_filter(spec)
 
+    def _build_shortcuts(self) -> None:
+        self.shortcuts = ShortcutRegistry(self)
+        existing = {
+            "new_scan": self.new_scan,
+            "settings": self.settings_action,
+            "refresh_selection": self.refresh_selection,
+        }
+        for key, action in existing.items():
+            self.shortcuts.register(key, self, action=action)
+        self.shortcuts.register("focus_query", self, self.query_edit.setFocus)
+        self.shortcuts.register(
+            "help",
+            self,
+            lambda: QDesktopServices.openUrl(
+                QUrl(
+                    "https://github.com/Ahmed41022/disk-analyzer-free/blob/main/docs/guide/shortcuts.md"
+                )
+            ),
+        )
+        for index in range(9):
+            action = self.shortcuts.register(
+                f"switch_tab_{index + 1}",
+                self,
+                partial(self._shortcut_tab, index),
+            )
+            action.setEnabled(self.tabs.isTabEnabled(index))
+        self.progress_panel.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        cancel = self.shortcuts.register(
+            "cancel_scan", self.progress_panel, self.cancel.trigger, scoped=True
+        )
+        cancel.setEnabled(self.cancel.isEnabled())
+        self.cancel.changed.connect(lambda: cancel.setEnabled(self.cancel.isEnabled()))
+        for spec in shortcut_specs():
+            if spec.id not in self.shortcuts.actions:
+                self.shortcuts.register(spec.id, self)
+        self.shortcuts.apply(self._settings.shortcuts)
+
+    def _shortcut_tab(self, index: int) -> None:
+        if self.tabs.isTabEnabled(index):
+            self.tabs.setCurrentIndex(index)
+
     def open_settings(self) -> None:
         """Open one transactional dialog using the shared application preferences."""
         if self._settings_dialog is not None:
@@ -200,6 +245,7 @@ class MainWindow(QMainWindow):
         dialog.open()
 
     def _settings_changed(self) -> None:
+        self.shortcuts.apply(self._settings.shortcuts)
         with QSignalBlocker(self.units):
             self.units.setCurrentIndex(list(api.UnitMode).index(self._settings.units))
         self._units_changed(self.units.currentIndex())

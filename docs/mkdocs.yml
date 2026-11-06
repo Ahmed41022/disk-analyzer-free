@@ -28,5 +28,6 @@ nav:
   - JSON export: reference/json-export.md
   - CSV export: reference/csv-export.md
   - Desktop bootstrap: gui.md
+  - Keyboard shortcuts: guide/shortcuts.md
   - Performance and fixtures: performance.md
   - Implementation plan: PLAN.md

@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QDoubleSpinBox,
     QFormLayout,
+    QKeySequenceEdit,
     QLabel,
     QLineEdit,
     QPlainTextEdit,
@@ -30,6 +31,7 @@ from PySide6.QtWidgets import (
 
 from dafree import api
 from dafree.gui import _display_text
+from dafree.gui.shortcuts import effective_shortcuts, shortcut_conflicts, shortcut_specs
 from dafree.gui.theme.palette import ThemeController
 from dafree.i18n import _
 from dafree.paths import AppPaths
@@ -92,9 +94,7 @@ class SettingsDialog(QDialog):
         self._general()
         self._scanning()
         self._duplicates()
-        self._placeholder(
-            _("Shortcuts"), _("Keyboard shortcut customization is not available yet.")
-        )
+        self._shortcuts()
         self._placeholder(_("Scheduled scans"), _("Scan scheduling is not available yet."))
         self._advanced()
         self.error = QLabel("", self)
@@ -117,6 +117,46 @@ class SettingsDialog(QDialog):
         scroll.setWidget(body)
         self.pages.addTab(scroll, title)
         return form
+
+    def _shortcuts(self) -> None:
+        form = self._page(_("Shortcuts"))
+        self.shortcut_edits: dict[str, QKeySequenceEdit] = {}
+        sequences = effective_shortcuts(self._settings.shortcuts)
+        for spec in shortcut_specs():
+            editor = QKeySequenceEdit(sequences[spec.id], self)
+            self.shortcut_edits[spec.id] = editor
+            self._row(form, spec.label, editor)
+            editor.keySequenceChanged.connect(self._shortcut_conflicts)
+        self.shortcut_error = QLabel("", self)
+        self.shortcut_error.setTextFormat(Qt.TextFormat.PlainText)
+        self.shortcut_error.setWordWrap(True)
+        form.addRow(self.shortcut_error)
+        self.reset_shortcuts = QPushButton(_("Restore default shortcuts"), self)
+        self.reset_shortcuts.clicked.connect(self._reset_shortcuts)
+        form.addRow(self.reset_shortcuts)
+        form.addRow(
+            QLabel(_("Unavailable features stay disabled. Clear a shortcut to unassign it."), self)
+        )
+        self._shortcut_conflicts()
+
+    def _reset_shortcuts(self) -> None:
+        for spec in shortcut_specs():
+            self.shortcut_edits[spec.id].setKeySequence(spec.default)
+
+    def _shortcut_conflicts(self) -> list[tuple[str, str]]:
+        conflicts = shortcut_conflicts(
+            {key: editor.keySequence() for key, editor in self.shortcut_edits.items()}
+        )
+        labels = {spec.id: spec.label for spec in shortcut_specs()}
+        self.shortcut_error.setText(
+            "\n".join(
+                _("Shortcut conflict: {first} and {second}").format(
+                    first=labels[a], second=labels[b]
+                )
+                for a, b in conflicts
+            )
+        )
+        return conflicts
 
     @staticmethod
     def _row(form: QFormLayout, caption: str, widget: QWidget) -> None:
@@ -314,6 +354,16 @@ class SettingsDialog(QDialog):
     def _candidate(self) -> Settings:
         # Preserve unrelated preferences changed by workers while the dialog was open.
         candidate = deepcopy(self._settings)
+        if self._shortcut_conflicts():
+            raise ValueError(_("Resolve shortcut conflicts before saving."))
+        for spec in shortcut_specs():
+            sequence = self.shortcut_edits[spec.id].keySequence()
+            if sequence == spec.default:
+                candidate.shortcuts.pop(spec.id, None)
+            else:
+                candidate.shortcuts[spec.id] = sequence.toString(
+                    sequence.SequenceFormat.PortableText
+                )
         candidate.theme = cast(Literal["system", "light", "dark"], self.theme.currentData())
         language = self.language.currentData()
         candidate.locale = language.value if isinstance(language, _LanguageValue) else language
@@ -383,6 +433,7 @@ class SettingsDialog(QDialog):
             "default_scan",
             "dupes",
             "show_ntfs_metafiles",
+            "shortcuts",
         ):
             setattr(self._settings, name, getattr(candidate, name))
         self._theme_controller.set_theme(candidate.theme)

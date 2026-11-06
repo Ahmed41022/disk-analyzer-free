@@ -1575,9 +1575,9 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T4.2, T2.7
   - **Acceptance:** `test_theme_change_applies_palette`, `test_settings_saved_on_ok_not_on_cancel`, `test_system_theme_follows_color_scheme_signal`.
 
-- [ ] **T4.11 — Keyboard shortcuts**
-  - **Files:** C `src/dafree/gui/shortcuts.py`, `docs/guide/shortcuts.md`, `tests/gui/test_shortcuts.py`.
-  - **Behavior:** registry of `QAction`s `{id, default QKeySequence, handler}`: New scan `Ctrl/Cmd+N`, Refresh selection `F5`, Focus query `Ctrl/Cmd+F`, Copy path `Ctrl/Cmd+C`, Delete to Trash `Delete`, Delete permanently `Shift+Delete`, Save snapshot `Ctrl/Cmd+S`, Open snapshot `Ctrl/Cmd+O`, Export `Ctrl/Cmd+E`, Switch tab `Ctrl/Cmd+1..9`, Settings `Ctrl/Cmd+,` (`QKeySequence.Preferences`), Cancel scan `Esc` (when progress panel focused), Help `F1`. Overrides stored in settings; conflicts reported in the Shortcuts page.
+- [x] **T4.11 — Keyboard shortcuts**
+  - **Files:** C `src/dafree/gui/shortcuts.py`, `docs/guide/shortcuts.md`, `tests/gui/test_shortcuts.py`; M `src/dafree/gui/{main_window.py,dialogs/settings_dialog.py}` and GUI catalogs/docs.
+  - **Behavior:** registry of `QAction`s `{id, default QKeySequence, handler}`: New scan `Ctrl/Cmd+N`, Refresh selection `F5`, Focus query `Ctrl/Cmd+F`, Copy path `Ctrl/Cmd+C`, Delete to Trash `Delete`, Delete permanently `Shift+Delete`, Save snapshot `Ctrl/Cmd+S`, Open snapshot `Ctrl/Cmd+O`, Export `Ctrl/Cmd+E`, Switch tab `Ctrl/Cmd+1..9`, Settings `Ctrl/Cmd+,` (`QKeySequence.Preferences`), Cancel scan `Esc` (when progress panel focused), Help `F1`. Overrides stored in settings; conflicts reported in the Shortcuts page. D-0079 keeps unavailable services disabled, stages edits until successful save, preserves unknown IDs, supports empty overrides, rejects exact/prefix conflicts, and suppresses ambiguous stored bindings.
   - **Depends on:** T4.6, T4.10
   - **Acceptance:** `test_default_shortcuts_trigger_actions`, `test_override_persists`, `test_conflict_reported`.
 

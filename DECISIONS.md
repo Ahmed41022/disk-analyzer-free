@@ -15,6 +15,16 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0079 — 2026-11-06 — Bind shortcuts without advancing deferred services
+
+Question: How should the complete shortcut registry work before snapshot, export, refresh, and file-action services exist?
+
+Choice: Register stable action IDs and platform-aware Qt defaults, bind implemented window actions, and keep actions for unavailable services disabled. Do not implement file deletion, refresh, snapshots, or exports early. Store overrides as Qt PortableText; an explicit empty value disables the binding. Preserve unknown future action IDs. Expose staged editors and Restore defaults on the Settings Shortcuts page; reject exact and multi-chord prefix conflicts before saving. Suppress both ambiguous bindings if an externally edited settings file already contains a conflict. Apply successful settings changes immediately. Scope Cancel to a separate action owned by the progress panel and its children, so Escape elsewhere cannot cancel a scan. Use Qt standard New/Find/Copy/Save/Open/Preferences sequences and Control-based portable sequences for the remaining platform command keys. Add no dependencies.
+
+Reasoning: A complete registry can reserve the planned interfaces while preserving milestone boundaries and normal editing keys. Sharing the toolbar Cancel action's shortcut context would also make Escape active at the toolbar; a scoped forwarding action avoids that ambiguity. Transactional editing prevents a failed save or Cancel from changing active bindings.
+
+Task: T4.11
+
 ## D-0078 — 2026-11-06 — Stage GUI preferences transactionally
 
 Question: Which settings should the first preferences dialog expose while shortcuts and scheduled scans are not ready, and how should edits affect the running application?

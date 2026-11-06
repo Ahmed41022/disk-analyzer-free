@@ -122,8 +122,6 @@ msgstr ""
 msgid "Keep duplicate groups on the same volume"
 msgstr ""
 
-msgid "Keyboard shortcut customization is not available yet."
-msgstr ""
 
 msgid "Language"
 msgstr ""
@@ -204,4 +202,48 @@ msgid "Verify matching bytes"
 msgstr ""
 
 msgid "XXH3 128"
+msgstr ""
+
+msgid "Cancel scan"
+msgstr ""
+
+msgid "Delete permanently"
+msgstr ""
+
+msgid "Delete to Trash"
+msgstr ""
+
+msgid "Export"
+msgstr ""
+
+msgid "Focus query"
+msgstr ""
+
+msgid "Help"
+msgstr ""
+
+msgid "Open snapshot"
+msgstr ""
+
+msgid "Refresh selection"
+msgstr ""
+
+msgid "Resolve shortcut conflicts before saving."
+msgstr ""
+
+msgid "Restore default shortcuts"
+msgstr ""
+
+msgid "Save snapshot"
+msgstr ""
+
+#, python-brace-format
+msgid "Shortcut conflict: {first} and {second}"
+msgstr ""
+
+#, python-brace-format
+msgid "Switch to tab {number}"
+msgstr ""
+
+msgid "Unavailable features stay disabled. Clear a shortcut to unassign it."
 msgstr ""
