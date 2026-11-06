@@ -115,6 +115,9 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
+msgid "Cancel scan"
+msgstr ""
+
 msgid "Cancellation requested…"
 msgstr ""
 
@@ -218,6 +221,12 @@ msgstr ""
 msgid "Dark"
 msgstr ""
 
+msgid "Delete permanently"
+msgstr ""
+
+msgid "Delete to Trash"
+msgstr ""
+
 msgid "Directory tree"
 msgstr ""
 
@@ -270,6 +279,9 @@ msgstr ""
 msgid "Excluded paths, one per line"
 msgstr ""
 
+msgid "Export"
+msgstr ""
+
 msgid "Export CSV"
 msgstr ""
 
@@ -306,6 +318,9 @@ msgid "Find"
 msgstr ""
 
 msgid "Finishing scan…"
+msgstr ""
+
+msgid "Focus query"
 msgstr ""
 
 msgid "Folder"
@@ -355,6 +370,9 @@ msgstr ""
 msgid "Hash algorithm"
 msgstr ""
 
+msgid "Help"
+msgstr ""
+
 msgid "Hidden"
 msgstr ""
 
@@ -390,9 +408,6 @@ msgid "Issues: {count}"
 msgstr ""
 
 msgid "Keep duplicate groups on the same volume"
-msgstr ""
-
-msgid "Keyboard shortcut customization is not available yet."
 msgstr ""
 
 msgid "Kilobytes"
@@ -470,6 +485,9 @@ msgstr ""
 msgid "Open log folder"
 msgstr ""
 
+msgid "Open snapshot"
+msgstr ""
+
 msgid "Orphaned entry"
 msgstr ""
 
@@ -545,16 +563,25 @@ msgstr ""
 msgid "Refresh"
 msgstr ""
 
+msgid "Refresh selection"
+msgstr ""
+
 msgid "Remove targets"
 msgstr ""
 
 msgid "Reparse point"
 msgstr ""
 
+msgid "Resolve shortcut conflicts before saving."
+msgstr ""
+
 msgid "Resolving…"
 msgstr ""
 
 msgid "Restart as administrator"
+msgstr ""
+
+msgid "Restore default shortcuts"
 msgstr ""
 
 msgid "Resume"
@@ -570,6 +597,9 @@ msgid "SHA-256"
 msgstr ""
 
 msgid "SI (kB, MB)"
+msgstr ""
+
+msgid "Save snapshot"
 msgstr ""
 
 msgid "Scan"
@@ -641,6 +671,10 @@ msgstr ""
 msgid "Settings pages"
 msgstr ""
 
+#, python-brace-format
+msgid "Shortcut conflict: {first} and {second}"
+msgstr ""
+
 msgid "Shortcuts"
 msgstr ""
 
@@ -661,6 +695,10 @@ msgid "Sparse"
 msgstr ""
 
 msgid "Start scan"
+msgstr ""
+
+#, python-brace-format
+msgid "Switch to tab {number}"
 msgstr ""
 
 msgid "Symbolic link"
@@ -717,6 +755,9 @@ msgid "Types"
 msgstr ""
 
 msgid "Unavailable"
+msgstr ""
+
+msgid "Unavailable features stay disabled. Clear a shortcut to unassign it."
 msgstr ""
 
 msgid "Unexpected error"

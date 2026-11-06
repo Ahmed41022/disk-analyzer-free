@@ -118,8 +118,6 @@ msgstr "Include hidden files"
 msgid "Keep duplicate groups on the same volume"
 msgstr "Keep duplicate groups on the same volume"
 
-msgid "Keyboard shortcut customization is not available yet."
-msgstr "Keyboard shortcut customization is not available yet."
 
 msgid "Language"
 msgstr "Language"
@@ -201,3 +199,47 @@ msgstr "Verify matching bytes"
 
 msgid "XXH3 128"
 msgstr "XXH3 128"
+
+msgid "Cancel scan"
+msgstr "Cancel scan"
+
+msgid "Delete permanently"
+msgstr "Delete permanently"
+
+msgid "Delete to Trash"
+msgstr "Delete to Trash"
+
+msgid "Export"
+msgstr "Export"
+
+msgid "Focus query"
+msgstr "Focus query"
+
+msgid "Help"
+msgstr "Help"
+
+msgid "Open snapshot"
+msgstr "Open snapshot"
+
+msgid "Refresh selection"
+msgstr "Refresh selection"
+
+msgid "Resolve shortcut conflicts before saving."
+msgstr "Resolve shortcut conflicts before saving."
+
+msgid "Restore default shortcuts"
+msgstr "Restore default shortcuts"
+
+msgid "Save snapshot"
+msgstr "Save snapshot"
+
+#, python-brace-format
+msgid "Shortcut conflict: {first} and {second}"
+msgstr "Shortcut conflict: {first} and {second}"
+
+#, python-brace-format
+msgid "Switch to tab {number}"
+msgstr "Switch to tab {number}"
+
+msgid "Unavailable features stay disabled. Clear a shortcut to unassign it."
+msgstr "Unavailable features stay disabled. Clear a shortcut to unassign it."
