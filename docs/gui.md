@@ -161,3 +161,34 @@ clipboard data also retains raw issue strings. Choose a new CSV filename:
 existing files and final symlinks are preserved. Export runs in a worker.
 An interrupted write reports that its newly created report may be incomplete;
 it does not remove or overwrite another file.
+
+
+## Automated self-test
+
+For an isolated, read-only GUI scan check, supply a directory and its expected logical
+byte total (sum of file lengths, with hard links counted once):
+
+```console
+python -m dafree.gui.app --self-test /path/to/fixture --expect-size 1234
+```
+
+The hook forces offscreen Qt, uses disposable preferences/logs, and checks the first
+rendered model row and raw total after asynchronous scanning completes. The normal
+root row displays its full path; the check verifies that path and its directory name.
+It prints one JSON object with `ok`, `name`, `size`, `expected_size`, and `error`, and
+exits 0 on success or 1 on failure. It does not read or update your saved preferences.
+Use a directory without permission errors or linked roots for a successful check.
+
+Developers can build the same console-enabled GUI smoke bundle used in CI:
+
+```console
+python -m pip install --require-hashes -r requirements/freeze.txt
+python -m pip install ".[gui]"
+python tools/dist/build_frozen.py --out dist/selftest
+```
+
+Launch `dist/selftest/DiskAnalyzerFree/DiskAnalyzerFree` (add `.exe` on Windows) with
+the same self-test flags. The output must be inside the checkout and must not already
+contain a bundle. Build work and FetchContent caches remain inside the ignored repo
+build/cache directories. Linux CI and the release verification workflow exercise
+actual frozen executables; installers and the final release bundle remain M10 work.

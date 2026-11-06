@@ -20,6 +20,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- An isolated offscreen GUI self-test with JSON diagnostics and actual frozen-bundle checks on Linux, Windows, and macOS.
+
 - Complete English, Arabic and German catalogs, RTL/native-dialog checks, and exact localized byte-size display.
 
 - Configurable platform keyboard shortcuts with conflict reporting and progress-scoped scan cancellation.

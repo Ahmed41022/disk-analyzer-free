@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import logging
@@ -12,7 +13,9 @@ import threading
 import traceback
 from datetime import date
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import TracebackType
+from typing import NoReturn, cast
 
 from PySide6.QtCore import (
     QCoreApplication,
@@ -24,6 +27,7 @@ from PySide6.QtCore import (
     QLockFile,
     QObject,
     Qt,
+    QTimer,
     QTranslator,
     Signal,
     Slot,
@@ -33,8 +37,9 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 from dafree import __version__, api
 from dafree.gui import _display_text
-from dafree.gui.main_window import create_main_window
+from dafree.gui.main_window import MainWindow, create_main_window
 from dafree.gui.theme.palette import apply_palette
+from dafree.gui.views.tree_tab import TreeTab
 from dafree.i18n import _, is_rtl, setup
 from dafree.paths import AppPaths, detect
 from dafree.settings import Settings, load_settings
@@ -43,6 +48,140 @@ _STATE_NAME = "dafree.application"
 _MAX_MESSAGE = 64 * 1024
 _LOG_FILES = 7
 _LOG_NAME = re.compile(r"dafree-[0-9]{8}\.log")
+_SELF_TEST_TIMEOUT_MS = 60_000
+
+
+class _SelfTestParser(argparse.ArgumentParser):
+    def error(self, message: str) -> NoReturn:
+        raise ValueError(message)
+
+
+def _close_app_state(app: QApplication) -> None:
+    state = app.findChild(_ApplicationState, _STATE_NAME)
+    if state is not None:
+        state.close()
+        state.setParent(None)
+        state.deleteLater()
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+
+
+def _self_test_row(target: Path, result: api.ScanResult, page: TreeTab) -> int:
+    """Verify the actual first model row and return its unformatted byte size."""
+    if page.table is None or not page.table.tree_model.rowCount():
+        raise ValueError("Tree model has no first row")
+    model = page.table.tree_model
+    node = model.node_at(0)
+    root_path = result.tree.path(node)
+    displayed = model.index(0, 0).data()
+    # The existing root-row contract displays the full path. Verify that
+    # presentation before comparing its basename against the requested DIR name.
+    if root_path != str(target) or displayed != _display_text(root_path):
+        raise ValueError("First tree row does not represent the requested directory")
+    if Path(root_path).name != target.name:
+        raise ValueError("First tree row has an unexpected directory name")
+    if result.summary.cancelled or result.summary.issues.total:
+        raise ValueError("Self-test scan was cancelled or reported filesystem issues")
+    return result.tree.node(node).size
+
+
+def _run_self_test(target: Path, expected_size: int, paths: AppPaths) -> dict[str, object]:
+    """Exercise real scan/controller/model delivery with isolated, disposable preferences."""
+    settings = Settings(locale="en_US", theme="light")
+    app = build_app([sys.argv[0]], paths, settings)
+    window = MainWindow(paths=paths, settings=settings, volume_provider=lambda: [])
+    page = cast(TreeTab, window._pages["tree"])
+    loop = QEventLoop()
+    window.closed.connect(loop.quit)
+    report: dict[str, object] = {
+        "ok": False,
+        "name": target.name,
+        "size": None,
+        "expected_size": expected_size,
+        "error": "Self-test did not complete",
+    }
+    result: api.ScanResult | None = None
+    finished = False
+    timer = QTimer(window)
+    timer.setSingleShot(True)
+
+    def finish(error: str | None) -> None:
+        nonlocal finished
+        if finished:
+            return
+        finished = True
+        timer.stop()
+        report.update(ok=error is None, error=error)
+        window.close()
+
+    def inspect_row() -> None:
+        if finished or result is None or page.tree is not result.tree or page.table is None:
+            return
+        try:
+            size = _self_test_row(target, result, page)
+            report["size"] = size
+            if size != expected_size or result.summary.bytes != expected_size:
+                raise ValueError("Tree size does not match the expected byte count")
+        except Exception as error:
+            finish(str(error))
+        else:
+            finish(None)
+
+    def scanned(value: api.ScanResult) -> None:
+        nonlocal result
+        result = value
+        inspect_row()
+
+    window.controller.finished.connect(scanned)
+    window.controller.failed.connect(finish)
+    window.runner.failed.connect(lambda job, message: finish(message))
+    page.ready.connect(inspect_row)
+    timer.timeout.connect(lambda: finish("Self-test timed out"))
+    window.show()
+    request = api.ScanRequest(
+        [target], mode=api.ScanMode.WALK, threads=2, follow_symlinks=False, cross_filesystems=False
+    )
+    QTimer.singleShot(0, lambda: window.start_scan(request))
+    timer.start(_SELF_TEST_TIMEOUT_MS)
+    try:
+        loop.exec()
+        return report
+    finally:
+        window.deleteLater()
+        _close_app_state(app)
+
+
+def _self_test(arguments: list[str]) -> int:
+    """Emit exactly one machine-readable result without using normal settings or IPC."""
+    report: dict[str, object] = {
+        "ok": False,
+        "name": None,
+        "size": None,
+        "expected_size": None,
+        "error": None,
+    }
+    try:
+        parser = _SelfTestParser(add_help=False)
+        parser.add_argument("--self-test", required=True)
+        parser.add_argument("--expect-size", required=True)
+        options = parser.parse_args(arguments)
+        # Normalize lexically; resolve() would follow links before validation.
+        target = Path(os.path.abspath(options.self_test))  # noqa: PTH100
+        report["name"] = target.name
+        expected = int(options.expect_size)
+        if not 0 <= expected <= (1 << 64) - 1:
+            raise ValueError("Expected size must be an unsigned 64-bit byte count")
+        report["expected_size"] = expected
+        if target.is_symlink() or target.is_junction() or not target.is_dir():
+            raise ValueError("Self-test target must be an existing directory, not a link")
+        os.environ["QT_QPA_PLATFORM"] = "offscreen"
+        with TemporaryDirectory(prefix="dafree-self-test-") as directory:
+            root = Path(directory)
+            paths = AppPaths(root / "config", root / "data", root / "logs", root / "snaps", False)
+            report = _run_self_test(target, expected, paths)
+    except Exception as error:
+        report.update(ok=False, error=str(error))
+    print(json.dumps(report, ensure_ascii=True))
+    return 0 if report["ok"] else 1
 
 
 def _log_handler(paths: AppPaths) -> logging.FileHandler:
@@ -296,6 +435,8 @@ def main(argv: list[str] | None = None) -> int:
     from PySide6.QtWidgets import QApplication  # noqa: PLC0415
 
     arguments = sys.argv[1:] if argv is None else argv
+    if any(arg.split("=", maxsplit=1)[0] in {"--self-test", "--expect-size"} for arg in arguments):
+        return _self_test(arguments)
     paths = detect()
     settings = load_settings(paths)
     app = build_app([sys.argv[0], *arguments], paths, settings)
@@ -335,12 +476,7 @@ def main(argv: list[str] | None = None) -> int:
             window.closed.connect(shutdown.quit)
             shutdown.exec()
         window.deleteLater()
-        state = app.findChild(_ApplicationState, _STATE_NAME)
-        if state is not None:
-            state.close()
-            state.setParent(None)
-            state.deleteLater()
-        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+        _close_app_state(app)
 
 
 if __name__ == "__main__":

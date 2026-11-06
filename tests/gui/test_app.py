@@ -2,6 +2,7 @@
 
 # ruff: noqa: PLR2004 -- fixed contract limits and fixture counts are explicit assertions.
 
+import json
 import os
 import subprocess
 import sys
@@ -9,6 +10,7 @@ import threading
 import weakref
 from collections.abc import Iterator
 from datetime import date, timedelta
+from functools import partial
 from importlib.util import find_spec
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -97,6 +99,33 @@ def test_app_initial_locale_sets_layout_direction(qapp: QApplication, tmp_path: 
     assert current_locale() == "ar"
     assert qapp.layoutDirection() == Qt.LayoutDirection.RightToLeft
     assert QLocale().language() == QLocale.Language.Arabic
+
+
+@pytest.mark.parametrize("expected", [4, 5])
+def test_self_test_runs_real_model_in_process(
+    tmp_path: Path, monkeypatch, capsys, expected: int
+) -> None:
+    """Exercise the hook itself, including event-loop shutdown and size mismatch diagnostics."""
+    target = tmp_path / "target"
+    target.mkdir()
+    (target / "payload").write_bytes(b"data")
+    monkeypatch.setattr(bootstrap, "TemporaryDirectory", partial(TemporaryDirectory, dir=tmp_path))
+    code = bootstrap.main(["--self-test", str(target), "--expect-size", str(expected)])
+    result = json.loads(capsys.readouterr().out)
+    assert code == (0 if expected == len(b"data") else 1)
+    assert result["ok"] == (code == 0)
+    assert result["size"] == len(b"data")
+    assert result["name"] == target.name
+    assert result["expected_size"] == expected
+    assert (result["error"] is None) == (code == 0)
+
+
+def test_self_test_invalid_arguments_are_json(tmp_path: Path, capsys) -> None:
+    """Parsing failures do not start an interactive GUI or emit an argparse exit code."""
+    assert bootstrap.main(["--self-test", str(tmp_path)]) == 1
+    result = json.loads(capsys.readouterr().out)
+    assert result["ok"] is False
+    assert isinstance(result["error"], str) and result["error"]
 
 
 def test_task_runner_emits_finished(qtbot: QtBot) -> None:
