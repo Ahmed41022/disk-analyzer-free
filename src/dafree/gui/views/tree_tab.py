@@ -9,7 +9,7 @@ from PySide6.QtCore import QLocale, QModelIndex, Qt, Signal
 from PySide6.QtWidgets import QLabel, QSplitter, QVBoxLayout, QWidget
 
 from dafree import api
-from dafree.gui import _display_text
+from dafree.gui import _display_text, _format_size
 from dafree.gui.controllers.task_runner import TaskRunner
 from dafree.gui.models.tree_model import TreeTableModel
 from dafree.gui.widgets.breadcrumb import Breadcrumb
@@ -196,8 +196,8 @@ class TreeTab(QWidget):
                 "{name}\nSize: {size}\nAllocated: {allocated}\nFiles: {files}\nFolders: {folders}"
             ).format(
                 name=_display_text(row[4]),
-                size=api.format_size(row[5], self._settings.units, self._settings.unit_style),
-                allocated=api.format_size(row[6], self._settings.units, self._settings.unit_style),
+                size=_format_size(row[5], self._settings.units, self._settings.unit_style),
+                allocated=_format_size(row[6], self._settings.units, self._settings.unit_style),
                 files=QLocale().toString(row[8]),
                 folders=QLocale().toString(row[9]),
             )

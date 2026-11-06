@@ -7,7 +7,7 @@ from PySide6.QtGui import QAccessible, QAccessibleEvent, QAction
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QProgressBar, QToolButton, QVBoxLayout, QWidget
 
 from dafree import api
-from dafree.gui import _display_text
+from dafree.gui import _display_text, _format_size
 from dafree.gui.controllers.scan_controller import ScanController
 from dafree.gui.widgets.breadcrumb import ElidedPathLabel
 from dafree.i18n import _
@@ -104,7 +104,7 @@ class ProgressPanel(QWidget):
         self.dirs.setText(_("Folders: {count}").format(count=locale.toString(dirs)))
         self.bytes.setText(
             _("Total: {size}").format(
-                size=api.format_size(size, self._settings.units, self._settings.unit_style)
+                size=_format_size(size, self._settings.units, self._settings.unit_style)
             )
         )
         self.elapsed.setText(_("Elapsed: {time}").format(time=elapsed_text(elapsed)))

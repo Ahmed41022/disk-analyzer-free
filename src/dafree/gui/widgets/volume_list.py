@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from dafree import api
-from dafree.gui import _display_text
+from dafree.gui import _display_text, _format_size
 from dafree.gui.controllers.task_runner import TaskRunner
 from dafree.i18n import _
 from dafree.settings import Settings
@@ -141,8 +141,8 @@ class VolumeList(QWidget):
         bar = QProgressBar(row)
         bar.setRange(0, 1000)
         bar.setValue(round((volume.total - min(volume.free, volume.total)) / volume.total * 1000))
-        free = api.format_size(volume.free, self._settings.units, self._settings.unit_style)
-        total = api.format_size(volume.total, self._settings.units, self._settings.unit_style)
+        free = _format_size(volume.free, self._settings.units, self._settings.unit_style)
+        total = _format_size(volume.total, self._settings.units, self._settings.unit_style)
         description = _("{free} free of {total}").format(free=free, total=total)
         bar.setFormat(description)
         bar.setAccessibleName(_("{mount}: {capacity}").format(mount=mount, capacity=description))

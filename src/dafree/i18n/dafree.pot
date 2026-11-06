@@ -17,10 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#, python-format
-msgid "% of Parent"
-msgstr ""
-
 msgid "180d–1y"
 msgstr ""
 
@@ -307,9 +303,6 @@ msgstr ""
 msgid "Files"
 msgstr ""
 
-msgid "Files: 0"
-msgstr ""
-
 #, python-brace-format
 msgid "Files: {count}"
 msgstr ""
@@ -334,9 +327,6 @@ msgid "Folder path"
 msgstr ""
 
 msgid "Folders"
-msgstr ""
-
-msgid "Folders: 0"
 msgstr ""
 
 #, python-brace-format
@@ -501,6 +491,9 @@ msgid "Owner lookup"
 msgstr ""
 
 msgid "Parent folder"
+msgstr ""
+
+msgid "Parent share (%)"
 msgstr ""
 
 msgid "Partial results"
@@ -733,9 +726,6 @@ msgid "Timeout"
 msgstr ""
 
 msgid "Top"
-msgstr ""
-
-msgid "Total: 0 B"
 msgstr ""
 
 #, python-brace-format

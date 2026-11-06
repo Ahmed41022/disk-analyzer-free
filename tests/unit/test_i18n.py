@@ -1,12 +1,14 @@
 """Tests for locale negotiation and gettext helpers."""
 
+import runpy
 import subprocess
 import sys
+from io import StringIO
 from pathlib import Path
 
 import pytest
 from babel.messages.catalog import Catalog
-from babel.messages.pofile import write_po
+from babel.messages.pofile import read_po, write_po
 
 from dafree.i18n import _, _file_count_label, current_locale, is_rtl, setup
 
@@ -92,3 +94,45 @@ def test_i18n_check_detects_placeholder_mismatch(tmp_path: Path) -> None:
 
     assert result.returncode == 1
     assert "format placeholder mismatch" in result.stderr
+
+
+def test_normalized_template_preserves_valid_po_header() -> None:
+    """A reproducible timestamp must retain the PO header's literal newline escape."""
+    checker = Path(__file__).parents[2] / "tools" / "i18n_check.py"
+    normalize = runpy.run_path(str(checker))["_normalise_pot"]
+    original = "\n".join(
+        [
+            'msgid ""',
+            'msgstr ""',
+            '"Project-Id-Version: test 1.0\\n"',
+            '"POT-Creation-Date: 2026-11-06 10:00+0000\\n"',
+            '"Content-Type: text/plain; charset=utf-8\\n"',
+            "",
+        ]
+    )
+    normalized = normalize(original)
+    catalogue = read_po(StringIO(normalized))
+    assert catalogue.creation_date.isoformat().startswith("2000-01-01")
+    assert catalogue.project == "test"
+    assert normalize(normalized) == normalized
+
+
+@pytest.mark.parametrize("language", ["en_US", "ar", "de"])
+def test_shipped_catalogues_are_complete(language: str) -> None:
+    """Every extracted message has all translated forms and no fuzzy flags."""
+    directory = Path(__file__).parents[2] / "src" / "dafree" / "i18n"
+    with (directory / "dafree.pot").open(encoding="utf8") as stream:
+        template = read_po(stream)
+    with (directory / "locales" / language / "LC_MESSAGES" / "dafree.po").open(
+        encoding="utf8"
+    ) as stream:
+        catalogue = read_po(stream)
+    assert {m.id for m in catalogue if m.id} == {m.id for m in template if m.id}
+    for message in catalogue:
+        if not message.id:
+            continue
+        forms = message.string if isinstance(message.string, tuple) else (message.string,)
+        assert len(forms) == (catalogue.num_plurals if isinstance(message.id, tuple) else 1)
+        assert all(forms), message.id
+        assert not message.fuzzy, message.id
+        assert not list(message.check(catalogue)), message.id

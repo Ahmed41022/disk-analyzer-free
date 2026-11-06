@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from dafree import api
-from dafree.gui import _copy_text, _display_text
+from dafree.gui import _copy_text, _display_text, _format_size
 from dafree.gui.controllers.task_runner import TaskRunner
 from dafree.i18n import _
 from dafree.settings import Settings
@@ -183,7 +183,7 @@ class PropertiesDialog(QDialog):
         self.form.addRow(title, label)
 
     def _size(self, value: int) -> str:
-        return api.format_size(value, self._settings.units, self._settings.unit_style)
+        return _format_size(value, self._settings.units, self._settings.unit_style)
 
     def _volume_text(self, volume: api.VolumeInfo | None) -> str:
         if volume is None:

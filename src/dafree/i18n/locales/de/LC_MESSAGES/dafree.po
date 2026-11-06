@@ -1,245 +1,903 @@
+
 msgid ""
 msgstr ""
 "Project-Id-Version: disk-analyzer-free 0.1.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2000-01-01 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"Language-Team: de <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
 
-#: src/dafree/i18n/__init__.py
+msgid "180d–1y"
+msgstr "180 T–1 J"
+
+msgid "1–2y"
+msgstr "1–2 J"
+
+msgid "2–5y"
+msgstr "2–5 J"
+
+msgid "30–90d"
+msgstr "30–90 T"
+
+msgid "90–180d"
+msgstr "90–180 T"
+
+msgid "<30d"
+msgstr "<30 T"
+
+#, python-brace-format
+msgid "<{end}"
+msgstr "<{end}"
+
+msgid ">5y"
+msgstr ">5 J"
+
+msgid "A background thread terminated unexpectedly."
+msgstr "Ein Hintergrundthread wurde unerwartet beendet."
+
+msgid "A scan is already running."
+msgstr "Ein Scan läuft bereits."
+
+msgid "Access denied"
+msgstr "Zugriff verweigert"
+
+msgid "Accessed"
+msgstr "Letzter Zugriff"
+
+msgid "Add folder…"
+msgstr "Ordner hinzufügen…"
+
+msgid "Add path"
+msgstr "Pfad hinzufügen"
+
+msgid "Add selected volumes"
+msgstr "Ausgewählte Volumes hinzufügen"
+
+msgid "Administrator"
+msgstr "Administrator"
+
+msgid "Administrator status is unavailable."
+msgstr "Der Administratorstatus ist nicht verfügbar."
+
+msgid "Advanced"
+msgstr "Erweitert"
+
+msgid "Age"
+msgstr "Alter"
+
+msgid "All kinds"
+msgstr "Alle Arten"
+
+msgid "Allocated"
+msgstr "Belegt"
+
+msgid "Allocated size is approximate"
+msgstr "Die belegte Größe ist ein Näherungswert"
+
+msgid "An unexpected error occurred. Details were saved to the application log."
+msgstr "Ein unerwarteter Fehler ist aufgetreten. Details wurden im Anwendungsprotokoll gespeichert."
+
+msgid "Arabic"
+msgstr "Arabisch"
+
+msgid "Auto"
+msgstr "Auto"
+
+msgid "Automatic"
+msgstr "Automatisch"
+
+msgid "BLAKE3"
+msgstr "BLAKE3"
+
+msgid "Binary (KB, MB)"
+msgstr "Binär (KB, MB)"
+
+msgid "Bytes"
+msgstr "Bytes"
+
+msgid "CSV files (*.csv)"
+msgstr "CSV-Dateien (*.csv)"
+
+msgid "Cancel"
+msgstr "Abbrechen"
+
+msgid "Cancel scan"
+msgstr "Scan abbrechen"
+
+msgid "Cancellation requested…"
+msgstr "Abbruch angefordert…"
+
+#, python-brace-format
+msgid "Cannot access preferences: {error}"
+msgstr "Auf Einstellungen kann nicht zugegriffen werden: {error}"
+
+msgid "Changed during scan"
+msgstr "Während des Scans geändert"
+
+msgid "Charts"
+msgstr "Diagramme"
+
+msgid "Checking folder…"
+msgstr "Ordner wird überprüft…"
+
+msgid "Choose a target to start a scan."
+msgstr "Wählen Sie ein Ziel aus, um einen Scan zu starten."
+
+msgid "Choose scan folder"
+msgstr "Scan-Ordner auswählen"
+
+msgid "Cloud placeholder"
+msgstr "Cloud-Platzhalter"
+
+msgid "Combined scan"
+msgstr "Kombinierter Scan"
+
+msgid "Comfortable"
+msgstr "Komfortabel"
+
+msgid "Compact"
+msgstr "Kompakt"
+
+msgid "Compare"
+msgstr "Vergleichen"
+
+msgid "Compressed"
+msgstr "Komprimiert"
+
+msgid "Copy all"
+msgstr "Alles kopieren"
+
+msgid "Copy all displayed issues."
+msgstr "Alle angezeigten Probleme kopieren."
+
+msgid "Copy details"
+msgstr "Details kopieren"
+
+msgid "Copy path"
+msgstr "Pfad kopieren"
+
+#, python-brace-format
+msgid "Could not export issues: {error}. Choose a new filename; existing files are preserved."
+msgstr ""
+"Probleme konnten nicht exportiert werden: {error}. Wählen Sie einen neuen Dateinamen; vorhandene "
+"Dateien bleiben erhalten."
+
+msgid "Could not open the log folder."
+msgstr "Der Protokollordner konnte nicht geöffnet werden."
+
+msgid "Could not pass arguments to the other instance."
+msgstr "Die Argumente konnten nicht an die andere Instanz übergeben werden."
+
+#, python-brace-format
+msgid "Could not prepare tree: {error}"
+msgstr "Baumstruktur konnte nicht vorbereitet werden: {error}"
+
+#, python-brace-format
+msgid "Could not read volumes: {error}"
+msgstr "Volumes konnten nicht gelesen werden: {error}"
+
+#, python-brace-format
+msgid "Could not save scan options: {error}"
+msgstr "Scanoptionen konnten nicht gespeichert werden: {error}"
+
+#, python-brace-format
+msgid "Could not save settings: {error}"
+msgstr "Einstellungen konnten nicht gespeichert werden: {error}"
+
+#, python-brace-format
+msgid "Could not validate folder: {error}"
+msgstr "Ordner konnte nicht überprüft werden: {error}"
+
+msgid "Count every link"
+msgstr "Jeden Link zählen"
+
+msgid "Count once"
+msgstr "Einmal zählen"
+
+msgid "Created"
+msgstr "Erstellt"
+
+msgid "Cross filesystems"
+msgstr "Dateisystemgrenzen überschreiten"
+
+#, python-brace-format
+msgid "Current language: {locale}"
+msgstr "Aktuelle Sprache: {locale}"
+
+msgid "Dark"
+msgstr "Dunkel"
+
+msgid "Delete permanently"
+msgstr "Endgültig löschen"
+
+msgid "Delete to Trash"
+msgstr "In den Papierkorb verschieben"
+
+msgid "Directory tree"
+msgstr "Verzeichnisbaum"
+
+msgid "Disk Analyzer Free"
+msgstr "Disk Analyzer Free"
+
+msgid "Duplicate I/O threads"
+msgstr "I/O-Threads für Duplikate"
+
+msgid "Duplicate filter"
+msgstr "Duplikatfilter"
+
+msgid "Duplicates"
+msgstr "Duplikate"
+
+msgid "Duplicates defaults"
+msgstr "Duplikat-Standardeinstellungen"
+
+msgid "Eager"
+msgstr "Sofort"
+
+#, python-brace-format
+msgid "Elapsed: {time}"
+msgstr "Verstrichen: {time}"
+
+msgid "Empty"
+msgstr "Leer"
+
+msgid "English"
+msgstr "Englisch"
+
+msgid "Enter a valid folder path."
+msgstr "Geben Sie einen gültigen Ordnerpfad ein."
+
+msgid "Exabytes"
+msgstr "Exabytes"
+
+msgid "Exclude hidden entries"
+msgstr "Versteckte Einträge ausschließen"
+
+msgid "Exclude system entries"
+msgstr "Systemeinträge ausschließen"
+
+msgid "Excluded from totals"
+msgstr "Von Summen ausgeschlossen"
+
+msgid "Excluded globs, one per line"
+msgstr "Ausgeschlossene Glob-Muster, eines pro Zeile"
+
+msgid "Excluded paths, one per line"
+msgstr "Ausgeschlossene Pfade, einer pro Zeile"
+
+msgid "Export"
+msgstr "Exportieren"
+
+msgid "Export CSV"
+msgstr "CSV exportieren"
+
+msgid "Export issues"
+msgstr "Probleme exportieren"
+
+msgid "Export retained issues matching the current filter to a new file."
+msgstr "Die beibehaltenen Probleme, die dem aktuellen Filter entsprechen, in eine neue Datei exportieren."
+
+#, python-brace-format
+msgid "Exported {count} issues."
+msgstr "{count} Probleme exportiert."
+
+msgid "Exporting issues…"
+msgstr "Probleme werden exportiert…"
+
+msgid "Extension"
+msgstr "Dateiendung"
+
+msgid "File"
+msgstr "Datei"
+
+msgid "Files"
+msgstr "Dateien"
+
+#, python-brace-format
+msgid "Files: {count}"
+msgstr "Dateien: {count}"
+
+msgid "Find"
+msgstr "Suchen"
+
+msgid "Finishing scan…"
+msgstr "Scan wird abgeschlossen…"
+
+msgid "Focus query"
+msgstr "Suchfeld fokussieren"
+
+msgid "Folder"
+msgstr "Ordner"
+
+#, python-brace-format
+msgid "Folder is unavailable: {path}"
+msgstr "Ordner ist nicht verfügbar: {path}"
+
+msgid "Folder path"
+msgstr "Ordnerpfad"
+
+msgid "Folders"
+msgstr "Ordner"
+
+#, python-brace-format
+msgid "Folders: {count}"
+msgstr "Ordner: {count}"
+
+msgid "Follow symbolic links"
+msgstr "Symbolischen Links folgen"
+
+msgid "Full path"
+msgstr "Vollständiger Pfad"
+
+msgid "General"
+msgstr "Allgemein"
+
+msgid "German"
+msgstr "Deutsch"
+
+msgid "Gigabytes"
+msgstr "Gigabytes"
+
+msgid "Globs"
+msgstr "Glob-Muster"
+
+msgid "Hard link — not counted in totals"
+msgstr "Hardlink — wird nicht in Summen eingerechnet"
+
+msgid "Hard links"
+msgstr "Hardlinks"
+
+msgid "Hash algorithm"
+msgstr "Hashalgorithmus"
+
+msgid "Help"
+msgstr "Hilfe"
+
+msgid "Hidden"
+msgstr "Versteckt"
+
+msgid "I/O error"
+msgstr "I/O-Fehler"
+
+msgid "IEC (KiB, MiB)"
+msgstr "IEC (KiB, MiB)"
+
+msgid "Include alternate data streams (Windows only)"
+msgstr "Alternative Datenströme einschließen (nur Windows)"
+
+msgid "Include hidden files"
+msgstr "Versteckte Dateien einschließen"
+
+msgid "Invalid name"
+msgstr "Ungültiger Name"
+
+msgid "Invalid volume metadata"
+msgstr "Ungültige Volume-Metadaten"
+
+msgid "Issue kind"
+msgstr "Problemart"
+
+msgid "Issues"
+msgstr "Probleme"
+
+msgid "Issues: 0"
+msgstr "Probleme: 0"
+
+#, python-brace-format
+msgid "Issues: {count}"
+msgstr "Probleme: {count}"
+
+msgid "Keep duplicate groups on the same volume"
+msgstr "Duplikatgruppen auf demselben Volume behalten"
+
+msgid "Kilobytes"
+msgstr "Kilobytes"
+
+msgid "Kind"
+msgstr "Art"
+
+msgid "Language"
+msgstr "Sprache"
+
+msgid "Language changes take effect after restarting the application."
+msgstr "Sprachänderungen werden nach einem Neustart der Anwendung übernommen."
+
+msgid "Last Modified"
+msgstr "Zuletzt geändert"
+
+msgid "Lazy"
+msgstr "Verzögert"
+
+msgid "Light"
+msgstr "Hell"
+
+msgid "Loading volumes…"
+msgstr "Volumes werden geladen…"
+
+msgid "Locations"
+msgstr "Speicherorte"
+
+msgid "MFT"
+msgstr "MFT"
+
+msgid "MFT (Windows only)"
+msgstr "MFT (nur Windows)"
+
+msgid "Maximum size (blank for no limit)"
+msgstr "Maximale Größe (leer lassen für unbegrenzt)"
+
+msgid "Megabytes"
+msgstr "Megabytes"
+
+msgid "Message"
+msgstr "Meldung"
+
+msgid "Minimum size (bytes or size with unit)"
+msgstr "Mindestgröße (Bytes oder Größe mit Einheit)"
+
+msgid "Mode"
+msgstr "Modus"
+
+msgid "Modified"
+msgstr "Geändert"
+
+msgid "Mount point"
+msgstr "Einhängepunkt"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "New scan"
+msgstr "Neuer Scan"
+
+msgid "No scan issues."
+msgstr "Keine Scanprobleme."
+
+msgid "No volumes available"
+msgstr "Keine Volumes verfügbar"
+
+msgid "Not found"
+msgstr "Nicht gefunden"
+
+msgid "Off"
+msgstr "Aus"
+
+msgid "Open log folder"
+msgstr "Protokollordner öffnen"
+
+msgid "Open snapshot"
+msgstr "Momentaufnahme öffnen"
+
+msgid "Orphaned entry"
+msgstr "Verwaister Eintrag"
+
+msgid "Other"
+msgstr "Sonstiges"
+
+msgid "Owner"
+msgstr "Besitzer"
+
+msgid "Owner lookup"
+msgstr "Besitzerermittlung"
+
+msgid "Parent folder"
+msgstr "Übergeordneter Ordner"
+
+msgid "Parent share (%)"
+msgstr "Anteil am übergeordneten Ordner (%)"
+
+msgid "Partial results"
+msgstr "Teilergebnisse"
+
+msgid "Partial scan"
+msgstr "Teilscan"
+
+msgid "Path"
+msgstr "Pfad"
+
+msgid "Path too long"
+msgstr "Pfad zu lang"
+
+msgid "Paths"
+msgstr "Pfade"
+
+msgid "Pause"
+msgstr "Pausieren"
+
+msgid "Paused"
+msgstr "Pausiert"
+
+msgid "Petabytes"
+msgstr "Petabytes"
+
+msgid "Portable mode is not available yet"
+msgstr "Der portable Modus ist noch nicht verfügbar"
+
+msgid "Prefix bytes"
+msgstr "Präfix-Bytes"
+
+msgid "Preparing scan…"
+msgstr "Scan wird vorbereitet…"
+
+msgid "Preparing tree view…"
+msgstr "Baumansicht wird vorbereitet…"
+
+msgid "Print a setting as JSON."
+msgstr "Eine Einstellung als JSON ausgeben."
+
+msgid "Print the preferences file path."
+msgstr "Den Pfad zur Einstellungsdatei ausgeben."
+
+msgid "Properties"
+msgstr "Eigenschaften"
+
+msgid "Rate: —"
+msgstr "Rate: —"
+
+msgid "Read and update shared preferences."
+msgstr "Gemeinsame Einstellungen lesen und aktualisieren."
+
+msgid "Ready"
+msgstr "Bereit"
+
+msgid "Recent scans"
+msgstr "Letzte Scans"
+
+msgid "Refresh"
+msgstr "Aktualisieren"
+
+msgid "Refresh selection"
+msgstr "Auswahl aktualisieren"
+
+msgid "Remove targets"
+msgstr "Ziele entfernen"
+
+msgid "Reparse point"
+msgstr "Analysepunkt"
+
+msgid "Resolve shortcut conflicts before saving."
+msgstr "Beheben Sie Konflikte bei Tastenkürzeln vor dem Speichern."
+
+msgid "Resolving…"
+msgstr "Wird aufgelöst…"
+
+msgid "Restart as administrator"
+msgstr "Als Administrator neu starten"
+
+msgid "Restore default shortcuts"
+msgstr "Standard-Tastenkürzel wiederherstellen"
+
+msgid "Resume"
+msgstr "Fortsetzen"
+
+msgid "Row density"
+msgstr "Zeilendichte"
+
+msgid "Running as administrator"
+msgstr "Wird als Administrator ausgeführt"
+
+msgid "SHA-256"
+msgstr "SHA-256"
+
+msgid "SI (kB, MB)"
+msgstr "SI (kB, MB)"
+
+msgid "Save snapshot"
+msgstr "Momentaufnahme speichern"
+
+msgid "Scan"
+msgstr "Scannen"
+
+msgid "Scan cancelled. Partial results are available."
+msgstr "Scan abgebrochen. Teilergebnisse sind verfügbar."
+
+msgid "Scan complete."
+msgstr "Scan abgeschlossen."
+
+msgid "Scan controls"
+msgstr "Scan-Steuerung"
+
+msgid "Scan error"
+msgstr "Scanfehler"
+
+msgid "Scan failed"
+msgstr "Scan fehlgeschlagen"
+
+msgid "Scan failed."
+msgstr "Scan fehlgeschlagen."
+
+msgid "Scan issues"
+msgstr "Scanprobleme"
+
+msgid "Scan progress"
+msgstr "Scanfortschritt"
+
+msgid "Scan scheduling is not available yet."
+msgstr "Die Scanplanung ist noch nicht verfügbar."
+
+msgid "Scan started."
+msgstr "Scan gestartet."
+
+msgid "Scan targets"
+msgstr "Scan-Ziele"
+
+msgid "Scan threads"
+msgstr "Scan-Threads"
+
+msgid "Scanning defaults"
+msgstr "Scan-Standardeinstellungen"
+
+msgid "Scanning…"
+msgstr "Scan läuft…"
+
+msgid "Scheduled scans"
+msgstr "Geplante Scans"
+
+msgid "Search"
+msgstr "Suchen"
+
+msgid "Search file and folder names."
+msgstr "Datei- und Ordnernamen durchsuchen."
+
+msgid "Search results"
+msgstr "Suchergebnisse"
+
+msgid "Search text cannot contain a NUL character."
+msgstr "Der Suchtext darf kein NUL-Zeichen enthalten."
+
+msgid "Select a row to inspect it."
+msgstr "Wählen Sie eine Zeile aus, um sie zu untersuchen."
+
+msgid "Settings"
+msgstr "Einstellungen"
+
+msgid "Settings pages"
+msgstr "Einstellungsseiten"
+
+#, python-brace-format
+msgid "Shortcut conflict: {first} and {second}"
+msgstr "Konflikt bei Tastenkürzeln: {first} und {second}"
+
+msgid "Shortcuts"
+msgstr "Tastenkürzel"
+
+msgid "Show NTFS metafiles (Windows only)"
+msgstr "NTFS-Metadateien anzeigen (nur Windows)"
+
+#, python-brace-format
+msgid "Showing {shown} of {total} issues"
+msgstr "{shown} von {total} Problemen werden angezeigt"
+
+msgid "Size"
+msgstr "Größe"
+
+msgid "Snapshots"
+msgstr "Momentaufnahmen"
+
+msgid "Sparse"
+msgstr "Sparse"
+
+msgid "Start scan"
+msgstr "Scan starten"
+
+#, python-brace-format
+msgid "Switch to tab {number}"
+msgstr "Zu Tab {number} wechseln"
+
+msgid "Symbolic link"
+msgstr "Symbolischer Link"
+
+msgid "Symbolic link loop"
+msgstr "Schleife symbolischer Links"
+
+msgid "System"
+msgstr "System"
+
+msgid "System language"
+msgstr "Systemsprache"
+
+msgid "Terabytes"
+msgstr "Terabytes"
+
+#, python-brace-format
+msgid "The new report may be incomplete: {error}"
+msgstr "Der neue Bericht ist möglicherweise unvollständig: {error}"
+
+msgid "Theme"
+msgstr "Design"
+
+msgid "These defaults will be used when duplicate analysis is available."
+msgstr "Diese Standardeinstellungen werden verwendet, sobald die Duplikatanalyse verfügbar ist."
+
+msgid "Threads"
+msgstr "Threads"
+
+msgid "Timeout"
+msgstr "Zeitüberschreitung"
+
+msgid "Top"
+msgstr "Größte Dateien"
+
+#, python-brace-format
+msgid "Total: {size}"
+msgstr "Gesamt: {size}"
+
+msgid "Tree"
+msgstr "Baum"
+
+msgid "Treemap"
+msgstr "Baumkarte"
+
+msgid "Type"
+msgstr "Typ"
+
+msgid "Types"
+msgstr "Typen"
+
+msgid "Unavailable"
+msgstr "Nicht verfügbar"
+
+msgid "Unavailable features stay disabled. Clear a shortcut to unassign it."
+msgstr ""
+"Nicht verfügbare Funktionen bleiben deaktiviert. Löschen Sie ein Tastenkürzel, um die Zuweisung "
+"aufzuheben."
+
+msgid "Unexpected error"
+msgstr "Unerwarteter Fehler"
+
+msgid "Unit labels"
+msgstr "Einheitenbezeichnungen"
+
+msgid "Units"
+msgstr "Einheiten"
+
+msgid "Unknown"
+msgstr "Unbekannt"
+
+#, python-brace-format
+msgid "Unsupported settings version: {version}"
+msgstr "Nicht unterstützte Einstellungsversion: {version}"
+
+msgid "Up"
+msgstr "Nach oben"
+
+msgid "Validate and save a setting."
+msgstr "Eine Einstellung überprüfen und speichern."
+
+msgid "Verify matching bytes"
+msgstr "Übereinstimmende Bytes überprüfen"
+
+msgid "Volume"
+msgstr "Volume"
+
+msgid "Volumes"
+msgstr "Volumes"
+
+msgid "Walk"
+msgstr "Durchlaufen"
+
+msgid "XXH3 128"
+msgstr "XXH3 128"
+
+msgid "dotted setting name"
+msgstr "Punktgetrennter Einstellungsname"
+
+msgid "existing setting"
+msgstr "Vorhandene Einstellung"
+
 msgid "file"
 msgid_plural "files"
 msgstr[0] "Datei"
 msgstr[1] "Dateien"
 
-msgid "Automatic"
-msgstr ""
+msgid "finite number"
+msgstr "Endliche Zahl"
 
-msgid "Bytes"
-msgstr ""
+msgid "folder"
+msgstr "Ordner"
 
-msgid "Exabytes"
-msgstr ""
+msgid "list"
+msgstr "Liste"
 
-msgid "Gigabytes"
-msgstr ""
+msgid "non-empty list of unique column IDs"
+msgstr "Nicht leere Liste eindeutiger Spalten-IDs"
 
-msgid "Kilobytes"
-msgstr ""
+msgid "non-negative dimensions"
+msgstr "Nicht negative Abmessungen"
 
-msgid "Megabytes"
-msgstr ""
+msgid "non-negative integer"
+msgstr "Nicht negative Ganzzahl"
 
-msgid "Petabytes"
-msgstr ""
+msgid "object"
+msgstr "Objekt"
 
-msgid "Search file and folder names."
-msgstr ""
+msgid "one character"
+msgstr "Ein Zeichen"
 
-msgid "Search text cannot contain a NUL character."
-msgstr ""
+msgid "positive dimensions"
+msgstr "Positive Abmessungen"
 
-msgid "Terabytes"
-msgstr ""
+msgid "positive widths and non-negative orders"
+msgstr "Positive Breiten und nicht negative Reihenfolgen"
 
-msgid "Advanced"
-msgstr ""
-
-msgid "Arabic"
-msgstr ""
-
-msgid "BLAKE3"
-msgstr ""
-
-msgid "Binary (KB, MB)"
-msgstr ""
-
-msgid "Comfortable"
-msgstr ""
-
-msgid "Compact"
-msgstr ""
-
-msgid "Could not open the log folder."
-msgstr ""
-
-msgid "Could not save settings: {error}"
-msgstr ""
-
-msgid "Count every link"
-msgstr ""
-
-msgid "Count once"
-msgstr ""
-
-msgid "Current language: {locale}"
-msgstr ""
-
-msgid "Dark"
-msgstr ""
-
-msgid "Duplicate I/O threads"
-msgstr ""
-
-msgid "Duplicate filter"
-msgstr ""
-
-msgid "Duplicates defaults"
-msgstr ""
-
-msgid "Eager"
-msgstr ""
-
-msgid "English"
-msgstr ""
-
-msgid "General"
-msgstr ""
-
-msgid "German"
-msgstr ""
-
-msgid "Hard links"
-msgstr ""
-
-msgid "Hash algorithm"
-msgstr ""
-
-msgid "IEC (KiB, MiB)"
-msgstr ""
-
-msgid "Include alternate data streams (Windows only)"
-msgstr ""
-
-msgid "Include hidden files"
-msgstr ""
-
-msgid "Keep duplicate groups on the same volume"
-msgstr ""
-
-
-msgid "Language"
-msgstr ""
-
-msgid "Language changes take effect after restarting the application."
-msgstr ""
-
-msgid "Lazy"
-msgstr ""
-
-msgid "Light"
-msgstr ""
-
-msgid "MFT (Windows only)"
-msgstr ""
-
-msgid "Maximum size (blank for no limit)"
-msgstr ""
-
-msgid "Minimum size (bytes or size with unit)"
-msgstr ""
-
-msgid "Off"
-msgstr ""
-
-msgid "Open log folder"
-msgstr ""
-
-msgid "Owner lookup"
-msgstr ""
-
-msgid "Prefix bytes"
-msgstr ""
-
-msgid "Row density"
-msgstr ""
-
-msgid "SHA-256"
-msgstr ""
-
-msgid "SI (kB, MB)"
-msgstr ""
-
-msgid "Scan scheduling is not available yet."
-msgstr ""
-
-msgid "Scan threads"
-msgstr ""
-
-msgid "Scanning defaults"
-msgstr ""
-
-msgid "Scheduled scans"
-msgstr ""
-
-msgid "Settings pages"
-msgstr ""
-
-msgid "Shortcuts"
-msgstr ""
-
-msgid "Show NTFS metafiles (Windows only)"
-msgstr ""
-
-msgid "System language"
-msgstr ""
-
-msgid "Theme"
-msgstr ""
-
-msgid "These defaults will be used when duplicate analysis is available."
-msgstr ""
-
-msgid "Unit labels"
-msgstr ""
-
-msgid "Verify matching bytes"
-msgstr ""
-
-msgid "XXH3 128"
-msgstr ""
-
-msgid "Cancel scan"
-msgstr ""
-
-msgid "Delete permanently"
-msgstr ""
-
-msgid "Delete to Trash"
-msgstr ""
-
-msgid "Export"
-msgstr ""
-
-msgid "Focus query"
-msgstr ""
-
-msgid "Help"
-msgstr ""
-
-msgid "Open snapshot"
-msgstr ""
-
-msgid "Refresh selection"
-msgstr ""
-
-msgid "Resolve shortcut conflicts before saving."
-msgstr ""
-
-msgid "Restore default shortcuts"
-msgstr ""
-
-msgid "Save snapshot"
-msgstr ""
+msgid "user preference (version is managed by migrations)"
+msgstr "Benutzereinstellung (Version wird durch Migrationen verwaltet)"
 
 #, python-brace-format
-msgid "Shortcut conflict: {first} and {second}"
-msgstr ""
+msgid "{days}d {time}"
+msgstr "{days} T {time}"
 
 #, python-brace-format
-msgid "Switch to tab {number}"
-msgstr ""
+msgid "{free} free of {total}"
+msgstr "{free} von {total} frei"
 
-msgid "Unavailable features stay disabled. Clear a shortcut to unassign it."
+#, python-brace-format
+msgid "{key}: expected {expected}"
+msgstr "{key}: erwartet wurde {expected}"
+
+#, python-brace-format
+msgid ""
+"{label}\n"
+"Mount: {mount}\n"
+"Filesystem: {filesystem}\n"
+"Serial: {serial}\n"
+"Capacity: {total}\n"
+"Free: {free}\n"
+"Cluster size: {cluster}"
 msgstr ""
+"{label}\n"
+"Einhängepunkt: {mount}\n"
+"Dateisystem: {filesystem}\n"
+"Seriennummer: {serial}\n"
+"Kapazität: {total}\n"
+"Frei: {free}\n"
+"Clustergröße: {cluster}"
+
+#, python-brace-format
+msgid "{label} ({mount})"
+msgstr "{label} ({mount})"
+
+#, python-brace-format
+msgid "{mount}: {capacity}"
+msgstr "{mount}: {capacity}"
+
+#, python-brace-format
+msgid ""
+"{name}\n"
+"Size: {size}\n"
+"Allocated: {allocated}\n"
+"Files: {files}\n"
+"Folders: {folders}"
+msgstr ""
+"{name}\n"
+"Größe: {size}\n"
+"Belegt: {allocated}\n"
+"Dateien: {files}\n"
+"Ordner: {folders}"
+
+#, python-brace-format
+msgid "{name}, {kind}, {size}, {percent} of parent"
+msgstr "{name}, {kind}, {size}, {percent} des übergeordneten Elements"
+
+#, python-brace-format
+msgid "{rate} files/s"
+msgstr "{rate} Dateien/s"
+
+#, python-brace-format
+msgid "{size} ({ratio} of logical size)"
+msgstr "{size} ({ratio} der logischen Größe)"
+
+#, python-brace-format
+msgid "{start}–{end}"
+msgstr "{start}–{end}"
+
+#, python-brace-format
+msgid "≥{start}"
+msgstr "≥{start}"

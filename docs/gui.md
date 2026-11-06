@@ -13,14 +13,16 @@ language, units and labels, row density, scan defaults, and duplicate-analysis
 defaults. Settings are staged in the dialog and saved atomically on **OK**;
 **Cancel** leaves both the saved and live preferences unchanged. The system
 theme follows operating-system color-scheme changes while selected. Language
-changes take effect after restarting the application. Shortcut customization
-and scheduled scans are shown as unavailable pages until their implementations
-are ready. Duplicate defaults are stored for future analysis; duplicate analysis
+changes take effect after restarting the application. Use the [Shortcuts page](guide/shortcuts.md) to customize keys and resolve conflicts.
+Scheduled scans remain unavailable until scheduling is implemented. Duplicate defaults are stored for future analysis; duplicate analysis
 is not available yet.
 
-The selected locale configures gettext, Qt's standard-dialog translator when
-available, and the initial layout direction. Custom strings use gettext markers;
-full GUI translations and RTL refinement remain T4.12 work.
+English, Arabic, and German translations are included. The selected locale configures
+gettext, Qt standard-dialog buttons, localized dates and counts, and layout direction.
+Arabic uses a right-to-left layout. Size display uses locale digits and decimal points
+while retaining exact byte integers, selected unit labels, and explicit non-default
+decimal separators. File paths and report data retain their original contents.
+The editable size fields keep the existing ASCII size syntax.
 
 One desktop instance owns each application data directory and Windows privilege level. A second launch at the same privilege level
 passes its arguments through local IPC and exits after acknowledgment. The first
@@ -107,8 +109,7 @@ rescan the filesystem.
 The Tree tab prepares native views off-thread and pairs its table with a breadcrumb
 and selection metadata; miniature charts remain M5 work. Issues retain the native
 summary's first 1,000 entries and show its complete count; kind filtering applies
-to copying and CSV export. Windows displays an administrator badge only when elevation is known;
-the real Windows privilege query remains paused T3.7 work.
+to copying and CSV export. Windows displays an administrator badge only when elevation is known.
 
 Closing the window cancels its read-only scan and keeps processing GUI events until
 background work delivers its result, then saves window geometry and disposes the

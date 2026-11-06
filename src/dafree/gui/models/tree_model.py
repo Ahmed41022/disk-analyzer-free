@@ -19,7 +19,7 @@ from PySide6.QtCore import (
 )
 
 from dafree import api
-from dafree.gui import _display_text
+from dafree.gui import _display_text, _format_size
 from dafree.i18n import _
 from dafree.settings import ColumnId
 
@@ -104,7 +104,7 @@ class TreeTableModel(QAbstractTableModel):
             return _("{name}, {kind}, {size}, {percent} of parent").format(
                 name=_display_text(row[4]),
                 kind=_("folder") if row[13] & api.NodeFlags.DIR else _("file"),
-                size=api.format_size(row[5], self.unit_mode, self.unit_style),
+                size=_format_size(row[5], self.unit_mode, self.unit_style),
                 percent=self._percent(row[7]),
             )
         return self._display(row, self.columns[column])
@@ -119,7 +119,7 @@ class TreeTableModel(QAbstractTableModel):
                 return _display_text(row[4])
             case ColumnId.SIZE | ColumnId.ALLOC:
                 approximate = column == ColumnId.ALLOC and row[13] & _ALLOC_UNRELIABLE
-                return ("≈" if approximate else "") + api.format_size(
+                return ("≈" if approximate else "") + _format_size(
                     row[6] if column == ColumnId.ALLOC else row[5], self.unit_mode, self.unit_style
                 )
             case ColumnId.PCT_PARENT:
@@ -152,7 +152,7 @@ class TreeTableModel(QAbstractTableModel):
         return {
             ColumnId.NAME: _("Name"),
             ColumnId.SIZE: _("Size"),
-            ColumnId.PCT_PARENT: _("% of Parent"),
+            ColumnId.PCT_PARENT: _("Parent share (%)"),
             ColumnId.ALLOC: _("Allocated"),
             ColumnId.FILES: _("Files"),
             ColumnId.DIRS: _("Folders"),
