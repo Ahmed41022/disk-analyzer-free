@@ -92,7 +92,7 @@ jobs:
       actions: read
       issues: write
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v9
         env:
           FUZZ_RESULT: ${{ needs.fuzz.result }}
         with:
