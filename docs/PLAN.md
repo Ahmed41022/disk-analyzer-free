@@ -1581,9 +1581,9 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T4.6, T4.10
   - **Acceptance:** `test_default_shortcuts_trigger_actions`, `test_override_persists`, `test_conflict_reported`.
 
-- [ ] **T4.12 — GUI i18n and RTL**
-  - **Files:** M `src/dafree/gui/app.py`, `src/dafree/i18n/locales/*/LC_MESSAGES/dafree.po`, C `tests/gui/test_i18n_gui.py`.
-  - **Behavior:** all visible strings via `_()`; Qt translator for `qtbase_<lang>.qm` from `PySide6/translations`; `setLayoutDirection` for RTL; dates/numbers via `QLocale`.
+- [x] **T4.12 — GUI i18n and RTL**
+  - **Files:** M `src/dafree/gui/{__init__.py,main_window.py,models/tree_model.py,views/tree_tab.py,dialogs/properties_dialog.py,widgets/{progress_panel.py,volume_list.py}}`, catalogs, `tools/i18n_check.py`, `tests/unit/test_i18n.py`; C `tests/gui/test_i18n_gui.py`. Bootstrap Qt translator/direction support in `app.py` is retained and verified.
+  - **Behavior:** all visible strings via `_()`; Qt translator for `qtbase_<lang>.qm` from `PySide6/translations`; `setLayoutDirection` for RTL; dates/numbers via `QLocale`. D-0080 completes all shipped catalogs, tests native-button translator replacement, preserves exact uint64 size digits through a bounded GUI formatting helper, enforces catalog completeness and nested UI-literal checks, and repairs reproducible POT header normalization.
   - **Depends on:** T0.7, T4.6
   - **Acceptance:** `test_arabic_sets_rtl_layout`, `test_no_untranslated_literals` (AST scan of `src/dafree/gui`: string literals passed to `setText/setWindowTitle/QAction/QLabel/setToolTip/addTab` must be wrapped in `_()`; allowlist for symbols).
 

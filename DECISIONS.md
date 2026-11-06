@@ -15,6 +15,16 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0080 — 2026-11-06 — Complete GUI catalogs and exact localized size display
+
+Question: How should GUI localization cover formatted sizes and catalog validation without changing CLI output or losing large byte counts?
+
+Choice: Ship complete English, Arabic, and German catalogs, retaining all plural forms and format placeholders. Reuse bootstrap's Qt base translator and locale direction, with tests for native buttons and translator replacement. Localize the numeric part of native size strings through a bounded cached QLocale digit/decimal mapping in the GUI helper; preserve exact uint64 digits, unit labels, and explicitly configured non-default separators. Keep CLI formatting unchanged. Format initial counters through the same locale paths as scan updates. Audit literal widget text, including nested/keyword expressions, with a small symbol allowlist. Require every shipped message/form to be nonempty, non-fuzzy, and valid under Babel checks. Reword the percentage header as “Parent share (%)” because Babel interprets “% of Parent” as an octal printf placeholder. Correct POT timestamp normalization to retain its literal newline escape and test that the normalized header remains parseable. Add no dependencies.
+
+Reasoning: Character mapping preserves native rounding and exact byte integers without converting them to floats. Catalog completeness must be a tested property even though the general checker intentionally reports missing translations as warnings. Reusing the existing Qt bootstrap avoids duplicate translator ownership. ASCII numeric input continues using the existing size grammar; localized output never changes stored native paths or raw export data.
+
+Task: T4.12
+
 ## D-0079 — 2026-11-06 — Bind shortcuts without advancing deferred services
 
 Question: How should the complete shortcut registry work before snapshot, export, refresh, and file-action services exist?

@@ -1,13 +1,794 @@
+
 msgid ""
 msgstr ""
 "Project-Id-Version: disk-analyzer-free 0.1.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2000-01-01 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ar\n"
+"Language-Team: ar <LL@li.org>\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : "
+"n%100>=11 && n%100<=99 ? 4 : 5);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5);\n"
+"Generated-By: Babel 2.18.0\n"
 
-#: src/dafree/i18n/__init__.py
+msgid "180d–1y"
+msgstr "من ١٨٠ يومًا إلى سنة"
+
+msgid "1–2y"
+msgstr "من سنة إلى سنتين"
+
+msgid "2–5y"
+msgstr "من سنتين إلى ٥ سنوات"
+
+msgid "30–90d"
+msgstr "من ٣٠ إلى ٩٠ يومًا"
+
+msgid "90–180d"
+msgstr "من ٩٠ إلى ١٨٠ يومًا"
+
+msgid "<30d"
+msgstr "أقل من ٣٠ يومًا"
+
+#, python-brace-format
+msgid "<{end}"
+msgstr "أقل من {end}"
+
+msgid ">5y"
+msgstr "أكثر من ٥ سنوات"
+
+msgid "A background thread terminated unexpectedly."
+msgstr "انتهى خيط معالجة في الخلفية بشكل غير متوقع."
+
+msgid "A scan is already running."
+msgstr "توجد عملية فحص قيد التشغيل بالفعل."
+
+msgid "Access denied"
+msgstr "رُفض الوصول"
+
+msgid "Accessed"
+msgstr "آخر وصول"
+
+msgid "Add folder…"
+msgstr "إضافة مجلد…"
+
+msgid "Add path"
+msgstr "إضافة مسار"
+
+msgid "Add selected volumes"
+msgstr "إضافة وحدات التخزين المحددة"
+
+msgid "Administrator"
+msgstr "المسؤول"
+
+msgid "Administrator status is unavailable."
+msgstr "حالة المسؤول غير متاحة."
+
+msgid "Advanced"
+msgstr "متقدم"
+
+msgid "Age"
+msgstr "العمر"
+
+msgid "All kinds"
+msgstr "كل الأنواع"
+
+msgid "Allocated"
+msgstr "المساحة المخصصة"
+
+msgid "Allocated size is approximate"
+msgstr "المساحة المخصصة تقديرية"
+
+msgid "An unexpected error occurred. Details were saved to the application log."
+msgstr "حدث خطأ غير متوقع. حُفظت التفاصيل في سجل التطبيق."
+
+msgid "Arabic"
+msgstr "العربية"
+
+msgid "Auto"
+msgstr "تلقائي"
+
+msgid "Automatic"
+msgstr "تلقائي"
+
+msgid "BLAKE3"
+msgstr "BLAKE3"
+
+msgid "Binary (KB, MB)"
+msgstr "ثنائي (KB، MB)"
+
+msgid "Bytes"
+msgstr "بايت"
+
+msgid "CSV files (*.csv)"
+msgstr "ملفات CSV ‏(*.csv)"
+
+msgid "Cancel"
+msgstr "إلغاء"
+
+msgid "Cancel scan"
+msgstr "إلغاء الفحص"
+
+msgid "Cancellation requested…"
+msgstr "طُلب الإلغاء…"
+
+#, python-brace-format
+msgid "Cannot access preferences: {error}"
+msgstr "تعذّر الوصول إلى التفضيلات: {error}"
+
+msgid "Changed during scan"
+msgstr "تغيّر أثناء الفحص"
+
+msgid "Charts"
+msgstr "المخططات"
+
+msgid "Checking folder…"
+msgstr "جارٍ التحقق من المجلد…"
+
+msgid "Choose a target to start a scan."
+msgstr "اختر هدفًا لبدء الفحص."
+
+msgid "Choose scan folder"
+msgstr "اختيار مجلد للفحص"
+
+msgid "Cloud placeholder"
+msgstr "عنصر نائب للسحابة"
+
+msgid "Combined scan"
+msgstr "فحص مدمج"
+
+msgid "Comfortable"
+msgstr "مريح"
+
+msgid "Compact"
+msgstr "مكثّف"
+
+msgid "Compare"
+msgstr "مقارنة"
+
+msgid "Compressed"
+msgstr "مضغوط"
+
+msgid "Copy all"
+msgstr "نسخ الكل"
+
+msgid "Copy all displayed issues."
+msgstr "نسخ كل المشكلات المعروضة."
+
+msgid "Copy details"
+msgstr "نسخ التفاصيل"
+
+msgid "Copy path"
+msgstr "نسخ المسار"
+
+#, python-brace-format
+msgid "Could not export issues: {error}. Choose a new filename; existing files are preserved."
+msgstr "تعذّر تصدير المشكلات: {error}. اختر اسم ملف جديدًا؛ ستبقى الملفات الحالية كما هي."
+
+msgid "Could not open the log folder."
+msgstr "تعذّر فتح مجلد السجلات."
+
+msgid "Could not pass arguments to the other instance."
+msgstr "تعذّر تمرير الوسيطات إلى النسخة الأخرى من التطبيق."
+
+#, python-brace-format
+msgid "Could not prepare tree: {error}"
+msgstr "تعذّر تجهيز الشجرة: {error}"
+
+#, python-brace-format
+msgid "Could not read volumes: {error}"
+msgstr "تعذّرت قراءة وحدات التخزين: {error}"
+
+#, python-brace-format
+msgid "Could not save scan options: {error}"
+msgstr "تعذّر حفظ خيارات الفحص: {error}"
+
+#, python-brace-format
+msgid "Could not save settings: {error}"
+msgstr "تعذّر حفظ الإعدادات: {error}"
+
+#, python-brace-format
+msgid "Could not validate folder: {error}"
+msgstr "تعذّر التحقق من المجلد: {error}"
+
+msgid "Count every link"
+msgstr "احتساب كل رابط"
+
+msgid "Count once"
+msgstr "الاحتساب مرة واحدة"
+
+msgid "Created"
+msgstr "تاريخ الإنشاء"
+
+msgid "Cross filesystems"
+msgstr "عبور أنظمة الملفات"
+
+#, python-brace-format
+msgid "Current language: {locale}"
+msgstr "اللغة الحالية: {locale}"
+
+msgid "Dark"
+msgstr "داكن"
+
+msgid "Delete permanently"
+msgstr "حذف نهائيًا"
+
+msgid "Delete to Trash"
+msgstr "نقل إلى سلة المهملات"
+
+msgid "Directory tree"
+msgstr "شجرة المجلدات"
+
+msgid "Disk Analyzer Free"
+msgstr "محلل القرص المجاني"
+
+msgid "Duplicate I/O threads"
+msgstr "خيوط إدخال/إخراج الملفات المكررة"
+
+msgid "Duplicate filter"
+msgstr "مرشح الملفات المكررة"
+
+msgid "Duplicates"
+msgstr "الملفات المكررة"
+
+msgid "Duplicates defaults"
+msgstr "الإعدادات الافتراضية للتكرارات"
+
+msgid "Eager"
+msgstr "فوري"
+
+#, python-brace-format
+msgid "Elapsed: {time}"
+msgstr "الوقت المنقضي: {time}"
+
+msgid "Empty"
+msgstr "فارغ"
+
+msgid "English"
+msgstr "الإنجليزية"
+
+msgid "Enter a valid folder path."
+msgstr "أدخل مسار مجلد صالحًا."
+
+msgid "Exabytes"
+msgstr "إكسابايت"
+
+msgid "Exclude hidden entries"
+msgstr "استبعاد العناصر المخفية"
+
+msgid "Exclude system entries"
+msgstr "استبعاد عناصر النظام"
+
+msgid "Excluded from totals"
+msgstr "مستبعد من الإجمالي"
+
+msgid "Excluded globs, one per line"
+msgstr "أنماط الاستبعاد، نمط واحد في كل سطر"
+
+msgid "Excluded paths, one per line"
+msgstr "مسارات الاستبعاد، مسار واحد في كل سطر"
+
+msgid "Export"
+msgstr "تصدير"
+
+msgid "Export CSV"
+msgstr "تصدير CSV"
+
+msgid "Export issues"
+msgstr "تصدير المشكلات"
+
+msgid "Export retained issues matching the current filter to a new file."
+msgstr "تصدير المشكلات المحتفَظ بها المطابقة للمرشح الحالي إلى ملف جديد."
+
+#, python-brace-format
+msgid "Exported {count} issues."
+msgstr "تم تصدير {count} من المشكلات."
+
+msgid "Exporting issues…"
+msgstr "جارٍ تصدير المشكلات…"
+
+msgid "Extension"
+msgstr "الامتداد"
+
+msgid "File"
+msgstr "ملف"
+
+msgid "Files"
+msgstr "الملفات"
+
+#, python-brace-format
+msgid "Files: {count}"
+msgstr "الملفات: {count}"
+
+msgid "Find"
+msgstr "بحث"
+
+msgid "Finishing scan…"
+msgstr "جارٍ إنهاء الفحص…"
+
+msgid "Focus query"
+msgstr "الانتقال إلى البحث"
+
+msgid "Folder"
+msgstr "مجلد"
+
+#, python-brace-format
+msgid "Folder is unavailable: {path}"
+msgstr "المجلد غير متاح: {path}"
+
+msgid "Folder path"
+msgstr "مسار المجلد"
+
+msgid "Folders"
+msgstr "المجلدات"
+
+#, python-brace-format
+msgid "Folders: {count}"
+msgstr "المجلدات: {count}"
+
+msgid "Follow symbolic links"
+msgstr "اتباع الروابط الرمزية"
+
+msgid "Full path"
+msgstr "المسار الكامل"
+
+msgid "General"
+msgstr "عام"
+
+msgid "German"
+msgstr "الألمانية"
+
+msgid "Gigabytes"
+msgstr "جيجابايت"
+
+msgid "Globs"
+msgstr "الأنماط"
+
+msgid "Hard link — not counted in totals"
+msgstr "رابط صلب — لا يُحتسب ضمن الإجمالي"
+
+msgid "Hard links"
+msgstr "الروابط الصلبة"
+
+msgid "Hash algorithm"
+msgstr "خوارزمية التجزئة"
+
+msgid "Help"
+msgstr "مساعدة"
+
+msgid "Hidden"
+msgstr "مخفي"
+
+msgid "I/O error"
+msgstr "خطأ إدخال/إخراج"
+
+msgid "IEC (KiB, MiB)"
+msgstr "IEC ‏(KiB، MiB)"
+
+msgid "Include alternate data streams (Windows only)"
+msgstr "تضمين تدفقات البيانات البديلة (Windows فقط)"
+
+msgid "Include hidden files"
+msgstr "تضمين الملفات المخفية"
+
+msgid "Invalid name"
+msgstr "اسم غير صالح"
+
+msgid "Invalid volume metadata"
+msgstr "بيانات وصفية غير صالحة لوحدة التخزين"
+
+msgid "Issue kind"
+msgstr "نوع المشكلة"
+
+msgid "Issues"
+msgstr "المشكلات"
+
+msgid "Issues: 0"
+msgstr "المشكلات: ٠"
+
+#, python-brace-format
+msgid "Issues: {count}"
+msgstr "المشكلات: {count}"
+
+msgid "Keep duplicate groups on the same volume"
+msgstr "إبقاء مجموعات الملفات المكررة على وحدة التخزين نفسها"
+
+msgid "Kilobytes"
+msgstr "كيلوبايت"
+
+msgid "Kind"
+msgstr "النوع"
+
+msgid "Language"
+msgstr "اللغة"
+
+msgid "Language changes take effect after restarting the application."
+msgstr "تسري تغييرات اللغة بعد إعادة تشغيل التطبيق."
+
+msgid "Last Modified"
+msgstr "آخر تعديل"
+
+msgid "Lazy"
+msgstr "عند الطلب"
+
+msgid "Light"
+msgstr "فاتح"
+
+msgid "Loading volumes…"
+msgstr "جارٍ تحميل وحدات التخزين…"
+
+msgid "Locations"
+msgstr "المواقع"
+
+msgid "MFT"
+msgstr "MFT"
+
+msgid "MFT (Windows only)"
+msgstr "MFT ‏(Windows فقط)"
+
+msgid "Maximum size (blank for no limit)"
+msgstr "الحجم الأقصى (اتركه فارغًا بلا حد)"
+
+msgid "Megabytes"
+msgstr "ميجابايت"
+
+msgid "Message"
+msgstr "الرسالة"
+
+msgid "Minimum size (bytes or size with unit)"
+msgstr "الحد الأدنى للحجم (بالبايت أو مع وحدة)"
+
+msgid "Mode"
+msgstr "الوضع"
+
+msgid "Modified"
+msgstr "تاريخ التعديل"
+
+msgid "Mount point"
+msgstr "نقطة الضم"
+
+msgid "Name"
+msgstr "الاسم"
+
+msgid "New scan"
+msgstr "فحص جديد"
+
+msgid "No scan issues."
+msgstr "لا توجد مشكلات في الفحص."
+
+msgid "No volumes available"
+msgstr "لا توجد وحدات تخزين متاحة"
+
+msgid "Not found"
+msgstr "غير موجود"
+
+msgid "Off"
+msgstr "إيقاف"
+
+msgid "Open log folder"
+msgstr "فتح مجلد السجلات"
+
+msgid "Open snapshot"
+msgstr "فتح لقطة"
+
+msgid "Orphaned entry"
+msgstr "عنصر يتيم"
+
+msgid "Other"
+msgstr "أخرى"
+
+msgid "Owner"
+msgstr "المالك"
+
+msgid "Owner lookup"
+msgstr "البحث عن المالك"
+
+msgid "Parent folder"
+msgstr "المجلد الأب"
+
+msgid "Parent share (%)"
+msgstr "حصة المجلد الأب (٪)"
+
+msgid "Partial results"
+msgstr "نتائج جزئية"
+
+msgid "Partial scan"
+msgstr "فحص جزئي"
+
+msgid "Path"
+msgstr "المسار"
+
+msgid "Path too long"
+msgstr "المسار طويل جدًا"
+
+msgid "Paths"
+msgstr "المسارات"
+
+msgid "Pause"
+msgstr "إيقاف مؤقت"
+
+msgid "Paused"
+msgstr "متوقف مؤقتًا"
+
+msgid "Petabytes"
+msgstr "بيتابايت"
+
+msgid "Portable mode is not available yet"
+msgstr "الوضع المحمول غير متاح بعد"
+
+msgid "Prefix bytes"
+msgstr "بايتات المقدمة"
+
+msgid "Preparing scan…"
+msgstr "جارٍ إعداد الفحص…"
+
+msgid "Preparing tree view…"
+msgstr "جارٍ إعداد عرض الشجرة…"
+
+msgid "Print a setting as JSON."
+msgstr "طباعة إعداد بتنسيق JSON."
+
+msgid "Print the preferences file path."
+msgstr "طباعة مسار ملف التفضيلات."
+
+msgid "Properties"
+msgstr "الخصائص"
+
+msgid "Rate: —"
+msgstr "المعدل: —"
+
+msgid "Read and update shared preferences."
+msgstr "قراءة التفضيلات المشتركة وتحديثها."
+
+msgid "Ready"
+msgstr "جاهز"
+
+msgid "Recent scans"
+msgstr "عمليات الفحص الأخيرة"
+
+msgid "Refresh"
+msgstr "تحديث"
+
+msgid "Refresh selection"
+msgstr "تحديث التحديد"
+
+msgid "Remove targets"
+msgstr "إزالة الأهداف"
+
+msgid "Reparse point"
+msgstr "نقطة إعادة تحليل"
+
+msgid "Resolve shortcut conflicts before saving."
+msgstr "حل تعارضات الاختصارات قبل الحفظ."
+
+msgid "Resolving…"
+msgstr "جارٍ الحل…"
+
+msgid "Restart as administrator"
+msgstr "إعادة التشغيل بصفة مسؤول"
+
+msgid "Restore default shortcuts"
+msgstr "استعادة الاختصارات الافتراضية"
+
+msgid "Resume"
+msgstr "استئناف"
+
+msgid "Row density"
+msgstr "كثافة الصفوف"
+
+msgid "Running as administrator"
+msgstr "يعمل بصفة مسؤول"
+
+msgid "SHA-256"
+msgstr "SHA-256"
+
+msgid "SI (kB, MB)"
+msgstr "SI ‏(kB، MB)"
+
+msgid "Save snapshot"
+msgstr "حفظ لقطة"
+
+msgid "Scan"
+msgstr "فحص"
+
+msgid "Scan cancelled. Partial results are available."
+msgstr "أُلغي الفحص. النتائج الجزئية متاحة."
+
+msgid "Scan complete."
+msgstr "اكتمل الفحص."
+
+msgid "Scan controls"
+msgstr "عناصر التحكم بالفحص"
+
+msgid "Scan error"
+msgstr "خطأ في الفحص"
+
+msgid "Scan failed"
+msgstr "فشل الفحص"
+
+msgid "Scan failed."
+msgstr "فشل الفحص."
+
+msgid "Scan issues"
+msgstr "مشكلات الفحص"
+
+msgid "Scan progress"
+msgstr "تقدم الفحص"
+
+msgid "Scan scheduling is not available yet."
+msgstr "جدولة الفحوصات غير متاحة بعد."
+
+msgid "Scan started."
+msgstr "بدأ الفحص."
+
+msgid "Scan targets"
+msgstr "أهداف الفحص"
+
+msgid "Scan threads"
+msgstr "خيوط الفحص"
+
+msgid "Scanning defaults"
+msgstr "إعدادات الفحص الافتراضية"
+
+msgid "Scanning…"
+msgstr "جارٍ الفحص…"
+
+msgid "Scheduled scans"
+msgstr "الفحوصات المجدولة"
+
+msgid "Search"
+msgstr "بحث"
+
+msgid "Search file and folder names."
+msgstr "البحث في أسماء الملفات والمجلدات."
+
+msgid "Search results"
+msgstr "نتائج البحث"
+
+msgid "Search text cannot contain a NUL character."
+msgstr "لا يمكن أن يحتوي نص البحث على محرف NUL."
+
+msgid "Select a row to inspect it."
+msgstr "حدد صفًا لفحص تفاصيله."
+
+msgid "Settings"
+msgstr "الإعدادات"
+
+msgid "Settings pages"
+msgstr "صفحات الإعدادات"
+
+#, python-brace-format
+msgid "Shortcut conflict: {first} and {second}"
+msgstr "تعارض في الاختصار: {first} و{second}"
+
+msgid "Shortcuts"
+msgstr "الاختصارات"
+
+msgid "Show NTFS metafiles (Windows only)"
+msgstr "إظهار ملفات NTFS الوصفية (Windows فقط)"
+
+#, python-brace-format
+msgid "Showing {shown} of {total} issues"
+msgstr "عرض {shown} من أصل {total} مشكلة"
+
+msgid "Size"
+msgstr "الحجم"
+
+msgid "Snapshots"
+msgstr "اللقطات"
+
+msgid "Sparse"
+msgstr "متناثر"
+
+msgid "Start scan"
+msgstr "بدء الفحص"
+
+#, python-brace-format
+msgid "Switch to tab {number}"
+msgstr "الانتقال إلى علامة التبويب {number}"
+
+msgid "Symbolic link"
+msgstr "رابط رمزي"
+
+msgid "Symbolic link loop"
+msgstr "حلقة روابط رمزية"
+
+msgid "System"
+msgstr "النظام"
+
+msgid "System language"
+msgstr "لغة النظام"
+
+msgid "Terabytes"
+msgstr "تيرابايت"
+
+#, python-brace-format
+msgid "The new report may be incomplete: {error}"
+msgstr "قد يكون التقرير الجديد غير مكتمل: {error}"
+
+msgid "Theme"
+msgstr "السمة"
+
+msgid "These defaults will be used when duplicate analysis is available."
+msgstr "ستُستخدم هذه الإعدادات الافتراضية عند إتاحة تحليل الملفات المكررة."
+
+msgid "Threads"
+msgstr "الخيوط"
+
+msgid "Timeout"
+msgstr "انتهاء المهلة"
+
+msgid "Top"
+msgstr "أكبر الملفات"
+
+#, python-brace-format
+msgid "Total: {size}"
+msgstr "الإجمالي: {size}"
+
+msgid "Tree"
+msgstr "الشجرة"
+
+msgid "Treemap"
+msgstr "خريطة المساحة"
+
+msgid "Type"
+msgstr "النوع"
+
+msgid "Types"
+msgstr "الأنواع"
+
+msgid "Unavailable"
+msgstr "غير متاح"
+
+msgid "Unavailable features stay disabled. Clear a shortcut to unassign it."
+msgstr "ستظل الميزات غير المتاحة معطّلة. امسح الاختصار لإلغاء تعيينه."
+
+msgid "Unexpected error"
+msgstr "خطأ غير متوقع"
+
+msgid "Unit labels"
+msgstr "تسميات الوحدات"
+
+msgid "Units"
+msgstr "الوحدات"
+
+msgid "Unknown"
+msgstr "غير معروف"
+
+#, python-brace-format
+msgid "Unsupported settings version: {version}"
+msgstr "إصدار الإعدادات غير مدعوم: {version}"
+
+msgid "Up"
+msgstr "لأعلى"
+
+msgid "Validate and save a setting."
+msgstr "التحقق من صحة إعداد وحفظه."
+
+msgid "Verify matching bytes"
+msgstr "التحقق من تطابق البايتات"
+
+msgid "Volume"
+msgstr "وحدة التخزين"
+
+msgid "Volumes"
+msgstr "وحدات التخزين"
+
+msgid "Walk"
+msgstr "تجوال"
+
+msgid "XXH3 128"
+msgstr "XXH3 128"
+
+msgid "dotted setting name"
+msgstr "اسم إعداد منقّط"
+
+msgid "existing setting"
+msgstr "إعداد موجود"
+
 msgid "file"
 msgid_plural "files"
 msgstr[0] "ملفات"
@@ -17,233 +798,107 @@ msgstr[3] "ملفات"
 msgstr[4] "ملفًا"
 msgstr[5] "ملف"
 
-msgid "Automatic"
-msgstr ""
+msgid "finite number"
+msgstr "رقم محدود"
 
-msgid "Bytes"
-msgstr ""
+msgid "folder"
+msgstr "مجلد"
 
-msgid "Exabytes"
-msgstr ""
+msgid "list"
+msgstr "قائمة"
 
-msgid "Gigabytes"
-msgstr ""
+msgid "non-empty list of unique column IDs"
+msgstr "قائمة غير فارغة من معرّفات الأعمدة الفريدة"
 
-msgid "Kilobytes"
-msgstr ""
+msgid "non-negative dimensions"
+msgstr "أبعاد غير سالبة"
 
-msgid "Megabytes"
-msgstr ""
+msgid "non-negative integer"
+msgstr "عدد صحيح غير سالب"
 
-msgid "Petabytes"
-msgstr ""
+msgid "object"
+msgstr "كائن"
 
-msgid "Search file and folder names."
-msgstr ""
+msgid "one character"
+msgstr "محرف واحد"
 
-msgid "Search text cannot contain a NUL character."
-msgstr ""
+msgid "positive dimensions"
+msgstr "أبعاد موجبة"
 
-msgid "Terabytes"
-msgstr ""
+msgid "positive widths and non-negative orders"
+msgstr "عروض موجبة وترتيبات غير سالبة"
 
-msgid "Advanced"
-msgstr ""
-
-msgid "Arabic"
-msgstr ""
-
-msgid "BLAKE3"
-msgstr ""
-
-msgid "Binary (KB, MB)"
-msgstr ""
-
-msgid "Comfortable"
-msgstr ""
-
-msgid "Compact"
-msgstr ""
-
-msgid "Could not open the log folder."
-msgstr ""
-
-msgid "Could not save settings: {error}"
-msgstr ""
-
-msgid "Count every link"
-msgstr ""
-
-msgid "Count once"
-msgstr ""
-
-msgid "Current language: {locale}"
-msgstr ""
-
-msgid "Dark"
-msgstr ""
-
-msgid "Duplicate I/O threads"
-msgstr ""
-
-msgid "Duplicate filter"
-msgstr ""
-
-msgid "Duplicates defaults"
-msgstr ""
-
-msgid "Eager"
-msgstr ""
-
-msgid "English"
-msgstr ""
-
-msgid "General"
-msgstr ""
-
-msgid "German"
-msgstr ""
-
-msgid "Hard links"
-msgstr ""
-
-msgid "Hash algorithm"
-msgstr ""
-
-msgid "IEC (KiB, MiB)"
-msgstr ""
-
-msgid "Include alternate data streams (Windows only)"
-msgstr ""
-
-msgid "Include hidden files"
-msgstr ""
-
-msgid "Keep duplicate groups on the same volume"
-msgstr ""
-
-
-msgid "Language"
-msgstr ""
-
-msgid "Language changes take effect after restarting the application."
-msgstr ""
-
-msgid "Lazy"
-msgstr ""
-
-msgid "Light"
-msgstr ""
-
-msgid "MFT (Windows only)"
-msgstr ""
-
-msgid "Maximum size (blank for no limit)"
-msgstr ""
-
-msgid "Minimum size (bytes or size with unit)"
-msgstr ""
-
-msgid "Off"
-msgstr ""
-
-msgid "Open log folder"
-msgstr ""
-
-msgid "Owner lookup"
-msgstr ""
-
-msgid "Prefix bytes"
-msgstr ""
-
-msgid "Row density"
-msgstr ""
-
-msgid "SHA-256"
-msgstr ""
-
-msgid "SI (kB, MB)"
-msgstr ""
-
-msgid "Scan scheduling is not available yet."
-msgstr ""
-
-msgid "Scan threads"
-msgstr ""
-
-msgid "Scanning defaults"
-msgstr ""
-
-msgid "Scheduled scans"
-msgstr ""
-
-msgid "Settings pages"
-msgstr ""
-
-msgid "Shortcuts"
-msgstr ""
-
-msgid "Show NTFS metafiles (Windows only)"
-msgstr ""
-
-msgid "System language"
-msgstr ""
-
-msgid "Theme"
-msgstr ""
-
-msgid "These defaults will be used when duplicate analysis is available."
-msgstr ""
-
-msgid "Unit labels"
-msgstr ""
-
-msgid "Verify matching bytes"
-msgstr ""
-
-msgid "XXH3 128"
-msgstr ""
-
-msgid "Cancel scan"
-msgstr ""
-
-msgid "Delete permanently"
-msgstr ""
-
-msgid "Delete to Trash"
-msgstr ""
-
-msgid "Export"
-msgstr ""
-
-msgid "Focus query"
-msgstr ""
-
-msgid "Help"
-msgstr ""
-
-msgid "Open snapshot"
-msgstr ""
-
-msgid "Refresh selection"
-msgstr ""
-
-msgid "Resolve shortcut conflicts before saving."
-msgstr ""
-
-msgid "Restore default shortcuts"
-msgstr ""
-
-msgid "Save snapshot"
-msgstr ""
+msgid "user preference (version is managed by migrations)"
+msgstr "تفضيل المستخدم (تدير عمليات الترحيل الإصدار)"
 
 #, python-brace-format
-msgid "Shortcut conflict: {first} and {second}"
-msgstr ""
+msgid "{days}d {time}"
+msgstr "{days} يوم، {time}"
 
 #, python-brace-format
-msgid "Switch to tab {number}"
-msgstr ""
+msgid "{free} free of {total}"
+msgstr "المتاح {free} من أصل {total}"
 
-msgid "Unavailable features stay disabled. Clear a shortcut to unassign it."
+#, python-brace-format
+msgid "{key}: expected {expected}"
+msgstr "{key}: المتوقع {expected}"
+
+#, python-brace-format
+msgid ""
+"{label}\n"
+"Mount: {mount}\n"
+"Filesystem: {filesystem}\n"
+"Serial: {serial}\n"
+"Capacity: {total}\n"
+"Free: {free}\n"
+"Cluster size: {cluster}"
 msgstr ""
+"{label}\n"
+"نقطة الضم: {mount}\n"
+"نظام الملفات: {filesystem}\n"
+"الرقم التسلسلي: {serial}\n"
+"السعة: {total}\n"
+"المتاح: {free}\n"
+"حجم العنقود: {cluster}"
+
+#, python-brace-format
+msgid "{label} ({mount})"
+msgstr "{label} ({mount})"
+
+#, python-brace-format
+msgid "{mount}: {capacity}"
+msgstr "{mount}: {capacity}"
+
+#, python-brace-format
+msgid ""
+"{name}\n"
+"Size: {size}\n"
+"Allocated: {allocated}\n"
+"Files: {files}\n"
+"Folders: {folders}"
+msgstr ""
+"{name}\n"
+"الحجم: {size}\n"
+"المساحة المخصصة: {allocated}\n"
+"الملفات: {files}\n"
+"المجلدات: {folders}"
+
+#, python-brace-format
+msgid "{name}, {kind}, {size}, {percent} of parent"
+msgstr "{name}، {kind}، {size}، {percent} من المجلد الأب"
+
+#, python-brace-format
+msgid "{rate} files/s"
+msgstr "{rate} ملف/ث"
+
+#, python-brace-format
+msgid "{size} ({ratio} of logical size)"
+msgstr "{size} ({ratio} من الحجم المنطقي)"
+
+#, python-brace-format
+msgid "{start}–{end}"
+msgstr "{start}–{end}"
+
+#, python-brace-format
+msgid "≥{start}"
+msgstr "≥{start}"

@@ -30,7 +30,7 @@ from PySide6.QtWidgets import (
 
 from dafree import api
 from dafree.api.types import ScanIssue
-from dafree.gui import _display_text
+from dafree.gui import _display_text, _format_size
 from dafree.gui.controllers.scan_controller import ScanController
 from dafree.gui.controllers.task_runner import TaskRunner
 from dafree.gui.dialogs.properties_dialog import PropertiesDialog
@@ -260,7 +260,7 @@ class MainWindow(QMainWindow):
             page.refresh_units()
         self.total_label.setText(
             _("Total: {size}").format(
-                size=api.format_size(
+                size=_format_size(
                     self._total_bytes, self._settings.units, self._settings.unit_style
                 )
             )
@@ -382,9 +382,14 @@ class MainWindow(QMainWindow):
     def _build_status(self, provider: Callable[[], bool] | None) -> None:
         bar = self.statusBar()
         self.mode_label = QLabel(_("Ready"), self)
-        self.files_label = QLabel(_("Files: 0"), self)
-        self.dirs_label = QLabel(_("Folders: 0"), self)
-        self.total_label = QLabel(_("Total: 0 B"), self)
+        self.files_label = QLabel(_("Files: {count}").format(count=QLocale().toString(0)), self)
+        self.dirs_label = QLabel(_("Folders: {count}").format(count=QLocale().toString(0)), self)
+        self.total_label = QLabel(
+            _("Total: {size}").format(
+                size=_format_size(0, self._settings.units, self._settings.unit_style)
+            ),
+            self,
+        )
         self.elapsed_label = QLabel(elapsed_text(0), self)
         for label in (
             self.mode_label,
@@ -395,7 +400,9 @@ class MainWindow(QMainWindow):
         ):
             label.setTextFormat(Qt.TextFormat.PlainText)
             bar.addWidget(label)
-        self.issues_button = QPushButton(_("Issues: 0"), self)
+        self.issues_button = QPushButton(
+            _("Issues: {count}").format(count=QLocale().toString(0)), self
+        )
         self.issues_button.setFlat(True)
         self.issues_button.setAccessibleName(_("Scan issues"))
         self.issues_button.clicked.connect(lambda: self.show_tab("issues"))
@@ -503,7 +510,7 @@ class MainWindow(QMainWindow):
         self.dirs_label.setText(_("Folders: {count}").format(count=QLocale().toString(0)))
         self.total_label.setText(
             _("Total: {size}").format(
-                size=api.format_size(0, self._settings.units, self._settings.unit_style)
+                size=_format_size(0, self._settings.units, self._settings.unit_style)
             )
         )
         self.elapsed_label.setText(elapsed_text(0))
@@ -524,9 +531,7 @@ class MainWindow(QMainWindow):
         self.dirs_label.setText(_("Folders: {count}").format(count=locale.toString(progress.dirs)))
         self.total_label.setText(
             _("Total: {size}").format(
-                size=api.format_size(
-                    progress.bytes, self._settings.units, self._settings.unit_style
-                )
+                size=_format_size(progress.bytes, self._settings.units, self._settings.unit_style)
             )
         )
         self.elapsed_label.setText(elapsed_text(progress.elapsed_ms))

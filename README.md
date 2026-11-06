@@ -25,7 +25,7 @@ The implementation plan stages these capabilities:
 - **Actions:** reveal and inspect files, and carefully confirmed delete or move operations with trash as the default.
 - **Network:** scanning network shares with suitable defaults.
 - **Reports and automation:** CSV, JSON, HTML, and PDF exports, scheduled scans, and alerts.
-- **Languages:** English is the initial interface language; Arabic (right-to-left) and German catalogues are being scaffolded.
+- **Languages:** English, Arabic (right-to-left), and German are available. Choose the language in Settings and restart to apply it.
 
 See the [implementation plan](docs/PLAN.md) for milestone status and the complete scope.
 

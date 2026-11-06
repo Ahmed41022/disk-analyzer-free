@@ -25,7 +25,9 @@ def _load_catalog(path: Path) -> Catalog:
 
 def _normalise_pot(content: str) -> str:
     """Remove the generated timestamp so template comparisons are reproducible."""
-    normalized = _POT_DATE.sub('"POT-Creation-Date: 2000-01-01 00:00+0000\\n"', content)
+    normalized = _POT_DATE.sub(
+        lambda match: '"POT-Creation-Date: 2000-01-01 00:00+0000\\n"', content
+    )
     return normalized.rstrip("\n") + "\n"
 
 

@@ -1,53 +1,97 @@
+
 msgid ""
 msgstr ""
 "Project-Id-Version: disk-analyzer-free 0.1.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2000-01-01 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en_US\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"Language-Team: en_US <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
 
-#: src/dafree/i18n/__init__.py
-msgid "file"
-msgid_plural "files"
-msgstr[0] ""
-msgstr[1] ""
+msgid "180d–1y"
+msgstr "180d–1y"
 
-msgid "Automatic"
-msgstr "Automatic"
+msgid "1–2y"
+msgstr "1–2y"
 
-msgid "Bytes"
-msgstr "Bytes"
+msgid "2–5y"
+msgstr "2–5y"
 
-msgid "Exabytes"
-msgstr "Exabytes"
+msgid "30–90d"
+msgstr "30–90d"
 
-msgid "Gigabytes"
-msgstr "Gigabytes"
+msgid "90–180d"
+msgstr "90–180d"
 
-msgid "Kilobytes"
-msgstr "Kilobytes"
+msgid "<30d"
+msgstr "<30d"
 
-msgid "Megabytes"
-msgstr "Megabytes"
+#, python-brace-format
+msgid "<{end}"
+msgstr "<{end}"
 
-msgid "Petabytes"
-msgstr "Petabytes"
+msgid ">5y"
+msgstr ">5y"
 
-msgid "Search file and folder names."
-msgstr "Search file and folder names."
+msgid "A background thread terminated unexpectedly."
+msgstr "A background thread terminated unexpectedly."
 
-msgid "Search text cannot contain a NUL character."
-msgstr "Search text cannot contain a NUL character."
+msgid "A scan is already running."
+msgstr "A scan is already running."
 
-msgid "Terabytes"
-msgstr "Terabytes"
+msgid "Access denied"
+msgstr "Access denied"
+
+msgid "Accessed"
+msgstr "Accessed"
+
+msgid "Add folder…"
+msgstr "Add folder…"
+
+msgid "Add path"
+msgstr "Add path"
+
+msgid "Add selected volumes"
+msgstr "Add selected volumes"
+
+msgid "Administrator"
+msgstr "Administrator"
+
+msgid "Administrator status is unavailable."
+msgstr "Administrator status is unavailable."
 
 msgid "Advanced"
 msgstr "Advanced"
 
+msgid "Age"
+msgstr "Age"
+
+msgid "All kinds"
+msgstr "All kinds"
+
+msgid "Allocated"
+msgstr "Allocated"
+
+msgid "Allocated size is approximate"
+msgstr "Allocated size is approximate"
+
+msgid "An unexpected error occurred. Details were saved to the application log."
+msgstr "An unexpected error occurred. Details were saved to the application log."
+
 msgid "Arabic"
 msgstr "Arabic"
+
+msgid "Auto"
+msgstr "Auto"
+
+msgid "Automatic"
+msgstr "Automatic"
 
 msgid "BLAKE3"
 msgstr "BLAKE3"
@@ -55,17 +99,99 @@ msgstr "BLAKE3"
 msgid "Binary (KB, MB)"
 msgstr "Binary (KB, MB)"
 
+msgid "Bytes"
+msgstr "Bytes"
+
+msgid "CSV files (*.csv)"
+msgstr "CSV files (*.csv)"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Cancel scan"
+msgstr "Cancel scan"
+
+msgid "Cancellation requested…"
+msgstr "Cancellation requested…"
+
+#, python-brace-format
+msgid "Cannot access preferences: {error}"
+msgstr "Cannot access preferences: {error}"
+
+msgid "Changed during scan"
+msgstr "Changed during scan"
+
+msgid "Charts"
+msgstr "Charts"
+
+msgid "Checking folder…"
+msgstr "Checking folder…"
+
+msgid "Choose a target to start a scan."
+msgstr "Choose a target to start a scan."
+
+msgid "Choose scan folder"
+msgstr "Choose scan folder"
+
+msgid "Cloud placeholder"
+msgstr "Cloud placeholder"
+
+msgid "Combined scan"
+msgstr "Combined scan"
+
 msgid "Comfortable"
 msgstr "Comfortable"
 
 msgid "Compact"
 msgstr "Compact"
 
+msgid "Compare"
+msgstr "Compare"
+
+msgid "Compressed"
+msgstr "Compressed"
+
+msgid "Copy all"
+msgstr "Copy all"
+
+msgid "Copy all displayed issues."
+msgstr "Copy all displayed issues."
+
+msgid "Copy details"
+msgstr "Copy details"
+
+msgid "Copy path"
+msgstr "Copy path"
+
+#, python-brace-format
+msgid "Could not export issues: {error}. Choose a new filename; existing files are preserved."
+msgstr "Could not export issues: {error}. Choose a new filename; existing files are preserved."
+
 msgid "Could not open the log folder."
 msgstr "Could not open the log folder."
 
+msgid "Could not pass arguments to the other instance."
+msgstr "Could not pass arguments to the other instance."
+
+#, python-brace-format
+msgid "Could not prepare tree: {error}"
+msgstr "Could not prepare tree: {error}"
+
+#, python-brace-format
+msgid "Could not read volumes: {error}"
+msgstr "Could not read volumes: {error}"
+
+#, python-brace-format
+msgid "Could not save scan options: {error}"
+msgstr "Could not save scan options: {error}"
+
+#, python-brace-format
 msgid "Could not save settings: {error}"
 msgstr "Could not save settings: {error}"
+
+#, python-brace-format
+msgid "Could not validate folder: {error}"
+msgstr "Could not validate folder: {error}"
 
 msgid "Count every link"
 msgstr "Count every link"
@@ -73,11 +199,30 @@ msgstr "Count every link"
 msgid "Count once"
 msgstr "Count once"
 
+msgid "Created"
+msgstr "Created"
+
+msgid "Cross filesystems"
+msgstr "Cross filesystems"
+
+#, python-brace-format
 msgid "Current language: {locale}"
 msgstr "Current language: {locale}"
 
 msgid "Dark"
 msgstr "Dark"
+
+msgid "Delete permanently"
+msgstr "Delete permanently"
+
+msgid "Delete to Trash"
+msgstr "Delete to Trash"
+
+msgid "Directory tree"
+msgstr "Directory tree"
+
+msgid "Disk Analyzer Free"
+msgstr "Disk Analyzer Free"
 
 msgid "Duplicate I/O threads"
 msgstr "Duplicate I/O threads"
@@ -85,14 +230,109 @@ msgstr "Duplicate I/O threads"
 msgid "Duplicate filter"
 msgstr "Duplicate filter"
 
+msgid "Duplicates"
+msgstr "Duplicates"
+
 msgid "Duplicates defaults"
 msgstr "Duplicates defaults"
 
 msgid "Eager"
 msgstr "Eager"
 
+#, python-brace-format
+msgid "Elapsed: {time}"
+msgstr "Elapsed: {time}"
+
+msgid "Empty"
+msgstr "Empty"
+
 msgid "English"
 msgstr "English"
+
+msgid "Enter a valid folder path."
+msgstr "Enter a valid folder path."
+
+msgid "Exabytes"
+msgstr "Exabytes"
+
+msgid "Exclude hidden entries"
+msgstr "Exclude hidden entries"
+
+msgid "Exclude system entries"
+msgstr "Exclude system entries"
+
+msgid "Excluded from totals"
+msgstr "Excluded from totals"
+
+msgid "Excluded globs, one per line"
+msgstr "Excluded globs, one per line"
+
+msgid "Excluded paths, one per line"
+msgstr "Excluded paths, one per line"
+
+msgid "Export"
+msgstr "Export"
+
+msgid "Export CSV"
+msgstr "Export CSV"
+
+msgid "Export issues"
+msgstr "Export issues"
+
+msgid "Export retained issues matching the current filter to a new file."
+msgstr "Export retained issues matching the current filter to a new file."
+
+#, python-brace-format
+msgid "Exported {count} issues."
+msgstr "Exported {count} issues."
+
+msgid "Exporting issues…"
+msgstr "Exporting issues…"
+
+msgid "Extension"
+msgstr "Extension"
+
+msgid "File"
+msgstr "File"
+
+msgid "Files"
+msgstr "Files"
+
+#, python-brace-format
+msgid "Files: {count}"
+msgstr "Files: {count}"
+
+msgid "Find"
+msgstr "Find"
+
+msgid "Finishing scan…"
+msgstr "Finishing scan…"
+
+msgid "Focus query"
+msgstr "Focus query"
+
+msgid "Folder"
+msgstr "Folder"
+
+#, python-brace-format
+msgid "Folder is unavailable: {path}"
+msgstr "Folder is unavailable: {path}"
+
+msgid "Folder path"
+msgstr "Folder path"
+
+msgid "Folders"
+msgstr "Folders"
+
+#, python-brace-format
+msgid "Folders: {count}"
+msgstr "Folders: {count}"
+
+msgid "Follow symbolic links"
+msgstr "Follow symbolic links"
+
+msgid "Full path"
+msgstr "Full path"
 
 msgid "General"
 msgstr "General"
@@ -100,11 +340,29 @@ msgstr "General"
 msgid "German"
 msgstr "German"
 
+msgid "Gigabytes"
+msgstr "Gigabytes"
+
+msgid "Globs"
+msgstr "Globs"
+
+msgid "Hard link — not counted in totals"
+msgstr "Hard link — not counted in totals"
+
 msgid "Hard links"
 msgstr "Hard links"
 
 msgid "Hash algorithm"
 msgstr "Hash algorithm"
+
+msgid "Help"
+msgstr "Help"
+
+msgid "Hidden"
+msgstr "Hidden"
+
+msgid "I/O error"
+msgstr "I/O error"
 
 msgid "IEC (KiB, MiB)"
 msgstr "IEC (KiB, MiB)"
@@ -115,9 +373,33 @@ msgstr "Include alternate data streams (Windows only)"
 msgid "Include hidden files"
 msgstr "Include hidden files"
 
+msgid "Invalid name"
+msgstr "Invalid name"
+
+msgid "Invalid volume metadata"
+msgstr "Invalid volume metadata"
+
+msgid "Issue kind"
+msgstr "Issue kind"
+
+msgid "Issues"
+msgstr "Issues"
+
+msgid "Issues: 0"
+msgstr "Issues: 0"
+
+#, python-brace-format
+msgid "Issues: {count}"
+msgstr "Issues: {count}"
+
 msgid "Keep duplicate groups on the same volume"
 msgstr "Keep duplicate groups on the same volume"
 
+msgid "Kilobytes"
+msgstr "Kilobytes"
+
+msgid "Kind"
+msgstr "Kind"
 
 msgid "Language"
 msgstr "Language"
@@ -125,11 +407,23 @@ msgstr "Language"
 msgid "Language changes take effect after restarting the application."
 msgstr "Language changes take effect after restarting the application."
 
+msgid "Last Modified"
+msgstr "Last Modified"
+
 msgid "Lazy"
 msgstr "Lazy"
 
 msgid "Light"
 msgstr "Light"
+
+msgid "Loading volumes…"
+msgstr "Loading volumes…"
+
+msgid "Locations"
+msgstr "Locations"
+
+msgid "MFT"
+msgstr "MFT"
 
 msgid "MFT (Windows only)"
 msgstr "MFT (Windows only)"
@@ -137,8 +431,38 @@ msgstr "MFT (Windows only)"
 msgid "Maximum size (blank for no limit)"
 msgstr "Maximum size (blank for no limit)"
 
+msgid "Megabytes"
+msgstr "Megabytes"
+
+msgid "Message"
+msgstr "Message"
+
 msgid "Minimum size (bytes or size with unit)"
 msgstr "Minimum size (bytes or size with unit)"
+
+msgid "Mode"
+msgstr "Mode"
+
+msgid "Modified"
+msgstr "Modified"
+
+msgid "Mount point"
+msgstr "Mount point"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "New scan"
+msgstr "New scan"
+
+msgid "No scan issues."
+msgstr "No scan issues."
+
+msgid "No volumes available"
+msgstr "No volumes available"
+
+msgid "Not found"
+msgstr "Not found"
 
 msgid "Off"
 msgstr "Off"
@@ -146,14 +470,116 @@ msgstr "Off"
 msgid "Open log folder"
 msgstr "Open log folder"
 
+msgid "Open snapshot"
+msgstr "Open snapshot"
+
+msgid "Orphaned entry"
+msgstr "Orphaned entry"
+
+msgid "Other"
+msgstr "Other"
+
+msgid "Owner"
+msgstr "Owner"
+
 msgid "Owner lookup"
 msgstr "Owner lookup"
+
+msgid "Parent folder"
+msgstr "Parent folder"
+
+msgid "Parent share (%)"
+msgstr "Parent share (%)"
+
+msgid "Partial results"
+msgstr "Partial results"
+
+msgid "Partial scan"
+msgstr "Partial scan"
+
+msgid "Path"
+msgstr "Path"
+
+msgid "Path too long"
+msgstr "Path too long"
+
+msgid "Paths"
+msgstr "Paths"
+
+msgid "Pause"
+msgstr "Pause"
+
+msgid "Paused"
+msgstr "Paused"
+
+msgid "Petabytes"
+msgstr "Petabytes"
+
+msgid "Portable mode is not available yet"
+msgstr "Portable mode is not available yet"
 
 msgid "Prefix bytes"
 msgstr "Prefix bytes"
 
+msgid "Preparing scan…"
+msgstr "Preparing scan…"
+
+msgid "Preparing tree view…"
+msgstr "Preparing tree view…"
+
+msgid "Print a setting as JSON."
+msgstr "Print a setting as JSON."
+
+msgid "Print the preferences file path."
+msgstr "Print the preferences file path."
+
+msgid "Properties"
+msgstr "Properties"
+
+msgid "Rate: —"
+msgstr "Rate: —"
+
+msgid "Read and update shared preferences."
+msgstr "Read and update shared preferences."
+
+msgid "Ready"
+msgstr "Ready"
+
+msgid "Recent scans"
+msgstr "Recent scans"
+
+msgid "Refresh"
+msgstr "Refresh"
+
+msgid "Refresh selection"
+msgstr "Refresh selection"
+
+msgid "Remove targets"
+msgstr "Remove targets"
+
+msgid "Reparse point"
+msgstr "Reparse point"
+
+msgid "Resolve shortcut conflicts before saving."
+msgstr "Resolve shortcut conflicts before saving."
+
+msgid "Resolving…"
+msgstr "Resolving…"
+
+msgid "Restart as administrator"
+msgstr "Restart as administrator"
+
+msgid "Restore default shortcuts"
+msgstr "Restore default shortcuts"
+
+msgid "Resume"
+msgstr "Resume"
+
 msgid "Row density"
 msgstr "Row density"
+
+msgid "Running as administrator"
+msgstr "Running as administrator"
 
 msgid "SHA-256"
 msgstr "SHA-256"
@@ -161,8 +587,44 @@ msgstr "SHA-256"
 msgid "SI (kB, MB)"
 msgstr "SI (kB, MB)"
 
+msgid "Save snapshot"
+msgstr "Save snapshot"
+
+msgid "Scan"
+msgstr "Scan"
+
+msgid "Scan cancelled. Partial results are available."
+msgstr "Scan cancelled. Partial results are available."
+
+msgid "Scan complete."
+msgstr "Scan complete."
+
+msgid "Scan controls"
+msgstr "Scan controls"
+
+msgid "Scan error"
+msgstr "Scan error"
+
+msgid "Scan failed"
+msgstr "Scan failed"
+
+msgid "Scan failed."
+msgstr "Scan failed."
+
+msgid "Scan issues"
+msgstr "Scan issues"
+
+msgid "Scan progress"
+msgstr "Scan progress"
+
 msgid "Scan scheduling is not available yet."
 msgstr "Scan scheduling is not available yet."
+
+msgid "Scan started."
+msgstr "Scan started."
+
+msgid "Scan targets"
+msgstr "Scan targets"
 
 msgid "Scan threads"
 msgstr "Scan threads"
@@ -170,11 +632,36 @@ msgstr "Scan threads"
 msgid "Scanning defaults"
 msgstr "Scanning defaults"
 
+msgid "Scanning…"
+msgstr "Scanning…"
+
 msgid "Scheduled scans"
 msgstr "Scheduled scans"
 
+msgid "Search"
+msgstr "Search"
+
+msgid "Search file and folder names."
+msgstr "Search file and folder names."
+
+msgid "Search results"
+msgstr "Search results"
+
+msgid "Search text cannot contain a NUL character."
+msgstr "Search text cannot contain a NUL character."
+
+msgid "Select a row to inspect it."
+msgstr "Select a row to inspect it."
+
+msgid "Settings"
+msgstr "Settings"
+
 msgid "Settings pages"
 msgstr "Settings pages"
+
+#, python-brace-format
+msgid "Shortcut conflict: {first} and {second}"
+msgstr "Shortcut conflict: {first} and {second}"
 
 msgid "Shortcuts"
 msgstr "Shortcuts"
@@ -182,8 +669,44 @@ msgstr "Shortcuts"
 msgid "Show NTFS metafiles (Windows only)"
 msgstr "Show NTFS metafiles (Windows only)"
 
+#, python-brace-format
+msgid "Showing {shown} of {total} issues"
+msgstr "Showing {shown} of {total} issues"
+
+msgid "Size"
+msgstr "Size"
+
+msgid "Snapshots"
+msgstr "Snapshots"
+
+msgid "Sparse"
+msgstr "Sparse"
+
+msgid "Start scan"
+msgstr "Start scan"
+
+#, python-brace-format
+msgid "Switch to tab {number}"
+msgstr "Switch to tab {number}"
+
+msgid "Symbolic link"
+msgstr "Symbolic link"
+
+msgid "Symbolic link loop"
+msgstr "Symbolic link loop"
+
+msgid "System"
+msgstr "System"
+
 msgid "System language"
 msgstr "System language"
+
+msgid "Terabytes"
+msgstr "Terabytes"
+
+#, python-brace-format
+msgid "The new report may be incomplete: {error}"
+msgstr "The new report may be incomplete: {error}"
 
 msgid "Theme"
 msgstr "Theme"
@@ -191,55 +714,186 @@ msgstr "Theme"
 msgid "These defaults will be used when duplicate analysis is available."
 msgstr "These defaults will be used when duplicate analysis is available."
 
+msgid "Threads"
+msgstr "Threads"
+
+msgid "Timeout"
+msgstr "Timeout"
+
+msgid "Top"
+msgstr "Top"
+
+#, python-brace-format
+msgid "Total: {size}"
+msgstr "Total: {size}"
+
+msgid "Tree"
+msgstr "Tree"
+
+msgid "Treemap"
+msgstr "Treemap"
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Types"
+msgstr "Types"
+
+msgid "Unavailable"
+msgstr "Unavailable"
+
+msgid "Unavailable features stay disabled. Clear a shortcut to unassign it."
+msgstr "Unavailable features stay disabled. Clear a shortcut to unassign it."
+
+msgid "Unexpected error"
+msgstr "Unexpected error"
+
 msgid "Unit labels"
 msgstr "Unit labels"
+
+msgid "Units"
+msgstr "Units"
+
+msgid "Unknown"
+msgstr "Unknown"
+
+#, python-brace-format
+msgid "Unsupported settings version: {version}"
+msgstr "Unsupported settings version: {version}"
+
+msgid "Up"
+msgstr "Up"
+
+msgid "Validate and save a setting."
+msgstr "Validate and save a setting."
 
 msgid "Verify matching bytes"
 msgstr "Verify matching bytes"
 
+msgid "Volume"
+msgstr "Volume"
+
+msgid "Volumes"
+msgstr "Volumes"
+
+msgid "Walk"
+msgstr "Walk"
+
 msgid "XXH3 128"
 msgstr "XXH3 128"
 
-msgid "Cancel scan"
-msgstr "Cancel scan"
+msgid "dotted setting name"
+msgstr "dotted setting name"
 
-msgid "Delete permanently"
-msgstr "Delete permanently"
+msgid "existing setting"
+msgstr "existing setting"
 
-msgid "Delete to Trash"
-msgstr "Delete to Trash"
+msgid "file"
+msgid_plural "files"
+msgstr[0] "file"
+msgstr[1] "files"
 
-msgid "Export"
-msgstr "Export"
+msgid "finite number"
+msgstr "finite number"
 
-msgid "Focus query"
-msgstr "Focus query"
+msgid "folder"
+msgstr "folder"
 
-msgid "Help"
-msgstr "Help"
+msgid "list"
+msgstr "list"
 
-msgid "Open snapshot"
-msgstr "Open snapshot"
+msgid "non-empty list of unique column IDs"
+msgstr "non-empty list of unique column IDs"
 
-msgid "Refresh selection"
-msgstr "Refresh selection"
+msgid "non-negative dimensions"
+msgstr "non-negative dimensions"
 
-msgid "Resolve shortcut conflicts before saving."
-msgstr "Resolve shortcut conflicts before saving."
+msgid "non-negative integer"
+msgstr "non-negative integer"
 
-msgid "Restore default shortcuts"
-msgstr "Restore default shortcuts"
+msgid "object"
+msgstr "object"
 
-msgid "Save snapshot"
-msgstr "Save snapshot"
+msgid "one character"
+msgstr "one character"
+
+msgid "positive dimensions"
+msgstr "positive dimensions"
+
+msgid "positive widths and non-negative orders"
+msgstr "positive widths and non-negative orders"
+
+msgid "user preference (version is managed by migrations)"
+msgstr "user preference (version is managed by migrations)"
 
 #, python-brace-format
-msgid "Shortcut conflict: {first} and {second}"
-msgstr "Shortcut conflict: {first} and {second}"
+msgid "{days}d {time}"
+msgstr "{days}d {time}"
 
 #, python-brace-format
-msgid "Switch to tab {number}"
-msgstr "Switch to tab {number}"
+msgid "{free} free of {total}"
+msgstr "{free} free of {total}"
 
-msgid "Unavailable features stay disabled. Clear a shortcut to unassign it."
-msgstr "Unavailable features stay disabled. Clear a shortcut to unassign it."
+#, python-brace-format
+msgid "{key}: expected {expected}"
+msgstr "{key}: expected {expected}"
+
+#, python-brace-format
+msgid ""
+"{label}\n"
+"Mount: {mount}\n"
+"Filesystem: {filesystem}\n"
+"Serial: {serial}\n"
+"Capacity: {total}\n"
+"Free: {free}\n"
+"Cluster size: {cluster}"
+msgstr ""
+"{label}\n"
+"Mount: {mount}\n"
+"Filesystem: {filesystem}\n"
+"Serial: {serial}\n"
+"Capacity: {total}\n"
+"Free: {free}\n"
+"Cluster size: {cluster}"
+
+#, python-brace-format
+msgid "{label} ({mount})"
+msgstr "{label} ({mount})"
+
+#, python-brace-format
+msgid "{mount}: {capacity}"
+msgstr "{mount}: {capacity}"
+
+#, python-brace-format
+msgid ""
+"{name}\n"
+"Size: {size}\n"
+"Allocated: {allocated}\n"
+"Files: {files}\n"
+"Folders: {folders}"
+msgstr ""
+"{name}\n"
+"Size: {size}\n"
+"Allocated: {allocated}\n"
+"Files: {files}\n"
+"Folders: {folders}"
+
+#, python-brace-format
+msgid "{name}, {kind}, {size}, {percent} of parent"
+msgstr "{name}, {kind}, {size}, {percent} of parent"
+
+#, python-brace-format
+msgid "{rate} files/s"
+msgstr "{rate} files/s"
+
+#, python-brace-format
+msgid "{size} ({ratio} of logical size)"
+msgstr "{size} ({ratio} of logical size)"
+
+#, python-brace-format
+msgid "{start}–{end}"
+msgstr "{start}–{end}"
+
+#, python-brace-format
+msgid "≥{start}"
+msgstr "≥{start}"

@@ -20,6 +20,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Added
 
+- Complete English, Arabic and German catalogs, RTL/native-dialog checks, and exact localized byte-size display.
+
 - Configurable platform keyboard shortcuts with conflict reporting and progress-scoped scan cancellation.
 
 - Debounced literal name search with localized error spans, plus a GUI units selector that reformats cached rows without rescanning or refetching them.
