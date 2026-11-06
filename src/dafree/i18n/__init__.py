@@ -70,6 +70,11 @@ def _(msg: str) -> str:
     return _state.translation.gettext(msg)
 
 
+def N_(msg: str) -> str:
+    """Mark a message ID for extraction while deferring translation to its consumer."""
+    return msg
+
+
 def ngettext(singular: str, plural: str, n: int) -> str:
     """Translate a singular or plural message using the active locale rules."""
     return _state.translation.ngettext(singular, plural, n)
@@ -91,4 +96,4 @@ def _file_count_label(count: int) -> str:
     return ngettext("file", "files", count)
 
 
-__all__ = ["_", "current_locale", "is_rtl", "ngettext", "setup"]
+__all__ = ["N_", "_", "current_locale", "is_rtl", "ngettext", "setup"]

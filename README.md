@@ -92,6 +92,8 @@ dafree config set default_scan.threads 4
 
 See the [CLI reference](docs/cli.md) for global options, TOML defaults, preferences, and shell completion.
 
+The desktop tree includes a debounced, case-insensitive literal name-substring search and a unit selector that reformats the current rows without rescanning. Structured query syntax remains planned.
+
 The Python API streams scan results as [JSON or NDJSON](docs/reference/json-export.md)
 and [CSV](docs/reference/csv-export.md).
 
@@ -108,7 +110,8 @@ for row in view.rows(0, 100):  # at most 500 rows per call
 ```
 
 `expand(id)`, `collapse(id)`, and `expand_to(id)` control visible paths. `FilterSpec`
-expressions evaluate in C++; query-text parsing remains planned. Rows are copied
+expressions evaluate in C++; the GUI currently accepts literal name substrings, while
+the structured query language remains planned. Rows are copied
 15-field tuples, documented in the API and native stub. Extension category IDs
 currently report `Other`; classification arrives with the deferred analysis task.
 

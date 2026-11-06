@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-05 07:59+0200\n"
+"POT-Creation-Date: 2000-01-01 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -89,6 +89,12 @@ msgid "An unexpected error occurred. Details were saved to the application log."
 msgstr ""
 
 msgid "Auto"
+msgstr ""
+
+msgid "Automatic"
+msgstr ""
+
+msgid "Bytes"
 msgstr ""
 
 msgid "CSV files (*.csv)"
@@ -193,6 +199,9 @@ msgstr ""
 msgid "Enter a valid folder path."
 msgstr ""
 
+msgid "Exabytes"
+msgstr ""
+
 msgid "Exclude hidden entries"
 msgstr ""
 
@@ -272,6 +281,9 @@ msgstr ""
 msgid "Full path"
 msgstr ""
 
+msgid "Gigabytes"
+msgstr ""
+
 msgid "Globs"
 msgstr ""
 
@@ -303,6 +315,9 @@ msgstr ""
 msgid "Issues: {count}"
 msgstr ""
 
+msgid "Kilobytes"
+msgstr ""
+
 msgid "Kind"
 msgstr ""
 
@@ -316,6 +331,9 @@ msgid "Locations"
 msgstr ""
 
 msgid "MFT"
+msgstr ""
+
+msgid "Megabytes"
 msgstr ""
 
 msgid "Message"
@@ -376,6 +394,9 @@ msgid "Pause"
 msgstr ""
 
 msgid "Paused"
+msgstr ""
+
+msgid "Petabytes"
 msgstr ""
 
 msgid "Portable mode is not available yet"
@@ -468,7 +489,13 @@ msgstr ""
 msgid "Search"
 msgstr ""
 
+msgid "Search file and folder names."
+msgstr ""
+
 msgid "Search results"
+msgstr ""
+
+msgid "Search text cannot contain a NUL character."
 msgstr ""
 
 msgid "Select a row to inspect it."
@@ -500,6 +527,9 @@ msgid "Symbolic link loop"
 msgstr ""
 
 msgid "System"
+msgstr ""
+
+msgid "Terabytes"
 msgstr ""
 
 #, python-brace-format

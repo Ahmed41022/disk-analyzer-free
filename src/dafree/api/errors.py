@@ -1,12 +1,30 @@
 """Stable Python exceptions for native scan failures."""
 
+from collections.abc import Mapping
 from enum import StrEnum
+from types import MappingProxyType
 
 from dafree.api.types import IssueKind
 
 
 class DafreeError(Exception):
     """Base class for errors reported by the native core."""
+
+
+class QueryError(DafreeError):
+    """A query error with Python character offsets and untranslated message arguments."""
+
+    def __init__(
+        self,
+        span: tuple[int, int],
+        message_id: str,
+        args: Mapping[str, str] | None = None,
+    ) -> None:
+        super().__init__(message_id)
+        self.span = span
+        self.message_id = message_id
+        # Exception.args is Python's reserved tuple; preserve it for exception machinery.
+        self.arguments: Mapping[str, str] = MappingProxyType(dict(args or {}))
 
 
 class Unsupported(DafreeError):

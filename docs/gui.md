@@ -86,6 +86,15 @@ native volumes in a worker, shows used/free capacity and network icons, and reta
 recent targets and the snapshot directory. Snapshot opening belongs to M6.
 
 `TreeTableView` uses compact 24-pixel rows and initial shared unit preferences.
+
+The tree tab's search field waits 250 ms after typing, then applies a trimmed,
+case-insensitive literal substring to file and folder names. Glob characters
+are treated literally. A NUL character is rejected; the last valid filter stays
+active and the invalid character is marked with a red wavy underline and a
+localized tooltip. The structured query grammar is deferred to T6.1. The units
+selector (Automatic, Bytes, and kilo through exa) changes displayed size formatting
+for the cached rows, selection details, and scan total; it does not fetch rows again or
+rescan the filesystem.
 The Tree tab prepares native views off-thread and pairs its table with a breadcrumb
 and selection metadata; miniature charts remain M5 work. Issues retain the native
 summary's first 1,000 entries and show its complete count; kind filtering applies

@@ -15,6 +15,16 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0077 — 2026-11-06 — Resume the query box before structured query parsing
+
+Question: How should the GUI query box ship while the full query grammar remains deferred?
+
+Choice: Implement a debounced name-substring query shim using the planned `dafree.query.parse` entry point and keep the lexer, structured grammar, and filter compiler in T6.1. Treat outer whitespace as normalization and all other input as a literal, case-insensitive filename or directory-name substring. Escape glob metacharacters when mapping to the existing native name glob filter. Reject NUL with an original Python-character span; keep the last valid filter active when the current text is invalid. Keep query error message IDs untranslated in the parser with the gettext `N_` marker, then translate in the GUI. Store interpolation data in read-only `QueryError.arguments`; Python's reserved `Exception.args` remains the exception argument tuple. The unit selector reformats cached results and details without a native row fetch or scan reset. Add no dependencies.
+
+Reasoning: The GUI can provide useful literal search and unit switching now without committing to partial structured semantics that belong to T6.1. Reusing the native name filter preserves existing filtering behavior, and deferring translation to the GUI keeps the parser independent of selected locale.
+
+Task: T4.9, resumed after M3
+
 ## D-0076 — 2026-11-06 — Isolate the repaint benchmark's Qt process
 
 Question: How should the repaint gate run reliably alongside the full local correctness suite?

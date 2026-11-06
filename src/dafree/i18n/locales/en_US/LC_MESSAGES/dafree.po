@@ -12,3 +12,33 @@ msgid "file"
 msgid_plural "files"
 msgstr[0] ""
 msgstr[1] ""
+
+msgid "Automatic"
+msgstr "Automatic"
+
+msgid "Bytes"
+msgstr "Bytes"
+
+msgid "Exabytes"
+msgstr "Exabytes"
+
+msgid "Gigabytes"
+msgstr "Gigabytes"
+
+msgid "Kilobytes"
+msgstr "Kilobytes"
+
+msgid "Megabytes"
+msgstr "Megabytes"
+
+msgid "Petabytes"
+msgstr "Petabytes"
+
+msgid "Search file and folder names."
+msgstr "Search file and folder names."
+
+msgid "Search text cannot contain a NUL character."
+msgstr "Search text cannot contain a NUL character."
+
+msgid "Terabytes"
+msgstr "Terabytes"

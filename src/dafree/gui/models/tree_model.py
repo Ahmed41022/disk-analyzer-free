@@ -238,6 +238,19 @@ class TreeTableModel(QAbstractTableModel):
         """Reset cached pages after native sorting/filtering and restore visible selection."""
         self._reset(lambda: self.view.set_options(opts))
 
+    def set_units(self, mode: api.UnitMode, style: api.UnitStyle | None = None) -> None:
+        """Reformat retained tuples without changing options, fetching rows, or resetting Qt."""
+        style = self.unit_style if style is None else style
+        if (mode, style) == (self.unit_mode, self.unit_style):
+            return
+        self.unit_mode, self.unit_style = mode, style
+        if self._row_count and self.columns:
+            self.dataChanged.emit(
+                self.index(0, 0),
+                self.index(self._row_count - 1, len(self.columns) - 1),
+                [_DISPLAY_ROLE, _ACCESSIBLE_ROLE],
+            )
+
     def sort(self, column: int, order: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
         """Delegate each column's sort to the native view, preserving other options."""
         if 0 <= column < len(self.columns):

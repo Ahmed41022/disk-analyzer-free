@@ -16,3 +16,33 @@ msgstr[2] "ملفان"
 msgstr[3] "ملفات"
 msgstr[4] "ملفًا"
 msgstr[5] "ملف"
+
+msgid "Automatic"
+msgstr ""
+
+msgid "Bytes"
+msgstr ""
+
+msgid "Exabytes"
+msgstr ""
+
+msgid "Gigabytes"
+msgstr ""
+
+msgid "Kilobytes"
+msgstr ""
+
+msgid "Megabytes"
+msgstr ""
+
+msgid "Petabytes"
+msgstr ""
+
+msgid "Search file and folder names."
+msgstr ""
+
+msgid "Search text cannot contain a NUL character."
+msgstr ""
+
+msgid "Terabytes"
+msgstr ""
