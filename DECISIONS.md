@@ -15,6 +15,16 @@ Partial job scope still pending (these are existing jobs, not missing rows): `li
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0078 — 2026-11-06 — Stage GUI preferences transactionally
+
+Question: Which settings should the first preferences dialog expose while shortcuts and scheduled scans are not ready, and how should edits affect the running application?
+
+Choice: Provide General, Scanning defaults, Duplicates defaults, Shortcuts, Scheduled scans, and Advanced pages. Persist a new `row_density` preference as `compact` (24 px, default) or `comfortable` (32 px), using the existing version-one additive-field behavior. Shortcuts and schedules remain explanatory placeholders until T4.11 and T9.7; duplicate defaults are editable and persisted, but are explicitly for future analysis because the engine is not implemented. Keep all edits in a candidate until OK validates and atomically saves it; Cancel changes neither disk nor live settings/palette. Do not preview draft themes. The running System theme tracks system color-scheme signals; fixed themes ignore them while retaining the latest scheme for a later switch to System. Language changes require restart. Windows NTFS metafile UI updates both persisted aliases; non-Windows keeps them disabled and unchanged. Open the log directory only if it already exists. Add no dependencies.
+
+Reasoning: This exposes preferences already represented by the schema while making the absent services clear. A candidate-save-then-apply order prevents cancellation or failed persistence from partially changing the session. The explicit density values give the tree a small, stable presentation choice without adding per-row state. Append the density field to preserve existing positional constructor arguments. Preserve unchanged raw exclusions against their initial Qt-normalized text, and carry unsupported language values in opaque metadata so QString conversion cannot lose stored data.
+
+Task: T4.10
+
 ## D-0077 — 2026-11-06 — Resume the query box before structured query parsing
 
 Question: How should the GUI query box ship while the full query grammar remains deferred?

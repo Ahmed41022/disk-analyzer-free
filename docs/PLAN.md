@@ -724,6 +724,7 @@ class Settings:
     shortcuts: dict[str, str] = field(default_factory=dict)   # action id → QKeySequence string override
     treemap: TreemapSettings = ...
     show_ntfs_metafiles: bool = True
+    row_density: Literal["compact", "comfortable"] = "compact"  # appended; 24px / 32px
 ```
 
 Stored as JSON. Location: portable mode ⇒ `<exe_dir>/data/settings.json`; else `platformdirs.user_config_dir("disk-analyzer-free", appauthor=False)/settings.json`. Writes are atomic (temp file + `os.replace`). Corrupt file ⇒ renamed `settings.json.bad-<unix>` and defaults loaded. The same file serves CLI and GUI.
@@ -1568,9 +1569,9 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T4.5
   - **Acceptance:** `test_invalid_query_underlines_span`, `test_valid_query_filters_rows`, `test_unit_switch_does_not_refetch`.
 
-- [ ] **T4.10 — Settings dialog, theme switching**
-  - **Files:** C `src/dafree/gui/dialogs/settings_dialog.py`, `tests/gui/test_settings_dialog.py`.
-  - **Behavior:** pages: General (language, theme, units, row density), Scanning defaults, Duplicates defaults, Shortcuts (T4.11), Scheduled scans (T9.7), Advanced (NTFS metafiles, threads, log folder button). Theme "System" follows `styleHints().colorSchemeChanged`. Language change applies after restart (dialog says so).
+- [x] **T4.10 — Settings dialog, theme switching**
+  - **Files:** C `src/dafree/gui/dialogs/settings_dialog.py`, `src/dafree/gui/theme/palette.py`, `src/dafree/gui/main_window.py`, `src/dafree/gui/widgets/tree_table.py`, `src/dafree/settings.py`, `tests/gui/test_settings_dialog.py`, `tests/gui/test_theme.py`, and GUI catalogs/docs.
+  - **Behavior:** modal pages: General (language, theme, units/labels, row density), Scanning defaults, Duplicates defaults, Shortcuts (staged until T4.11), Scheduled scans (staged until T9.7), Advanced (NTFS metafiles, scan threads, log-folder button). Stage a deep copy; validate and atomically save on OK before updating shared/live state. Cancel leaves disk, shared settings, and palette unchanged. Do not preview draft themes. A theme controller follows `styleHints().colorSchemeChanged` only in System mode while remembering the latest system scheme in fixed modes. Language applies after restart (dialog says so). Row density persists additively as `compact` (24 px, default) or `comfortable` (32 px). The duplicate defaults are persisted for future analysis; the duplicate engine is not implemented yet. NTFS metafile setting updates both stored flags on Windows; non-Windows controls are disabled and preserve values. Log-folder action opens the existing directory without creating it. No new dependencies.
   - **Depends on:** T4.2, T2.7
   - **Acceptance:** `test_theme_change_applies_palette`, `test_settings_saved_on_ok_not_on_cancel`, `test_system_theme_follows_color_scheme_signal`.
 

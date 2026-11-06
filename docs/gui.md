@@ -8,11 +8,19 @@ dafree gui
 ```
 
 The initial window uses Fusion and the shared `theme` and `locale` preferences.
-The system theme is sampled at startup; live switching and the settings dialog
-remain deferred. The selected locale configures gettext, Qt's standard-dialog
-translator when available, and the initial layout direction. New custom strings
-are marked for translation; full GUI translations and RTL refinement remain
-T4.12 work.
+Open **Settings** from the main window to choose a system, light, or dark theme,
+language, units and labels, row density, scan defaults, and duplicate-analysis
+defaults. Settings are staged in the dialog and saved atomically on **OK**;
+**Cancel** leaves both the saved and live preferences unchanged. The system
+theme follows operating-system color-scheme changes while selected. Language
+changes take effect after restarting the application. Shortcut customization
+and scheduled scans are shown as unavailable pages until their implementations
+are ready. Duplicate defaults are stored for future analysis; duplicate analysis
+is not available yet.
+
+The selected locale configures gettext, Qt's standard-dialog translator when
+available, and the initial layout direction. Custom strings use gettext markers;
+full GUI translations and RTL refinement remain T4.12 work.
 
 One desktop instance owns each application data directory and Windows privilege level. A second launch at the same privilege level
 passes its arguments through local IPC and exits after acknowledgment. The first
@@ -85,7 +93,8 @@ analysis tabs and deferred toolbar actions remain disabled. The sidebar discover
 native volumes in a worker, shows used/free capacity and network icons, and retains
 recent targets and the snapshot directory. Snapshot opening belongs to M6.
 
-`TreeTableView` uses compact 24-pixel rows and initial shared unit preferences.
+`TreeTableView` uses compact 24-pixel rows by default. Settings can switch to
+comfortable 32-pixel rows and change shared unit preferences.
 
 The tree tab's search field waits 250 ms after typing, then applies a trimmed,
 case-insensitive literal substring to file and folder names. Glob characters
