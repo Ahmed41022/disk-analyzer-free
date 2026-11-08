@@ -18,6 +18,8 @@ Choice: Complete T0.5's remaining PR-title, clang-format, spelling, compiler-cac
 
 Reasoning: The earlier inventory explicitly deferred these T0.5 obligations; completing M4 alone would leave pre-M5 CI work unfinished. Broad rule disabling would conceal relevant findings. Scoped representation/ABI exceptions retain the existing design while ordinary cleanup makes the configured gate enforceable. Today's scheduled CI/Nightly failures at main 3e04173 were download failures (PCRE2 HTTP 504 and Lychee installation); the same commit passed the previous day. Downloads responded again and the failed runs were retried. Finish and push this current cleanup, then stop before another task as requested.
 
+CI follow-up: The first Windows cached build exposed MSVC C1041 collisions in a shared compiler PDB. Configure embedded object debug symbols (`/Z7`) with `CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded` and default CMP0141 to NEW for older dependency projects, as required by sccache's documented CMake setup. Keep debug information, MSVC, parallel compilation, and every test enabled; compilers outside the MSVC ABI ignore this setting.
+
 Task: T0.5 follow-up, pre-M5 completion
 
 ## D-0081 — 2026-11-06 — Verify the frozen GUI before release packaging

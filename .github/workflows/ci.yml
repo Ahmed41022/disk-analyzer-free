@@ -100,6 +100,8 @@ jobs:
           cmake --preset dev
           -DDAFREE_BUILD_BENCH=${{ env.DAFREE_FULL_CI == 'true' && 'ON' || 'OFF' }}
           -DCMAKE_CXX_COMPILER_LAUNCHER=${{ runner.os == 'Windows' && 'sccache' || 'ccache' }}
+          -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+          -DCMAKE_POLICY_DEFAULT_CMP0141=NEW
       - name: Build
         run: cmake --build --preset dev
       - name: Unit tests
