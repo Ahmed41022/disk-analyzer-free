@@ -4,15 +4,21 @@ Entries are newest-first. Product-owner overrides take precedence over earlier c
 
 ## Pending CI jobs
 
-This inventory covers every §7.3 job absent from `ci.yml`. Remove a row when its job lands. Existing jobs: `frozen-smoke`, `lint`, `cpp`, `python`, `sanitizers`, `coverage`, `wheels`, `audit`, `docs`, `bench`, `ci-success`; additional `tsan`, `fuzz`, and `view-perf` jobs retain their separate required gates.
+Every §7.3 job is now present in `ci.yml`: `lint`, `cpp`, `python`, `sanitizers`, `coverage`, `wheels`, `frozen-smoke`, `audit`, `docs`, `bench`, `pr-title`, and `ci-success`; additional `tsan`, `fuzz`, and `view-perf` jobs retain their separate required gates. No missing-job rows remain.
 
-| Missing §7.3 job | Task that will add it | Remaining prerequisite / scope |
-| --- | --- | --- |
-| `pr-title` | T0.5 follow-up after these prerequisites | Enforce Conventional Commits on PR titles; no feature prerequisite. |
-
-Partial job scope still pending (these are existing jobs, not missing rows): `frozen-smoke` verifies the actual GUI bundle in T4.14; its dual GUI/CLI bundle, installer/archive production, and 90 MB release-size gate remain T10.1. `lint` needs automated clang-format/typos (T0.5 follow-up); `cpp` needs compiler caches/clang-tidy (T0.5 follow-up); `python` needs SMB/scheduler integration in T9.5–T9.7. Its GUI scroll performance is implemented in T4.5 and runs separately without instrumentation. Native model/scanner line thresholds remain 85% each. This inventory does not claim the unimplemented packaging or analysis checks are complete.
+Scope assigned to later whole tasks remains explicit: `frozen-smoke` verifies the actual GUI bundle in T4.14; its dual GUI/CLI bundle, installer/archive production, and 90 MB release-size gate remain T10.1. SMB/scheduler integration remains T9.5–T9.7. Native model/scanner line thresholds remain 85% each. This inventory does not claim those later packaging or analysis features are implemented.
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
+
+## D-0082 — 2026-11-08 — Close the remaining pre-M5 quality gates
+
+Question: Which recorded CI follow-ups must be completed before stopping the current pre-M5 work, and how should strict analysis handle low-level interfaces mandated by the architecture?
+
+Choice: Complete T0.5's remaining PR-title, clang-format, spelling, compiler-cache and Linux clang-tidy gates. Use clang-format 19.1.7 and clang-tidy 18.1.3 (Apache-2.0 with LLVM exception, build-only), crate-ci/typos v1 (local baseline v1.52.0, Apache-2.0), hendrikmuhs/ccache-action v1.2 (MIT; ccache Linux/macOS, sccache Windows), and amannn/action-semantic-pull-request v6 (MIT). Keep the existing dev CMake preset and all analysis checks/warnings-as-errors enabled. Apply mechanical trailing-return/nodiscard updates, name existing policy values without changing them, initialize ordinary metadata, guard optional result/error access, use checked fixed-array indexing, and avoid unnecessary copies in read-only native helpers. Preserve enum representations, Node's 56-byte/8-byte layout, segmented arena ownership, scan defaults, resource limits and Python interfaces. Retain precise local analyzer exceptions only for externally specified NTFS/Unicode/JSON/kernel layouts, standard C callback/allocator boundaries, required iterator/API roles, intentionally borrowed references, and bounded per-scan state padding; explain each at its source. Keep the validated NTFS filename scratch prefix uninitialized until written to avoid clearing its unused tail per record. Add a regression test for Expected<void,E>'s checked access. Spelling exclusions cover only non-English catalogs, upstream Unicode data, binary fixtures, and documented technical identifiers. The aggregate gate requires the title check on PRs and permits its planned absence on other events. Add no runtime dependencies.
+
+Reasoning: The earlier inventory explicitly deferred these T0.5 obligations; completing M4 alone would leave pre-M5 CI work unfinished. Broad rule disabling would conceal relevant findings. Scoped representation/ABI exceptions retain the existing design while ordinary cleanup makes the configured gate enforceable. Today's scheduled CI/Nightly failures at main 3e04173 were download failures (PCRE2 HTTP 504 and Lychee installation); the same commit passed the previous day. Downloads responded again and the failed runs were retried. Finish and push this current cleanup, then stop before another task as requested.
+
+Task: T0.5 follow-up, pre-M5 completion
 
 ## D-0081 — 2026-11-06 — Verify the frozen GUI before release packaging
 

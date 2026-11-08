@@ -6,21 +6,25 @@ namespace {
 
 class LocalBackend final : public FsBackend {
   public:
-    [[nodiscard]] BackendKind kind() const override { return BackendKind::Local; }
+    [[nodiscard]] auto kind() const -> BackendKind override { return BackendKind::Local; }
 #ifdef _WIN32
     bool supports_local_mft() const noexcept override { return true; }
     bool can_resolve_owner_by_path() const noexcept override { return true; }
 #endif
-    RawEntry stat_root(std::string_view path) override { return platform::stat_nofollow(path); }
-    RawEntry stat_follow(std::string_view path) override { return platform::stat_follow(path); }
-    DirListing read_dir(std::string_view path, const DirHint &hint) override {
+    auto stat_root(std::string_view path) -> RawEntry override {
+        return platform::stat_nofollow(path);
+    }
+    auto stat_follow(std::string_view path) -> RawEntry override {
+        return platform::stat_follow(path);
+    }
+    auto read_dir(std::string_view path, const DirHint &hint) -> DirListing override {
         return hint.follow_symlinks ? platform::read_dir_follow(path) : platform::read_dir(path);
     }
-    std::optional<VolumeInfo> volume_info(std::string_view path) override {
+    auto volume_info(std::string_view path) -> std::optional<VolumeInfo> override {
         return platform::volume_info(path);
     }
-    std::optional<std::pair<OwnerKey, std::string>> resolve_owner(std::string_view path,
-                                                                  const OwnerKey *hint) override {
+    auto resolve_owner(std::string_view path, const OwnerKey *hint)
+        -> std::optional<std::pair<OwnerKey, std::string>> override {
 #ifdef _WIN32
         (void)hint;
         return platform::owner_of(path);
@@ -39,6 +43,6 @@ class LocalBackend final : public FsBackend {
 
 } // namespace
 
-std::shared_ptr<FsBackend> make_local_backend() { return std::make_shared<LocalBackend>(); }
+auto make_local_backend() -> std::shared_ptr<FsBackend> { return std::make_shared<LocalBackend>(); }
 
 } // namespace dafree

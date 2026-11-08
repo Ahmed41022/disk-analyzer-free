@@ -4,7 +4,7 @@
 
 namespace dafree::platform {
 
-bool is_elevated() { return ::geteuid() == 0; }
+auto is_elevated() -> bool { return ::geteuid() == 0; }
 
 void relaunch_elevated(std::span<const std::string>) {
     throw Unsupported("elevated relaunch is unsupported on POSIX");

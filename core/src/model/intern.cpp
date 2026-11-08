@@ -10,8 +10,10 @@
 namespace dafree {
 namespace {
 
-bool decode_utf8(std::string_view input, std::size_t offset, char32_t &codepoint,
-                 std::size_t &length) noexcept {
+// UTF-8 leading-byte, continuation, and scalar ranges follow Unicode.
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
+auto decode_utf8(std::string_view input, std::size_t offset, char32_t &codepoint,
+                 std::size_t &length) noexcept -> bool {
     const auto first = static_cast<unsigned char>(input[offset]);
     if (first <= 0x7F) {
         codepoint = first;
@@ -48,7 +50,10 @@ bool decode_utf8(std::string_view input, std::size_t offset, char32_t &codepoint
     }
     return true;
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 
+// UTF-8 byte masks and shifts follow Unicode.
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
 void append_utf8(std::string &output, char32_t codepoint) {
     if (codepoint <= 0x7F) {
         output.push_back(static_cast<char>(codepoint));
@@ -66,9 +71,11 @@ void append_utf8(std::string &output, char32_t codepoint) {
         output.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
     }
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 
-char32_t simple_fold(char32_t codepoint) noexcept {
-    if (codepoint > 0xFFFF) {
+auto simple_fold(char32_t codepoint) noexcept -> char32_t {
+    constexpr char32_t last_bmp_codepoint = 0xFFFF;
+    if (codepoint > last_bmp_codepoint) {
         return codepoint;
     }
     const auto found = std::lower_bound(
@@ -78,14 +85,17 @@ char32_t simple_fold(char32_t codepoint) noexcept {
                                                                                  : codepoint;
 }
 
-bool is_space(char32_t codepoint) noexcept {
+// These code points are the Unicode White_Space property.
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
+auto is_space(char32_t codepoint) noexcept -> bool {
     return (codepoint >= 0x0009 && codepoint <= 0x000D) || codepoint == 0x0020 ||
            codepoint == 0x0085 || codepoint == 0x00A0 || codepoint == 0x1680 ||
            (codepoint >= 0x2000 && codepoint <= 0x200A) || codepoint == 0x2028 ||
            codepoint == 0x2029 || codepoint == 0x202F || codepoint == 0x205F || codepoint == 0x3000;
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 
-std::string folded_extension(std::string_view extension, bool &has_space) {
+auto folded_extension(std::string_view extension, bool &has_space) -> std::string {
     std::string folded;
     folded.reserve(extension.size());
     has_space = false;
@@ -104,9 +114,12 @@ std::string folded_extension(std::string_view extension, bool &has_space) {
     return folded;
 }
 
-std::size_t combine_hash(std::size_t seed, std::size_t value) noexcept {
+// Fixed hash-combine avalanche constants and shifts define this mixer.
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
+auto combine_hash(std::size_t seed, std::size_t value) noexcept -> std::size_t {
     return seed ^ (value + static_cast<std::size_t>(0x9E3779B9) + (seed << 6) + (seed >> 2));
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 
 } // namespace
 
@@ -115,7 +128,7 @@ ExtInterner::ExtInterner() {
     ids_.emplace(std::string{}, 0);
 }
 
-std::uint32_t ExtInterner::intern(std::string_view filename, bool is_directory) {
+auto ExtInterner::intern(std::string_view filename, bool is_directory) -> std::uint32_t {
     if (is_directory) {
         return 0;
     }
@@ -123,8 +136,9 @@ std::uint32_t ExtInterner::intern(std::string_view filename, bool is_directory) 
     if (dot == std::string_view::npos || dot == 0 || dot + 1 == filename.size()) {
         return 0;
     }
+    constexpr std::size_t maximum_extension_bytes = 16;
     const auto extension = filename.substr(dot + 1);
-    if (extension.size() > 16) {
+    if (extension.size() > maximum_extension_bytes) {
         return 0;
     }
     bool has_space = false;
@@ -154,9 +168,9 @@ std::uint32_t ExtInterner::intern(std::string_view filename, bool is_directory) 
     return id;
 }
 
-std::string_view ExtInterner::get(std::uint32_t id) const { return extensions_.at(id); }
+auto ExtInterner::get(std::uint32_t id) const -> std::string_view { return extensions_.at(id); }
 
-std::size_t ExtInterner::heap_bytes() const noexcept {
+auto ExtInterner::heap_bytes() const noexcept -> std::size_t {
     std::size_t bytes =
         extensions_.capacity() * sizeof(std::string) + ids_.bucket_count() * sizeof(void *);
     for (const auto &extension : extensions_) {
@@ -169,13 +183,15 @@ std::size_t ExtInterner::heap_bytes() const noexcept {
     return bytes;
 }
 
-OwnerKey OwnerKey::posix_uid(std::uint32_t owner_uid) { return {Kind::PosixUid, owner_uid, {}}; }
+auto OwnerKey::posix_uid(std::uint32_t owner_uid) -> OwnerKey {
+    return {Kind::PosixUid, owner_uid, {}};
+}
 
-OwnerKey OwnerKey::windows_sid(std::string_view sid_bytes) {
+auto OwnerKey::windows_sid(std::string_view sid_bytes) -> OwnerKey {
     return {Kind::WindowsSid, 0, std::string(sid_bytes)};
 }
 
-OwnerKey OwnerKey::remote(std::string_view remote_key) {
+auto OwnerKey::remote(std::string_view remote_key) -> OwnerKey {
     return {Kind::Remote, 0, std::string(remote_key)};
 }
 
@@ -184,7 +200,7 @@ OwnerTable::OwnerTable() {
     keys_.emplace_back();
 }
 
-std::uint32_t OwnerTable::intern(const OwnerKey &key, std::string_view display) {
+auto OwnerTable::intern(const OwnerKey &key, std::string_view display) -> std::uint32_t {
     if (const auto found = ids_.find(key); found != ids_.end()) {
         if (displays_[found->second].empty() && !display.empty())
             displays_[found->second] = display;
@@ -213,13 +229,13 @@ std::uint32_t OwnerTable::intern(const OwnerKey &key, std::string_view display) 
     return id;
 }
 
-std::string_view OwnerTable::get(std::uint32_t id) const { return displays_.at(id); }
+auto OwnerTable::get(std::uint32_t id) const -> std::string_view { return displays_.at(id); }
 
-const OwnerKey *OwnerTable::key(std::uint32_t id) const {
+auto OwnerTable::key(std::uint32_t id) const -> const OwnerKey * {
     return id == 0 ? nullptr : &keys_.at(id);
 }
 
-std::size_t OwnerTable::heap_bytes() const noexcept {
+auto OwnerTable::heap_bytes() const noexcept -> std::size_t {
     std::size_t bytes = displays_.capacity() * sizeof(std::string) +
                         keys_.capacity() * sizeof(OwnerKey) + ids_.bucket_count() * sizeof(void *);
     for (const auto &key : keys_)
@@ -234,7 +250,7 @@ std::size_t OwnerTable::heap_bytes() const noexcept {
     return bytes;
 }
 
-std::size_t OwnerTable::Hash::operator()(const OwnerKey &key) const noexcept {
+auto OwnerTable::Hash::operator()(const OwnerKey &key) const noexcept -> std::size_t {
     std::size_t seed = std::hash<std::uint8_t>{}(static_cast<std::uint8_t>(key.kind));
     if (key.kind == OwnerKey::Kind::PosixUid) {
         return combine_hash(seed, std::hash<std::uint32_t>{}(key.uid));

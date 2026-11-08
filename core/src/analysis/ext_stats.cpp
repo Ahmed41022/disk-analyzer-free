@@ -5,7 +5,7 @@
 
 namespace dafree {
 
-std::vector<ExtStat> ext_breakdown(const Tree &tree, NodeId scope) {
+auto ext_breakdown(const Tree &tree, NodeId scope) -> std::vector<ExtStat> {
     if (!analysis_detail::visible_scope(tree, scope))
         return {};
 

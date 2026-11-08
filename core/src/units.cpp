@@ -12,8 +12,14 @@ constexpr std::array<std::string_view, 7> kTraditionalLabels{"B",  "KB", "MB", "
                                                              "TB", "PB", "EB"};
 constexpr std::array<std::string_view, 7> kIecLabels{"B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"};
 constexpr std::array<std::string_view, 7> kSiLabels{"B", "kB", "MB", "GB", "TB", "PB", "EB"};
+constexpr std::uint32_t kMaximumUnitPower = static_cast<std::uint32_t>(kSiLabels.size() - 1);
+constexpr std::uint64_t kDecimalRadix = 10;
+constexpr std::uint64_t kDecimalHalfRadix = kDecimalRadix / 2;
+constexpr std::uint64_t kMaximumFractionScale = 1'000'000'000;
 
-std::uint64_t scale(std::uint32_t power, std::uint64_t base) {
+// Unit scaling uses exponent followed by radix at each call site.
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+auto scale(std::uint32_t power, std::uint64_t base) -> std::uint64_t {
     std::uint64_t result = 1;
     for (std::uint32_t index = 0; index < power; ++index) {
         result *= base;
@@ -21,7 +27,7 @@ std::uint64_t scale(std::uint32_t power, std::uint64_t base) {
     return result;
 }
 
-std::string_view trim(std::string_view text) {
+auto trim(std::string_view text) -> std::string_view {
     while (!text.empty() && std::isspace(static_cast<unsigned char>(text.front())) != 0) {
         text.remove_prefix(1);
     }
@@ -31,25 +37,25 @@ std::string_view trim(std::string_view text) {
     return text;
 }
 
-char ascii_upper(char value) {
+auto ascii_upper(char value) -> char {
     return value >= 'a' && value <= 'z' ? static_cast<char>(value - 'a' + 'A') : value;
 }
 
 } // namespace
 
-std::string format_size(std::uint64_t bytes, UnitMode mode, UnitStyle style) {
+auto format_size(std::uint64_t bytes, UnitMode mode, UnitStyle style) -> std::string {
     const auto base = style.system == UnitSystem::SI ? std::uint64_t{1000} : std::uint64_t{1024};
     const auto &labels = style.system == UnitSystem::SI
                              ? kSiLabels
                              : (style.system == UnitSystem::IEC ? kIecLabels : kTraditionalLabels);
     std::uint32_t power = 0;
     if (mode == UnitMode::Auto) {
-        while (power < 6 && bytes >= scale(power + 1, base)) {
+        while (power < kMaximumUnitPower && bytes >= scale(power + 1, base)) {
             ++power;
         }
     } else {
         power = static_cast<std::uint32_t>(mode) - 1;
-        if (power > 6) {
+        if (power > kMaximumUnitPower) {
             throw std::invalid_argument("unsupported unit mode");
         }
     }
@@ -60,21 +66,23 @@ std::string format_size(std::uint64_t bytes, UnitMode mode, UnitStyle style) {
     const auto divisor = scale(power, base);
     auto whole = bytes / divisor;
     const auto remainder = bytes % divisor;
-    auto tenth = (remainder * 10 + divisor / 2) / divisor;
-    if (tenth == 10) {
+    auto tenth = (remainder * kDecimalRadix + divisor / 2) / divisor;
+    if (tenth == kDecimalRadix) {
         ++whole;
         tenth = 0;
     }
     const auto maximum = std::numeric_limits<std::uint64_t>::max();
-    const auto fractional_bytes = (divisor / 10) * tenth + ((divisor % 10) * tenth + 5) / 10;
+    const auto fractional_bytes =
+        (divisor / kDecimalRadix) * tenth +
+        ((divisor % kDecimalRadix) * tenth + kDecimalHalfRadix) / kDecimalRadix;
     if (whole > maximum / divisor || fractional_bytes > maximum - whole * divisor) {
         return std::to_string(bytes) + " B";
     }
     return std::to_string(whole) + style.decimal_separator + static_cast<char>('0' + tenth) + " " +
-           std::string(labels[power]);
+           std::string(labels.at(power));
 }
 
-std::uint64_t parse_size(std::string_view text, UnitStyle style) {
+auto parse_size(std::string_view text, UnitStyle style) -> std::uint64_t {
     text = trim(text);
     if (text.empty() || text.front() == '-') {
         throw std::invalid_argument("size must be non-negative");
@@ -86,10 +94,10 @@ std::uint64_t parse_size(std::string_view text, UnitStyle style) {
     while (offset < text.size() && text[offset] >= '0' && text[offset] <= '9') {
         has_digit = true;
         const auto digit = static_cast<std::uint64_t>(text[offset] - '0');
-        if (whole > (std::numeric_limits<std::uint64_t>::max() - digit) / 10) {
+        if (whole > (std::numeric_limits<std::uint64_t>::max() - digit) / kDecimalRadix) {
             throw std::out_of_range("size overflows 64 bits");
         }
-        whole = whole * 10 + digit;
+        whole = whole * kDecimalRadix + digit;
         ++offset;
     }
 
@@ -99,11 +107,11 @@ std::uint64_t parse_size(std::string_view text, UnitStyle style) {
         ++offset;
         while (offset < text.size() && text[offset] >= '0' && text[offset] <= '9') {
             has_digit = true;
-            if (fraction_scale >= 1'000'000'000) {
+            if (fraction_scale >= kMaximumFractionScale) {
                 throw std::invalid_argument("too many fractional digits");
             }
-            fraction = fraction * 10 + static_cast<std::uint64_t>(text[offset] - '0');
-            fraction_scale *= 10;
+            fraction = fraction * kDecimalRadix + static_cast<std::uint64_t>(text[offset] - '0');
+            fraction_scale *= kDecimalRadix;
             ++offset;
         }
     }

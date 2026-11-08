@@ -6,6 +6,9 @@
 
 namespace dafree {
 namespace {
+constexpr std::string_view kExtendedUncPrefix = "//?/UNC/";
+constexpr std::string_view kExtendedDrivePrefix = "//?/";
+constexpr std::size_t kDrivePrefixLength = 3;
 
 #if defined(_WIN32) || defined(__APPLE__)
 constexpr bool ignore_case = true;
@@ -18,29 +21,30 @@ constexpr bool windows_paths = true;
 constexpr bool windows_paths = false;
 #endif
 
-std::string normalized_path(std::string_view input) {
+auto normalized_path(std::string_view input) -> std::string {
     std::string path(input);
     if (windows_paths) {
         std::replace(path.begin(), path.end(), '\\', '/');
-        if (path.starts_with("//?/UNC/"))
-            path = "//" + path.substr(8);
-        else if (path.starts_with("//?/"))
-            path.erase(0, 4);
+        if (path.starts_with(kExtendedUncPrefix))
+            path = "//" + path.substr(kExtendedUncPrefix.size());
+        else if (path.starts_with(kExtendedDrivePrefix))
+            path.erase(0, kExtendedDrivePrefix.size());
     }
-    const bool absolute = windows_paths ? ((path.size() >= 3 && path[1] == ':' && path[2] == '/') ||
-                                           path.starts_with("//"))
-                                        : path.starts_with('/');
+    const bool absolute =
+        windows_paths ? ((path.size() >= kDrivePrefixLength && path[1] == ':' && path[2] == '/') ||
+                         path.starts_with("//"))
+                      : path.starts_with('/');
     if (!absolute)
         throw ExcludeError(std::string(input), "excluded paths must be absolute");
-    std::size_t offset = windows_paths && path.size() >= 3 && path[1] == ':'
-                             ? 3
+    std::size_t offset = windows_paths && path.size() >= kDrivePrefixLength && path[1] == ':'
+                             ? kDrivePrefixLength
                              : (windows_paths && path.starts_with("//") ? 2 : 1);
     std::string result = path.substr(0, offset);
     std::vector<std::string_view> components;
     while (offset < path.size()) {
         const auto end = path.find('/', offset);
         const auto stop = end == std::string::npos ? path.size() : end;
-        const std::string_view component(path.data() + offset, stop - offset);
+        const auto component = std::string_view(path).substr(offset, stop - offset);
         if (component == "..") {
             if (!components.empty())
                 components.pop_back();
@@ -56,7 +60,7 @@ std::string normalized_path(std::string_view input) {
     return result;
 }
 
-std::optional<std::size_t> under(std::string_view path, std::string_view prefix) {
+auto under(std::string_view path, std::string_view prefix) -> std::optional<std::size_t> {
     std::size_t left = 0, right = 0;
     while (right < prefix.size()) {
         if (left == path.size())
@@ -82,7 +86,7 @@ std::optional<std::size_t> under(std::string_view path, std::string_view prefix)
     return std::nullopt;
 }
 
-bool directory(EntryKind kind) {
+auto directory(EntryKind kind) -> bool {
     return kind == EntryKind::Dir || kind == EntryKind::MountPoint || kind == EntryKind::Junction;
 }
 
@@ -100,7 +104,8 @@ struct CompiledExcludes::Impl {
     std::vector<GlobRule> globs;
 };
 
-CompiledExcludes CompiledExcludes::compile(const ExcludeRules &rules, std::string_view root) {
+auto CompiledExcludes::compile(const ExcludeRules &rules, std::string_view root)
+    -> CompiledExcludes {
     auto impl = std::make_shared<Impl>();
     impl->hidden = rules.hidden;
     impl->system = rules.system;
@@ -147,8 +152,8 @@ CompiledExcludes CompiledExcludes::compile(const ExcludeRules &rules, std::strin
     return CompiledExcludes(std::move(impl));
 }
 
-bool CompiledExcludes::excluded(std::string_view rel_path, std::string_view name,
-                                const RawEntry &entry) const {
+auto CompiledExcludes::excluded(std::string_view rel_path, std::string_view name,
+                                const RawEntry &entry) const -> bool {
     if (impl_->all)
         return true;
     if (impl_->hidden && (entry.hidden || (!windows_paths && name.starts_with('.'))))

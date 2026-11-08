@@ -19,19 +19,19 @@ struct NodeInfo {
     std::optional<std::string> owner, ext;
 };
 
-std::optional<std::string> owned(std::optional<std::string_view> value) {
+auto owned(std::optional<std::string_view> value) -> std::optional<std::string> {
     if (!value || value->empty())
         return std::nullopt;
     return std::string(*value);
 }
 
-std::optional<nb::str> decoded(const std::optional<std::string> &value) {
+auto decoded(const std::optional<std::string> &value) -> std::optional<nb::str> {
     if (!value)
         return std::nullopt;
     return decode_native(*value);
 }
 
-NodeInfo node_info(const Tree &tree, NodeId id) {
+auto node_info(const Tree &tree, NodeId id) -> NodeInfo {
     const auto &node = tree.node(id);
     const auto counts = tree.counts(id);
     const auto time = [](std::uint32_t value) -> std::optional<std::uint32_t> {
@@ -137,7 +137,7 @@ void bind_tree(nb::module_ &module) {
             "Return scan target node IDs.")
         .def(
             "find_path",
-            [](const BoundTree &self, nb::str input) {
+            [](const BoundTree &self, const nb::str &input) {
                 const auto path = encode_native(input);
                 nb::gil_scoped_release release;
                 return self.handle->read([&](const Tree &tree) { return tree.find_path(path); });

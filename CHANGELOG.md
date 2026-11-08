@@ -6,6 +6,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Changed
 
+- Completed pre-M5 CI quality gates with C++ formatting/static analysis, spelling checks, compiler caches, and Conventional Commit PR titles.
+
 - Added a transactional settings dialog with live system-theme tracking, row density, language, units, scan preferences, duplicate-analysis defaults, and advanced controls.
 
 - Refreshed CI actions and the locked development/documentation dependencies after reviewing the pending automated update PRs.

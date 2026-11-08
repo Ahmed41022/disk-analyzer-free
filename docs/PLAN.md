@@ -1143,6 +1143,7 @@ Conventions for every task:
   - **Files:** C `.github/workflows/ci.yml` exactly as §7.3, `.github/dependabot.yml`, `codecov.yml`, `tools/{cpp_licenses.py,junit_summary.py}`.
   - **Behavior:** `cpp_licenses.py` parses `cmake/Dependencies.cmake` for a structured comment per dependency (`# dafree-dep: name=zstd license=BSD-3-Clause url=...`) and fails if a license is not in the allowlist or a FetchContent entry lacks the comment. Python license allowlist via `pip-licenses --allow-only="MIT;MIT License;BSD License;BSD-2-Clause;BSD-3-Clause;Apache-2.0;Apache Software License;ISC;Python Software Foundation License;PSF-2.0;Mozilla Public License 2.0 (MPL 2.0);MPL-2.0" --ignore-packages PySide6-Essentials shiboken6` run on the **runtime** environment only (`pip install .[gui]` in a clean venv) — PySide6/shiboken6 are the documented LGPL exception, checked separately to be exactly those two packages. `junit_summary.py` turns JUnit XML into a Markdown failure table (missing files ignored, exit 0).
   - **Depends on:** T0.1–T0.4
+  - **Completion follow-up:** D-0082 activates the remaining formatting/spelling, ccache/sccache, strict Linux clang-tidy, and PR-title gates, with source-level cleanup and narrowly documented representation/ABI exceptions. The missing-job inventory is now empty.
   - **Acceptance:** CI run on the PR is green on every leg; `test_cpp_licenses_rejects_gpl` (feeds a fake Dependencies.cmake with GPL entry → non-zero exit).
 
 - [x] **T0.6 — Project documents**

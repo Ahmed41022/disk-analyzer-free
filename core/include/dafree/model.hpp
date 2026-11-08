@@ -68,6 +68,8 @@ struct Node {
     std::uint32_t mtime = 0, btime = 0, atime = 0;
     std::uint32_t owner = 0;
 };
+// Literal size/alignment pin the external Node layout contract.
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
 static_assert(sizeof(Node) == 56 && alignof(Node) == 8);
 static_assert(std::is_trivially_copyable_v<Node>);
 
@@ -97,6 +99,8 @@ template <class T> class SegVector {
     struct Segment {
         std::uint32_t begin;
         std::uint32_t capacity;
+        // Heap-sized stable arena segments require owning dynamic arrays.
+        // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
         std::unique_ptr<T[]> values;
     };
 
@@ -119,51 +123,55 @@ template <class T> class SegVector {
             requires(IsConst && !OtherConst)
         Iterator(const Iterator<OtherConst> &other) : owner_(other.owner_), index_(other.index_) {}
 
-        reference operator*() const { return (*owner_)[index_]; }
-        pointer operator->() const { return &(**this); }
-        reference operator[](difference_type offset) const { return *(*this + offset); }
+        auto operator*() const -> reference { return (*owner_)[index_]; }
+        auto operator->() const -> pointer { return &(**this); }
+        auto operator[](difference_type offset) const -> reference { return *(*this + offset); }
 
-        Iterator &operator++() {
+        auto operator++() -> Iterator & {
             ++index_;
             return *this;
         }
-        Iterator operator++(int) {
+        // C++20 iterator concepts require the exact Iterator postfix return type.
+        // NOLINTNEXTLINE(cert-dcl21-cpp)
+        auto operator++(int) -> Iterator {
             auto previous = *this;
             ++*this;
             return previous;
         }
-        Iterator &operator--() {
+        auto operator--() -> Iterator & {
             --index_;
             return *this;
         }
-        Iterator operator--(int) {
+        // C++20 iterator concepts require the exact Iterator postfix return type.
+        // NOLINTNEXTLINE(cert-dcl21-cpp)
+        auto operator--(int) -> Iterator {
             auto previous = *this;
             --*this;
             return previous;
         }
-        Iterator &operator+=(difference_type offset) {
+        auto operator+=(difference_type offset) -> Iterator & {
             index_ = static_cast<std::uint32_t>(static_cast<difference_type>(index_) + offset);
             return *this;
         }
-        Iterator &operator-=(difference_type offset) { return *this += -offset; }
+        auto operator-=(difference_type offset) -> Iterator & { return *this += -offset; }
 
-        friend Iterator operator+(Iterator iterator, difference_type offset) {
+        friend auto operator+(Iterator iterator, difference_type offset) -> Iterator {
             iterator += offset;
             return iterator;
         }
-        friend Iterator operator+(difference_type offset, Iterator iterator) {
+        friend auto operator+(difference_type offset, Iterator iterator) -> Iterator {
             iterator += offset;
             return iterator;
         }
-        friend Iterator operator-(Iterator iterator, difference_type offset) {
+        friend auto operator-(Iterator iterator, difference_type offset) -> Iterator {
             iterator -= offset;
             return iterator;
         }
-        friend difference_type operator-(const Iterator &lhs, const Iterator &rhs) {
+        friend auto operator-(const Iterator &lhs, const Iterator &rhs) -> difference_type {
             return static_cast<difference_type>(lhs.index_) -
                    static_cast<difference_type>(rhs.index_);
         }
-        friend bool operator==(const Iterator &lhs, const Iterator &rhs) {
+        friend auto operator==(const Iterator &lhs, const Iterator &rhs) -> bool {
             return lhs.owner_ == rhs.owner_ && lhs.index_ == rhs.index_;
         }
         friend auto operator<=>(const Iterator &lhs, const Iterator &rhs) {
@@ -186,7 +194,7 @@ template <class T> class SegVector {
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     /// Append one value and return its index. Throws CapacityError at the size limit.
-    std::uint32_t push_back(const T &value) {
+    auto push_back(const T &value) -> std::uint32_t {
         if (size_ == kMaxSize) {
             throw CapacityError();
         }
@@ -199,7 +207,7 @@ template <class T> class SegVector {
     }
 
     /// Append a span and return its contiguous logical half-open index range.
-    std::pair<std::uint32_t, std::uint32_t> append(std::span<const T> values) {
+    auto append(std::span<const T> values) -> std::pair<std::uint32_t, std::uint32_t> {
         const auto count = values.size();
         if (count > static_cast<std::size_t>(kMaxSize - size_)) {
             throw CapacityError();
@@ -212,22 +220,22 @@ template <class T> class SegVector {
     }
 
     /// Return the value at an index without bounds checking.
-    T &operator[](std::uint32_t index) {
+    auto operator[](std::uint32_t index) -> T & {
         const auto segment = find_segment(index);
         return segments_[segment].values[index - segments_[segment].begin];
     }
 
     /// Return the value at an index without bounds checking.
-    const T &operator[](std::uint32_t index) const {
+    auto operator[](std::uint32_t index) const -> const T & {
         const auto segment = find_segment(index);
         return segments_[segment].values[index - segments_[segment].begin];
     }
 
     /// Return the number of stored values.
-    [[nodiscard]] std::uint32_t size() const noexcept { return size_; }
+    [[nodiscard]] auto size() const noexcept -> std::uint32_t { return size_; }
 
     /// Return the bytes reserved by segment arrays.
-    [[nodiscard]] std::size_t heap_bytes() const noexcept {
+    [[nodiscard]] auto heap_bytes() const noexcept -> std::size_t {
         std::size_t bytes = 0;
         for (const auto &segment : segments_) {
             bytes += static_cast<std::size_t>(segment.capacity) * sizeof(T);
@@ -249,6 +257,8 @@ template <class T> class SegVector {
             segments_.pop_back();
             return;
         }
+        // Heap-sized stable arena segments require owning dynamic arrays.
+        // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
         auto values = std::make_unique_for_overwrite<T[]>(used);
         for (std::uint32_t i = 0; i < used; ++i) {
             values[i] = std::move_if_noexcept(segment.values[i]);
@@ -258,25 +268,29 @@ template <class T> class SegVector {
     }
 
     /// Return an iterator to the first value.
-    iterator begin() noexcept { return {this, 0}; }
+    auto begin() noexcept -> iterator { return {this, 0}; }
     /// Return an iterator past the final value.
-    iterator end() noexcept { return {this, size_}; }
+    auto end() noexcept -> iterator { return {this, size_}; }
     /// Return a const iterator to the first value.
-    const_iterator begin() const noexcept { return {this, 0}; }
+    [[nodiscard]] auto begin() const noexcept -> const_iterator { return {this, 0}; }
     /// Return a const iterator past the final value.
-    const_iterator end() const noexcept { return {this, size_}; }
+    [[nodiscard]] auto end() const noexcept -> const_iterator { return {this, size_}; }
     /// Return a const iterator to the first value.
-    const_iterator cbegin() const noexcept { return begin(); }
+    [[nodiscard]] auto cbegin() const noexcept -> const_iterator { return begin(); }
     /// Return a const iterator past the final value.
-    const_iterator cend() const noexcept { return end(); }
+    [[nodiscard]] auto cend() const noexcept -> const_iterator { return end(); }
     /// Return a reverse iterator to the final value.
-    reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+    auto rbegin() noexcept -> reverse_iterator { return reverse_iterator(end()); }
     /// Return a reverse iterator before the first value.
-    reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+    auto rend() noexcept -> reverse_iterator { return reverse_iterator(begin()); }
     /// Return a const reverse iterator to the final value.
-    const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
+    [[nodiscard]] auto rbegin() const noexcept -> const_reverse_iterator {
+        return const_reverse_iterator(end());
+    }
     /// Return a const reverse iterator before the first value.
-    const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
+    [[nodiscard]] auto rend() const noexcept -> const_reverse_iterator {
+        return const_reverse_iterator(begin());
+    }
 
   private:
     void ensure_tail_capacity() {
@@ -287,10 +301,12 @@ template <class T> class SegVector {
             }
         }
         segments_.push_back(
+            // Heap-sized stable arena segments require owning dynamic arrays.
+            // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
             {size_, kSegmentSize, std::make_unique_for_overwrite<T[]>(kSegmentSize)});
     }
 
-    [[nodiscard]] std::size_t find_segment(std::uint32_t index) const {
+    [[nodiscard]] auto find_segment(std::uint32_t index) const -> std::size_t {
         const auto expected = static_cast<std::size_t>(index / kSegmentSize);
         if (expected < segments_.size()) {
             const auto &segment = segments_[expected];
@@ -312,14 +328,16 @@ template <class T> class SegVector {
 class NameArena {
   public:
     /// Append bytes and return their 32-bit arena offset and 16-bit byte length.
-    std::pair<std::uint32_t, std::uint16_t> push(std::string_view native_bytes);
+    auto push(std::string_view native_bytes) -> std::pair<std::uint32_t, std::uint16_t>;
     /// Return a view of bytes previously stored at the given offset and length.
-    [[nodiscard]] std::string_view get(std::uint32_t offset, std::uint16_t length) const;
+    [[nodiscard]] auto get(std::uint32_t offset, std::uint16_t length) const -> std::string_view;
     /// Return the bytes reserved by arena chunks.
-    [[nodiscard]] std::size_t heap_bytes() const noexcept;
+    [[nodiscard]] auto heap_bytes() const noexcept -> std::size_t;
 
   private:
     struct Chunk {
+        // Heap-sized stable arena segments require owning dynamic arrays.
+        // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
         std::unique_ptr<char[]> data;
         std::size_t used = 0;
     };
@@ -333,11 +351,11 @@ class ExtInterner {
     ExtInterner();
 
     /// Return the ID for a filename's extension, or zero for directories and invalid extensions.
-    std::uint32_t intern(std::string_view filename, bool is_directory = false);
+    auto intern(std::string_view filename, bool is_directory = false) -> std::uint32_t;
     /// Return the extension for an ID; ID zero returns an empty view.
-    [[nodiscard]] std::string_view get(std::uint32_t id) const;
+    [[nodiscard]] auto get(std::uint32_t id) const -> std::string_view;
     /// Return a lower-bound estimate of extension storage bytes.
-    [[nodiscard]] std::size_t heap_bytes() const noexcept;
+    [[nodiscard]] auto heap_bytes() const noexcept -> std::size_t;
 
   private:
     std::vector<std::string> extensions_;
@@ -353,14 +371,14 @@ struct OwnerKey {
     std::string value;
 
     /// Build a POSIX UID owner key.
-    static OwnerKey posix_uid(std::uint32_t uid);
+    static auto posix_uid(std::uint32_t uid) -> OwnerKey;
     /// Build a Windows owner key from the SID's binary bytes.
-    static OwnerKey windows_sid(std::string_view sid_bytes);
+    static auto windows_sid(std::string_view sid_bytes) -> OwnerKey;
     /// Build a remote owner key from its backend-provided string.
-    static OwnerKey remote(std::string_view remote_key);
+    static auto remote(std::string_view remote_key) -> OwnerKey;
 
     /// Compare the identity kind and its corresponding value.
-    bool operator==(const OwnerKey &) const = default;
+    auto operator==(const OwnerKey &) const -> bool = default;
 };
 
 /// Intern owner identities and keep one display name for each identity.
@@ -369,18 +387,18 @@ class OwnerTable {
     OwnerTable();
 
     /// Return a stable identity ID; fill an unresolved display name when one becomes available.
-    std::uint32_t intern(const OwnerKey &key, std::string_view display);
+    auto intern(const OwnerKey &key, std::string_view display) -> std::uint32_t;
     /// Return the display name for an ID; ID zero returns an empty view.
-    [[nodiscard]] std::string_view get(std::uint32_t id) const;
+    [[nodiscard]] auto get(std::uint32_t id) const -> std::string_view;
     /// Return a lower-bound estimate of owner storage bytes.
-    [[nodiscard]] std::size_t heap_bytes() const noexcept;
+    [[nodiscard]] auto heap_bytes() const noexcept -> std::size_t;
 
     /// Return an identity by stable owner ID, or nullptr for the absent owner.
-    [[nodiscard]] const OwnerKey *key(std::uint32_t id) const;
+    [[nodiscard]] auto key(std::uint32_t id) const -> const OwnerKey *;
 
   private:
     struct Hash {
-        [[nodiscard]] std::size_t operator()(const OwnerKey &key) const noexcept;
+        [[nodiscard]] auto operator()(const OwnerKey &key) const noexcept -> std::size_t;
     };
 
     std::vector<std::string> displays_;
@@ -395,46 +413,46 @@ void aggregate(SegVector<Node> &nodes, SegVector<Counts> &counts);
 class Tree {
   public:
     /// Return the number of nodes, including the synthetic root.
-    [[nodiscard]] std::uint32_t size() const noexcept;
+    [[nodiscard]] auto size() const noexcept -> std::uint32_t;
     /// Return a node by ID.
-    [[nodiscard]] const Node &node(NodeId id) const;
+    [[nodiscard]] auto node(NodeId id) const -> const Node &;
     /// Return the descendant counts for a node.
-    [[nodiscard]] Counts counts(NodeId id) const;
+    [[nodiscard]] auto counts(NodeId id) const -> Counts;
     /// Return a node's native name bytes. Root nodes contain their full path.
-    [[nodiscard]] std::string_view name_bytes(NodeId id) const;
+    [[nodiscard]] auto name_bytes(NodeId id) const -> std::string_view;
     /// Return the node extension when it has one.
-    [[nodiscard]] std::optional<std::string_view> ext(NodeId id) const;
+    [[nodiscard]] auto ext(NodeId id) const -> std::optional<std::string_view>;
     /// Return a node's resolved owner display name when available.
-    [[nodiscard]] std::optional<std::string_view> owner_name(NodeId id) const;
+    [[nodiscard]] auto owner_name(NodeId id) const -> std::optional<std::string_view>;
     /// Return the contiguous half-open child ID range.
-    [[nodiscard]] std::pair<NodeId, NodeId> children(NodeId id) const;
+    [[nodiscard]] auto children(NodeId id) const -> std::pair<NodeId, NodeId>;
     /// Return the parent ID, or no value for the synthetic root.
-    [[nodiscard]] std::optional<NodeId> parent(NodeId id) const;
+    [[nodiscard]] auto parent(NodeId id) const -> std::optional<NodeId>;
     /// Reconstruct the node's native path in O(depth).
-    [[nodiscard]] std::string path_bytes(NodeId id) const;
+    [[nodiscard]] auto path_bytes(NodeId id) const -> std::string;
     /// Return the node depth below its scan root.
-    [[nodiscard]] std::uint16_t depth(NodeId id) const;
+    [[nodiscard]] auto depth(NodeId id) const -> std::uint16_t;
     /// Find a path after separator normalization and platform case handling.
-    [[nodiscard]] std::optional<NodeId> find_path(std::string_view native_path) const;
+    [[nodiscard]] auto find_path(std::string_view native_path) const -> std::optional<NodeId>;
     /// Return the root node IDs.
-    [[nodiscard]] std::span<const NodeId> roots() const;
+    [[nodiscard]] auto roots() const -> std::span<const NodeId>;
     /// Report the bytes reserved by tree-owned storage.
-    [[nodiscard]] MemoryReport memory_usage() const;
+    [[nodiscard]] auto memory_usage() const -> MemoryReport;
     /// Intern and assign an owner identity.
-    void set_owner(NodeId id, OwnerKey key, std::string_view display);
+    void set_owner(NodeId id, const OwnerKey &key, std::string_view display);
     /// Exclude a node and incrementally update totals.
     void mark_deleted(NodeId id);
     /// Replace a subtree while preserving the tree invariants.
     void replace_subtree(NodeId at, const Tree &fresh, NodeId fresh_root);
     /// Return scan metadata associated with the tree.
-    [[nodiscard]] const ScanMeta &meta() const noexcept;
+    [[nodiscard]] auto meta() const noexcept -> const ScanMeta &;
 
   private:
     friend class TreeBuilder;
     friend class ScanEngine;
-    friend Tree build_tree_from_mft(const MftIndex &, std::string_view,
+    friend auto build_tree_from_mft(const MftIndex &, std::string_view,
                                     std::optional<std::string_view>, const ScanOptions &,
-                                    IssueSink &);
+                                    IssueSink &) -> Tree;
     friend void resolve_owners(TreeHandle &, std::span<const NodeId>, FsBackend &);
     SegVector<Node> nodes_;
     SegVector<Counts> counts_;
@@ -462,19 +480,19 @@ class TreeBuilder {
     };
 
     /// Append all entries contiguously; a directory may be populated only once.
-    std::pair<NodeId, NodeId> add_children(NodeId dir, std::span<const NewNode> entries);
+    auto add_children(NodeId dir, std::span<const NewNode> entries) -> std::pair<NodeId, NodeId>;
     /// Add flags to a node.
     void mark(NodeId id, std::uint16_t flags);
     /// Recompute totals for a partially built tree.
     void aggregate_partial();
     /// Finalize the tree and release unused tail storage.
-    Tree finish(ScanMeta meta) &&;
+    auto finish(ScanMeta meta) && -> Tree;
 
   private:
     friend class ScanEngine;
-    friend Tree build_tree_from_mft(const MftIndex &, std::string_view,
+    friend auto build_tree_from_mft(const MftIndex &, std::string_view,
                                     std::optional<std::string_view>, const ScanOptions &,
-                                    IssueSink &);
+                                    IssueSink &) -> Tree;
     Tree tree_;
     std::vector<bool> populated_;
 };

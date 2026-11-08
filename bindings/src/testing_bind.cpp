@@ -14,7 +14,9 @@ namespace {
 struct TestingNamespace {};
 struct FixtureTreeBuilder {};
 
-std::shared_ptr<BoundTree> flat_tree(std::string root, std::uint32_t visible_rows) {
+// Synthetic fixture names use fixed file/index/.bin slots within each 24-byte owned array.
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
+auto flat_tree(std::string root, std::uint32_t visible_rows) -> std::shared_ptr<BoundTree> {
     if (visible_rows == 0 || visible_rows == std::numeric_limits<std::uint32_t>::max())
         throw std::invalid_argument("visible row count must be between 1 and 4294967294");
     dafree::TreeBuilder builder({std::move(root)});
@@ -47,6 +49,7 @@ std::shared_ptr<BoundTree> flat_tree(std::string root, std::uint32_t visible_row
     return std::make_shared<BoundTree>(
         std::make_shared<Tree>(std::move(builder).finish(std::move(meta))), make_local_backend());
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
 } // namespace
 
@@ -66,7 +69,7 @@ void bind_testing(nb::module_ &module) {
     nb::class_<FixtureTreeBuilder>(testing, "TreeBuilder", "MockBackend-free synthetic trees.")
         .def_static(
             "flat",
-            [](nb::str root, std::uint32_t visible_rows) {
+            [](const nb::str &root, std::uint32_t visible_rows) {
                 auto path = encode_native(root);
                 nb::gil_scoped_release release;
                 return flat_tree(std::move(path), visible_rows);
@@ -101,7 +104,7 @@ void bind_testing(nb::module_ &module) {
         .def(nb::init<>())
         .def_prop_rw(
             "path", [](const MockEntry &entry) { return decode_native(entry.path); },
-            [](MockEntry &entry, nb::str path) { entry.path = encode_native(path); })
+            [](MockEntry &entry, const nb::str &path) { entry.path = encode_native(path); })
         .def_rw("entry", &MockEntry::entry);
     nb::class_<MockSpec>(module, "MockSpec", nb::is_final(),
                          "Deterministic native-only test backend inputs.")
@@ -129,7 +132,7 @@ void bind_testing(nb::module_ &module) {
                     result[decode_native(path)] = nb::cast(kind);
                 return result;
             },
-            [](MockSpec &spec, nb::typed<nb::dict, nb::str, IssueKind> errors) {
+            [](MockSpec &spec, const nb::typed<nb::dict, nb::str, IssueKind> &errors) {
                 spec.errors.clear();
                 for (auto [path, kind] : errors)
                     spec.errors.emplace(encode_native(path), nb::cast<IssueKind>(kind));
@@ -142,7 +145,7 @@ void bind_testing(nb::module_ &module) {
                     result[decode_native(path)] = decode_native(target);
                 return result;
             },
-            [](MockSpec &spec, nb::typed<nb::dict, nb::str, nb::str> targets) {
+            [](MockSpec &spec, const nb::typed<nb::dict, nb::str, nb::str> &targets) {
                 spec.symlink_targets.clear();
                 for (auto [path, target] : targets)
                     spec.symlink_targets.emplace(encode_native(path), encode_native(target));
@@ -155,7 +158,7 @@ void bind_testing(nb::module_ &module) {
                     result[nb::int_(uid)] = decode_native(name);
                 return result;
             },
-            [](MockSpec &spec, nb::typed<nb::dict, std::uint32_t, nb::str> names) {
+            [](MockSpec &spec, const nb::typed<nb::dict, std::uint32_t, nb::str> &names) {
                 spec.owner_names.clear();
                 for (auto [uid, name] : names)
                     spec.owner_names.emplace(nb::cast<std::uint32_t>(uid), encode_native(name));

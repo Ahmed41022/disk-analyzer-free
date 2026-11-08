@@ -5,7 +5,7 @@
 
 namespace dafree::bindings {
 
-nb::str decode_native(std::string_view input) {
+auto decode_native(std::string_view input) -> nb::str {
     if (input.size() > static_cast<std::size_t>(PY_SSIZE_T_MAX))
         throw std::length_error("native string is too large for Python");
     const auto length = static_cast<Py_ssize_t>(input.size());
@@ -19,7 +19,7 @@ nb::str decode_native(std::string_view input) {
     return nb::steal<nb::str>(value);
 }
 
-std::string encode_native(nb::handle input) {
+auto encode_native(nb::handle input) -> std::string {
     if (!PyUnicode_Check(input.ptr()))
         throw nb::type_error("native paths and names must be str");
 #ifdef _WIN32
@@ -37,7 +37,7 @@ std::string encode_native(nb::handle input) {
     return {data, static_cast<std::size_t>(length)};
 }
 
-std::vector<nb::str> decode_strings(const std::vector<std::string> &input) {
+auto decode_strings(const std::vector<std::string> &input) -> std::vector<nb::str> {
     std::vector<nb::str> output;
     output.reserve(input.size());
     for (const auto &value : input)
@@ -45,7 +45,7 @@ std::vector<nb::str> decode_strings(const std::vector<std::string> &input) {
     return output;
 }
 
-std::vector<std::string> encode_strings(const std::vector<nb::str> &input) {
+auto encode_strings(const std::vector<nb::str> &input) -> std::vector<std::string> {
     std::vector<std::string> output;
     output.reserve(input.size());
     for (const auto &value : input)

@@ -5,6 +5,7 @@
 
 #include <array>
 #include <charconv>
+#include <limits>
 #include <ostream>
 #include <stdexcept>
 
@@ -27,7 +28,9 @@ class Json {
 
     // Invalid native bytes are represented by replacement characters, with raw bytes
     // emitted separately for names and paths. WTF-8 surrogate triples are one unit.
-    bool string(std::string_view text) {
+    // JSON control escapes and Unicode scalar boundaries follow RFC 8259.
+    // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
+    auto string(std::string_view text) -> bool {
         put('"');
         bool invalid = false;
         std::size_t start = 0;
@@ -78,7 +81,10 @@ class Json {
         put('"');
         return invalid;
     }
+    // NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 
+    // Hex byte encoding uses fixed four-bit nibbles.
+    // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
     void bytes(std::string_view input) {
         put('"');
         for (const char ch : input) {
@@ -88,9 +94,10 @@ class Json {
         }
         put('"');
     }
+    // NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 
     void number(std::uint64_t value) {
-        std::array<char, 20> buffer{};
+        std::array<char, std::numeric_limits<std::uint64_t>::digits10 + 1> buffer{};
         const auto result = std::to_chars(buffer.data(), buffer.data() + buffer.size(), value);
         raw({buffer.data(), static_cast<std::size_t>(result.ptr - buffer.data())});
     }
@@ -130,11 +137,15 @@ class Json {
     }
 
   private:
+    // The report writer borrows its caller-owned stream for this invocation.
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
     std::ostream &out_;
     bool pretty_;
 };
 
 template <class Owner>
+// The exporter keeps its established node/indent argument roles.
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 void fields(Json &json, const Tree &tree, NodeId id, std::size_t indent, const JsonOptions &opts,
             Owner &owner, std::string &path) {
     const auto &node = tree.node(id);

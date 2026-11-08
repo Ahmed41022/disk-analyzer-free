@@ -10,16 +10,16 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-namespace dafree {
+namespace dafree::platform {
 
-namespace platform {
+constexpr std::uint64_t kStatBlockBytes = 512;
 
-int open_parent_directory(std::string_view path);
+auto open_parent_directory(std::string_view path) -> int;
 #ifdef __linux__
-int statx_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry);
+auto statx_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry) -> int;
 #endif
 
-IssueKind issue_kind(int code) noexcept {
+auto issue_kind(int code) noexcept -> IssueKind {
     switch (code) {
     case EACCES:
     case EPERM:
@@ -34,7 +34,7 @@ IssueKind issue_kind(int code) noexcept {
     }
 }
 
-EntryKind kind_from_mode(mode_t mode) noexcept {
+auto kind_from_mode(mode_t mode) noexcept -> EntryKind {
     if (S_ISREG(mode))
         return EntryKind::File;
     if (S_ISDIR(mode))
@@ -44,13 +44,14 @@ EntryKind kind_from_mode(mode_t mode) noexcept {
     return EntryKind::Other;
 }
 
-RawEntry raw_from_stat(std::string_view name, const struct stat &metadata) {
+auto raw_from_stat(std::string_view name, const struct stat &metadata) -> RawEntry {
     RawEntry entry;
     entry.name = name;
     entry.kind = kind_from_mode(metadata.st_mode);
     entry.size = metadata.st_size > 0 ? static_cast<std::uint64_t>(metadata.st_size) : 0;
-    entry.alloc =
-        metadata.st_blocks > 0 ? static_cast<std::uint64_t>(metadata.st_blocks) * 512u : 0;
+    entry.alloc = metadata.st_blocks > 0
+                      ? static_cast<std::uint64_t>(metadata.st_blocks) * kStatBlockBytes
+                      : 0;
     entry.mtime = static_cast<std::int64_t>(metadata.st_mtime);
     entry.atime = static_cast<std::int64_t>(metadata.st_atime);
 #ifdef __APPLE__
@@ -69,7 +70,7 @@ RawEntry raw_from_stat(std::string_view name, const struct stat &metadata) {
     return entry;
 }
 
-int stat_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry) {
+auto stat_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry) -> int {
 #ifdef __linux__
     const int statx_result = statx_entry_at(dirfd, name, follow, entry);
     if (statx_result != ENOSYS)
@@ -82,7 +83,7 @@ int stat_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry) {
     return 0;
 }
 
-static RawEntry stat_path(std::string_view input, bool follow) {
+static auto stat_path(std::string_view input, bool follow) -> RawEntry {
     if (input.empty())
         throw IoError("", IssueKind::NotFound, "empty path");
     std::string path(input);
@@ -108,9 +109,8 @@ static RawEntry stat_path(std::string_view input, bool follow) {
     return entry;
 }
 
-RawEntry stat_nofollow(std::string_view path) { return stat_path(path, false); }
+auto stat_nofollow(std::string_view path) -> RawEntry { return stat_path(path, false); }
 
-RawEntry stat_follow(std::string_view path) { return stat_path(path, true); }
+auto stat_follow(std::string_view path) -> RawEntry { return stat_path(path, true); }
 
-} // namespace platform
-} // namespace dafree
+} // namespace dafree::platform

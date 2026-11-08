@@ -49,6 +49,7 @@ void resolve_owners(TreeHandle &handle, std::span<const NodeId> ids, FsBackend &
                         backend.resolve_owner(lookup.path, lookup.key ? &*lookup.key : nullptr);
                 } catch (const IoError &) {
                     // A vanished path does not invalidate the rest of this batch.
+                    lookup.result.reset();
                 }
             }
         } catch (...) {

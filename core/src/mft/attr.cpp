@@ -18,8 +18,10 @@ struct AttributeRecord {
     std::uint64_t size = 0, alloc = 0, lowest_vcn = 0;
 };
 
-Expected<AttributeRecord, MftError> read_attribute(std::span<const std::byte> remaining,
-                                                   std::uint32_t type) {
+// NTFS attribute field offsets, lengths, and type IDs are fixed by the on-disk schema.
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers) -- NTFS attribute record layout.
+auto read_attribute(std::span<const std::byte> remaining, std::uint32_t type)
+    -> Expected<AttributeRecord, MftError> {
     const mft_detail::ByteReader outer(remaining);
     const auto length = outer.read_u32(4);
     if (!length.has_value() || length.value() < 16 || length.value() % 8 != 0)
@@ -99,9 +101,12 @@ Expected<AttributeRecord, MftError> read_attribute(std::span<const std::byte> re
     }
     return result;
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 
 } // namespace
 
+// Only the validated name prefix is written/read; avoid clearing 510 bytes per record.
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 AttrIterator::AttrIterator(std::span<const std::byte> rec) : record_(rec) {
     const auto header = parse_header(rec);
     if (!header.has_value()) {
@@ -112,7 +117,8 @@ AttrIterator::AttrIterator(std::span<const std::byte> rec) : record_(rec) {
     end_ = header.value().bytes_used;
 }
 
-Expected<std::u16string_view, MftError> AttrIterator::read_name(std::span<const std::byte> chars) {
+auto AttrIterator::read_name(std::span<const std::byte> chars)
+    -> Expected<std::u16string_view, MftError> {
     static_assert(sizeof(char16_t) == 2);
     if (chars.size() % 2 != 0 || chars.size() / 2 > name_storage_.size())
         return MftError::OutOfBounds;
@@ -126,13 +132,14 @@ Expected<std::u16string_view, MftError> AttrIterator::read_name(std::span<const 
             const auto code_unit = reader.read_u16(index * 2);
             if (!code_unit.has_value())
                 return code_unit.error();
-            name_storage_[index] = static_cast<char16_t>(code_unit.value());
+            name_storage_.at(index) = static_cast<char16_t>(code_unit.value());
         }
     }
     return std::u16string_view(name_storage_.data(), chars.size() / 2);
 }
 
-Expected<std::optional<Attr>, MftError> AttrIterator::next() {
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers) -- NTFS attribute type and value layout.
+auto AttrIterator::next() -> Expected<std::optional<Attr>, MftError> {
     if (error_.has_value())
         return error_.value();
     if (position_ == end_)
@@ -214,10 +221,11 @@ Expected<std::optional<Attr>, MftError> AttrIterator::next() {
         return error_.value();
     }
     position_ += attribute.bytes.size();
-    return std::optional<Attr>{std::move(result.value())};
+    return std::optional<Attr>{result.value()};
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 
-std::int64_t filetime_to_unix(std::uint64_t filetime) {
+auto filetime_to_unix(std::uint64_t filetime) -> std::int64_t {
     constexpr std::uint64_t ticks_per_second = 10'000'000;
     constexpr std::int64_t epoch_offset = 11'644'473'600;
     return static_cast<std::int64_t>(filetime / ticks_per_second) - epoch_offset;

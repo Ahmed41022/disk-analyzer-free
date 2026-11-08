@@ -6,8 +6,10 @@
 namespace dafree {
 namespace {
 
-Node make_node(NodeId parent, std::uint16_t flags, std::uint32_t name_offset,
-               std::uint16_t name_length) {
+// The builder follows the fixed Node field roles: parent, flags, name offset, and length.
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+auto make_node(NodeId parent, std::uint16_t flags, std::uint32_t name_offset,
+               std::uint16_t name_length) -> Node {
     Node node;
     node.parent = parent;
     node.flags = flags;
@@ -41,7 +43,8 @@ TreeBuilder::TreeBuilder(std::vector<std::string> root_paths) {
     }
 }
 
-std::pair<NodeId, NodeId> TreeBuilder::add_children(NodeId dir, std::span<const NewNode> entries) {
+auto TreeBuilder::add_children(NodeId dir, std::span<const NewNode> entries)
+    -> std::pair<NodeId, NodeId> {
     if (dir >= tree_.nodes_.size()) {
         throw std::out_of_range("tree node ID is out of range");
     }
@@ -89,7 +92,7 @@ void TreeBuilder::mark(NodeId id, std::uint16_t flags) {
 
 void TreeBuilder::aggregate_partial() { aggregate(tree_.nodes_, tree_.counts_); }
 
-Tree TreeBuilder::finish(ScanMeta meta) && {
+auto TreeBuilder::finish(ScanMeta meta) && -> Tree {
     aggregate(tree_.nodes_, tree_.counts_);
     tree_.meta_ = std::move(meta);
     tree_.nodes_.shrink_last();

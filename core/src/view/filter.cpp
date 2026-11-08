@@ -1,3 +1,5 @@
+// PCRE2 selects its exported C ABI through this preprocessor definition.
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
 
@@ -5,25 +7,39 @@
 #include "view_internal.hpp"
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <bit>
 #include <cstddef>
 #include <cstdlib>
 #include <exception>
+#include <limits>
+#include <ranges>
 #include <thread>
 
 namespace dafree::detail {
 namespace {
 
 constexpr std::size_t regex_limit = 1u << 20;
+constexpr std::size_t kRegexMessageBytes = 256;
+constexpr std::uint32_t kRegexHeapKiB = 1024;
+constexpr std::uint32_t kRegexMatchLimit = 1'000'000;
+constexpr unsigned kMaximumExpressionDepth = 32;
+constexpr unsigned kRegexRank = 5;
+constexpr unsigned kOwnerRank = 6;
+constexpr std::size_t kWordBits = std::numeric_limits<std::uint64_t>::digits;
+constexpr std::size_t kWordsPerBatch = 64;
+constexpr std::size_t kSerialWordThreshold = 128;
 
+// PCRE2 allocator callbacks require void-pointer ABI and bounded malloc/free ownership.
+// NOLINTBEGIN(cppcoreguidelines-no-malloc,cppcoreguidelines-owning-memory,cppcoreguidelines-pro-bounds-pointer-arithmetic,bugprone-easily-swappable-parameters)
 struct CompileMemory {
     struct alignas(std::max_align_t) Header {
         std::size_t size;
     };
     std::size_t live = 0;
     bool rejected = false;
-    static void *allocate(PCRE2_SIZE size, void *data) noexcept {
+    static auto allocate(PCRE2_SIZE size, void *data) noexcept -> void * {
         auto &self = *static_cast<CompileMemory *>(data);
         if (size > regex_limit - self.live || sizeof(Header) > regex_limit - self.live - size) {
             self.rejected = true;
@@ -44,6 +60,7 @@ struct CompileMemory {
         std::free(header);
     }
 };
+// NOLINTEND(cppcoreguidelines-no-malloc,cppcoreguidelines-owning-memory,cppcoreguidelines-pro-bounds-pointer-arithmetic,bugprone-easily-swappable-parameters)
 
 class Regex {
   public:
@@ -62,6 +79,8 @@ class Regex {
         pcre2_set_max_pattern_length(context.get(), regex_limit);
         int error = 0;
         PCRE2_SIZE offset = 0;
+        // PCRE2 borrows the UTF-8 string as unsigned bytes during this call.
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         code_ = pcre2_compile(reinterpret_cast<PCRE2_SPTR>(pattern.data()), pattern.size(),
                               PCRE2_UTF | PCRE2_UCP | PCRE2_CASELESS | PCRE2_MATCH_INVALID_UTF,
                               &error, &offset, context.get());
@@ -71,23 +90,28 @@ class Regex {
                     "regular expression exceeds the 1 MiB compilation budget");
             if (error == PCRE2_ERROR_NOMEMORY)
                 throw std::bad_alloc();
-            PCRE2_UCHAR message[256]{};
-            pcre2_get_error_message(error, message, sizeof(message));
-            throw std::invalid_argument(std::string(reinterpret_cast<const char *>(message)) +
-                                        " at pattern byte " + std::to_string(offset));
+            std::array<PCRE2_UCHAR, kRegexMessageBytes> message{};
+            pcre2_get_error_message(error, message.data(), message.size());
+            // PCRE2 returns a NUL-terminated UTF-8 byte message in the owned array.
+            throw std::invalid_argument(
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+                std::string(reinterpret_cast<const char *>(message.data())) + " at pattern byte " +
+                std::to_string(offset));
         }
     }
     ~Regex() { pcre2_code_free(code_); }
+    Regex(Regex &&) = delete;
+    auto operator=(Regex &&) -> Regex & = delete;
     Regex(const Regex &) = delete;
-    Regex &operator=(const Regex &) = delete;
-    pcre2_code *code() const { return code_; }
+    auto operator=(const Regex &) -> Regex & = delete;
+    [[nodiscard]] auto code() const -> pcre2_code * { return code_; }
 
   private:
     CompileMemory memory_;
     pcre2_code *code_ = nullptr;
 };
 
-enum class Truth { No, Yes, PendingOwner };
+enum class Truth : std::uint8_t { No, Yes, PendingOwner };
 
 struct Context {
     CompiledGlob::Workspace glob;
@@ -105,21 +129,21 @@ struct Context {
         limits.reset(pcre2_match_context_create(nullptr));
         if (!match || !limits)
             throw std::bad_alloc();
-        pcre2_set_heap_limit(limits.get(), 1024);
-        pcre2_set_match_limit(limits.get(), 1'000'000);
+        pcre2_set_heap_limit(limits.get(), kRegexHeapKiB);
+        pcre2_set_match_limit(limits.get(), kRegexMatchLimit);
     }
 
-    std::string_view full_path(const Tree &tree, NodeId id) {
+    auto full_path(const Tree &tree, NodeId id) -> std::string_view {
         ancestors.clear();
         for (auto cursor = id; cursor != kRoot && cursor != kNone;) {
             ancestors.push_back(cursor);
             cursor = tree.node(cursor).parent;
         }
         path.clear();
-        for (auto cursor = ancestors.rbegin(); cursor != ancestors.rend(); ++cursor) {
+        for (unsigned int &ancestor : std::ranges::reverse_view(ancestors)) {
             if (!path.empty() && path.back() != '/' && path.back() != '\\')
                 path.push_back('/');
-            path.append(tree.name_bytes(*cursor));
+            path.append(tree.name_bytes(ancestor));
         }
 #ifdef _WIN32
         std::replace(path.begin(), path.end(), '\\', '/');
@@ -132,7 +156,7 @@ struct Context {
     }
 };
 
-bool compare(std::uint64_t value, Cmp64 cmp) {
+auto compare(std::uint64_t value, Cmp64 cmp) -> bool {
     switch (cmp.op) {
     case Cmp64::Lt:
         return value < cmp.v;
@@ -148,7 +172,7 @@ bool compare(std::uint64_t value, Cmp64 cmp) {
     throw std::invalid_argument("unknown comparison operator");
 }
 
-std::string_view basename(const Tree &tree, NodeId id) {
+auto basename(const Tree &tree, NodeId id) -> std::string_view {
     auto name = tree.name_bytes(id);
     if (tree.node(id).parent != kRoot)
         return name;
@@ -163,7 +187,7 @@ std::string_view basename(const Tree &tree, NodeId id) {
     return end == std::string_view::npos ? name : name.substr(end + 1);
 }
 
-unsigned cost(FilterSpec::Kind kind) {
+auto cost(FilterSpec::Kind kind) -> unsigned {
     using K = FilterSpec::Kind;
     switch (kind) {
     case K::Flag:
@@ -181,9 +205,9 @@ unsigned cost(FilterSpec::Kind kind) {
     case K::PathGlob:
         return 4;
     case K::Regex:
-        return 5;
+        return kRegexRank;
     case K::Owner:
-        return 6;
+        return kOwnerRank;
     default:
         return 0;
     }
@@ -204,7 +228,7 @@ struct Expression {
         : kind(spec.kind), cmp(spec.cmp), time(spec.time_field), flag(spec.flag),
           type_dir(spec.type_dir), rank(cost(spec.kind)) {
         using K = FilterSpec::Kind;
-        if (depth > 32)
+        if (depth > kMaximumExpressionDepth)
             throw std::invalid_argument("filter expression depth exceeds 32");
         if (kind == K::And || kind == K::Or || kind == K::Not) {
             if (kind == K::Not && spec.children.size() != 1)
@@ -244,13 +268,14 @@ struct Expression {
             throw std::invalid_argument("unknown timestamp field");
     }
 
-    bool any(std::string_view value, Context &context, bool windows = false) const {
+    auto any(std::string_view value, Context &context, bool windows = false) const -> bool {
         return std::any_of(patterns.begin(), patterns.end(), [&](const auto &pattern) {
             return pattern.matches(value, windows, context.glob);
         });
     }
 
-    Truth evaluate(const Tree &tree, NodeId id, Context &context, bool allow_pending) const {
+    auto evaluate(const Tree &tree, NodeId id, Context &context, bool allow_pending) const
+        -> Truth {
         using K = FilterSpec::Kind;
         const auto &node = tree.node(id);
         const auto truth = [](bool value) { return value ? Truth::Yes : Truth::No; };
@@ -320,6 +345,8 @@ struct Expression {
             context.prepare_regex();
             const auto name = basename(tree, id);
             const int result =
+                // PCRE2 reads this bounded UTF-8 view as unsigned bytes.
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
                 pcre2_match(regex->code(), reinterpret_cast<PCRE2_SPTR>(name.data()), name.size(),
                             0, 0, context.match.get(), context.limits.get());
             if (result < 0 && result != PCRE2_ERROR_NOMATCH)
@@ -342,10 +369,10 @@ template <class Function> void parallel_words(std::size_t words, Function functi
         try {
             Context context;
             while (!stop.load(std::memory_order_relaxed)) {
-                const auto begin = next.fetch_add(64, std::memory_order_relaxed);
+                const auto begin = next.fetch_add(kWordsPerBatch, std::memory_order_relaxed);
                 if (begin >= words)
                     break;
-                const auto end = std::min(words, begin + 64);
+                const auto end = std::min(words, begin + kWordsPerBatch);
                 for (auto word = begin; word < end; ++word)
                     function(word, context);
             }
@@ -356,11 +383,11 @@ template <class Function> void parallel_words(std::size_t words, Function functi
             stop.store(true, std::memory_order_relaxed);
         }
     };
-    if (words < 128) {
+    if (words < kSerialWordThreshold) {
         work();
     } else {
         auto &pool = ThreadPool::analysis();
-        pool.run(std::min(pool.size(), (words + 63) / 64), work);
+        pool.run(std::min(pool.size(), (words + kWordsPerBatch - 1) / kWordsPerBatch), work);
     }
     if (failure)
         std::rethrow_exception(failure);
@@ -368,16 +395,16 @@ template <class Function> void parallel_words(std::size_t words, Function functi
 
 } // namespace
 
-Visibility filter_visibility(const TreeHandle &handle, const std::optional<FilterSpec> &spec,
-                             bool show_files,
-                             const std::function<void(std::span<const NodeId>)> &resolve) {
+auto filter_visibility(const TreeHandle &handle, const std::optional<FilterSpec> &spec,
+                       bool show_files, const std::function<void(std::span<const NodeId>)> &resolve)
+    -> Visibility {
     Visibility result;
     if (!spec)
         return result;
     Expression expression(*spec);
     ViewBits active, pending;
     handle.read([&](const Tree &tree) {
-        const auto words = (static_cast<std::size_t>(tree.size()) + 63) / 64;
+        const auto words = (static_cast<std::size_t>(tree.size()) + kWordBits - 1) / kWordBits;
         result.eligible.words.resize(words);
         result.has_children.words.resize(words);
         active.words.resize(words);
@@ -389,13 +416,13 @@ Visibility filter_visibility(const TreeHandle &handle, const std::optional<Filte
         }
         parallel_words(words, [&](std::size_t word, Context &context) {
             std::uint64_t yes = 0, unknown = 0;
-            const auto end = std::min<std::size_t>(tree.size(), (word + 1) * 64);
-            for (auto index = word * 64; index < end; ++index) {
+            const auto end = std::min<std::size_t>(tree.size(), (word + 1) * kWordBits);
+            for (auto index = word * kWordBits; index < end; ++index) {
                 const auto id = static_cast<NodeId>(index);
                 if (!active.get(id))
                     continue;
                 const auto value = expression.evaluate(tree, id, context, true);
-                const auto bit = std::uint64_t{1} << (index % 64);
+                const auto bit = std::uint64_t{1} << (index % kWordBits);
                 if (value == Truth::Yes)
                     yes |= bit;
                 else if (value == Truth::PendingOwner)
@@ -410,7 +437,7 @@ Visibility filter_visibility(const TreeHandle &handle, const std::optional<Filte
         auto mask = pending.words[word];
         while (mask != 0) {
             const auto bit = static_cast<unsigned>(std::countr_zero(mask));
-            candidates.push_back(static_cast<NodeId>(word * 64 + bit));
+            candidates.push_back(static_cast<NodeId>(word * kWordBits + bit));
             mask &= mask - 1;
         }
     }
@@ -422,7 +449,7 @@ Visibility filter_visibility(const TreeHandle &handle, const std::optional<Filte
                 auto matches = result.eligible.words[word];
                 while (mask != 0) {
                     const auto bit = static_cast<unsigned>(std::countr_zero(mask));
-                    const auto id = static_cast<NodeId>(word * 64 + bit);
+                    const auto id = static_cast<NodeId>(word * kWordBits + bit);
                     if (expression.evaluate(tree, id, context, false) == Truth::Yes)
                         matches |= std::uint64_t{1} << bit;
                     mask &= mask - 1;

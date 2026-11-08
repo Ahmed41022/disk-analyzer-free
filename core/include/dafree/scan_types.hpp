@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -9,13 +10,26 @@
 
 namespace dafree {
 
+namespace detail {
+inline constexpr std::uint32_t kDefaultProgressIntervalMs = 250;
+inline constexpr std::size_t kRetainedIssueLimit = 1000;
+} // namespace detail
+
 /// Requested scanning strategy.
+// Preserve the established public/native enum representation.
+// NOLINTNEXTLINE(performance-enum-size)
 enum class ScanMode { Auto, Walk, Mft };
 /// Owner lookup policy.
+// Preserve the established public/native enum representation.
+// NOLINTNEXTLINE(performance-enum-size)
 enum class OwnerMode { Off, Lazy, Eager };
 /// Logical-byte accounting for additional hard links.
+// Preserve the established public/native enum representation.
+// NOLINTNEXTLINE(performance-enum-size)
 enum class HardlinkMode { Dedup, CountAll };
 /// Strategy actually used for a scan.
+// Preserve the established public/native enum representation.
+// NOLINTNEXTLINE(performance-enum-size)
 enum class ScanModeUsed { Walk, Mft, Sftp };
 /// Observable scan lifecycle.
 enum class ScanState : std::uint8_t { Running, Paused, Finalizing, Done, Cancelled, Failed };
@@ -38,7 +52,7 @@ struct ScanOptions {
     OwnerMode owner = OwnerMode::Lazy;
     HardlinkMode hardlinks = HardlinkMode::Dedup;
     bool include_ads = false, show_ntfs_metafiles = true;
-    std::uint32_t progress_interval_ms = 250;
+    std::uint32_t progress_interval_ms = detail::kDefaultProgressIntervalMs;
 };
 
 /// Reason a filesystem entry could not be enumerated completely.
@@ -67,7 +81,7 @@ using IssueSink = std::function<void(ScanIssue)>;
 
 /// All issue counts and the first 1,000 diagnostics, independent of live draining.
 struct IssueSummary {
-    std::array<std::uint64_t, 10> counts{};
+    std::array<std::uint64_t, static_cast<std::size_t>(IssueKind::Other) + 1> counts{};
     std::vector<ScanIssue> first;
     std::uint64_t total = 0, overflow = 0;
 };
@@ -104,6 +118,8 @@ struct ScanProgress {
 
 /// Informational scan policy or volume notices.
 struct Notice {
+    // Preserve the established public/native enum representation.
+    // NOLINTNEXTLINE(performance-enum-size)
     enum Kind { FastModeUnavailable, NetworkVolume, RotationalDisk, HardlinkDedupDisabled } kind;
     std::string detail;
 };

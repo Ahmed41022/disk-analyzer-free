@@ -17,6 +17,8 @@ constexpr std::array<std::string_view, 14> headers{
     "dirs", "mtime_iso", "btime_iso", "atime_iso", "owner", "ext",        "flags",
 };
 
+constexpr std::size_t kNumberFormattingBufferCapacity = 32;
+
 class Csv {
   public:
     Csv(std::ostream &out, char delimiter) : out_(out), delimiter_(delimiter) {
@@ -53,7 +55,7 @@ class Csv {
     }
 
     template <class Number> void number(Number value) {
-        std::array<char, 32> bytes{};
+        std::array<char, kNumberFormattingBufferCapacity> bytes{};
         const auto result = std::to_chars(bytes.data(), bytes.data() + bytes.size(), value);
         if (result.ec != std::errc{})
             throw Error("failed to format CSV number");
@@ -86,13 +88,15 @@ class Csv {
     }
 
   private:
+    // The report writer borrows its caller-owned stream for this invocation.
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
     std::ostream &out_;
     char delimiter_;
     std::ostringstream fraction_;
     bool first_ = true;
 };
 
-double parent_fraction(const Tree &tree, const Node &node) {
+auto parent_fraction(const Tree &tree, const Node &node) -> double {
     if (node.parent == kRoot || node.parent == kNone)
         return 0;
     const auto size = tree.node(node.parent).size;

@@ -7,16 +7,16 @@
 namespace dafree {
 namespace {
 
-template <typename T> T saturating_add(T left, T right) noexcept {
+template <typename T> auto saturating_add(T left, T right) noexcept -> T {
     const auto maximum = std::numeric_limits<T>::max();
     return right > maximum - left ? maximum : static_cast<T>(left + right);
 }
 
-template <typename T> T saturating_subtract(T left, T right) noexcept {
+template <typename T> auto saturating_subtract(T left, T right) noexcept -> T {
     return right > left ? 0 : static_cast<T>(left - right);
 }
 
-Counts contribution(std::uint16_t flags, Counts below) noexcept {
+auto contribution(std::uint16_t flags, Counts below) noexcept -> Counts {
     if ((flags & kExcluded) != 0) {
         return {};
     }

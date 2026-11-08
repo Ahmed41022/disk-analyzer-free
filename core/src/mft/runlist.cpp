@@ -8,8 +8,9 @@
 namespace dafree {
 namespace {
 
-Expected<std::uint64_t, MftError> read_unsigned(const mft_detail::ByteReader &reader,
-                                                std::size_t offset, std::size_t width) {
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers) -- NTFS mapping-pair byte/bit encoding.
+auto read_unsigned(const mft_detail::ByteReader &reader, std::size_t offset, std::size_t width)
+    -> Expected<std::uint64_t, MftError> {
     const auto bytes = reader.bytes(offset, width);
     if (!bytes.has_value())
         return bytes.error();
@@ -19,7 +20,9 @@ Expected<std::uint64_t, MftError> read_unsigned(const mft_detail::ByteReader &re
     return value;
 }
 
-std::int64_t signed_delta(std::uint64_t encoded, std::size_t width) {
+// Mapping pairs specify encoded value followed by encoded byte width.
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+auto signed_delta(std::uint64_t encoded, std::size_t width) -> std::int64_t {
     const auto bits = width * 8;
     constexpr auto maximum = std::numeric_limits<std::uint64_t>::max();
     if (bits < 64 && (encoded & (std::uint64_t{1} << (bits - 1))) != 0)
@@ -31,8 +34,8 @@ std::int64_t signed_delta(std::uint64_t encoded, std::size_t width) {
     return -1 - static_cast<std::int64_t>(maximum - encoded);
 }
 
-Expected<std::size_t, MftError> decode_pass(std::span<const std::byte> bytes,
-                                            std::vector<Run> *output) {
+auto decode_pass(std::span<const std::byte> bytes, std::vector<Run> *output)
+    -> Expected<std::size_t, MftError> {
     const mft_detail::ByteReader reader(bytes);
     std::size_t position = 0, count = 0;
     std::uint64_t vcn = 0;
@@ -75,14 +78,15 @@ Expected<std::size_t, MftError> decode_pass(std::span<const std::byte> bytes,
         ++count;
     }
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 
 } // namespace
 
-Expected<std::vector<Run>, MftError> decode_runlist(std::span<const std::byte> bytes) {
+auto decode_runlist(std::span<const std::byte> bytes) -> Expected<std::vector<Run>, MftError> {
     const auto count = decode_pass(bytes, nullptr);
     if (!count.has_value())
         return count.error();
-    constexpr std::size_t maximum_output_bytes = 64 * 1024 * 1024;
+    constexpr std::size_t maximum_output_bytes = std::size_t{64} * 1024 * 1024;
     if (count.value() > maximum_output_bytes / sizeof(Run))
         return MftError::Unsupported;
     std::vector<Run> runs;

@@ -27,12 +27,12 @@ enum class EntryKind : std::uint8_t {
 class IoError : public Error {
   public:
     /// Construct an error for a path and a classified OS failure.
-    IoError(std::string path, IssueKind kind, std::string message)
+    IoError(std::string path, IssueKind kind, const std::string &message)
         : Error(message), path_(std::move(path)), kind_(kind) {}
     /// Return the path whose operation failed.
-    [[nodiscard]] const std::string &path() const noexcept { return path_; }
+    [[nodiscard]] auto path() const noexcept -> const std::string & { return path_; }
     /// Return the classified reason.
-    [[nodiscard]] IssueKind kind() const noexcept { return kind_; }
+    [[nodiscard]] auto kind() const noexcept -> IssueKind { return kind_; }
 
   private:
     std::string path_;
@@ -65,10 +65,10 @@ namespace platform {
 using VolumeInfo = dafree::VolumeInfo;
 
 /// Return the host name and operating system name for scan provenance.
-std::pair<std::string, std::string> system_identity();
+auto system_identity() -> std::pair<std::string, std::string>;
 
 /// Report the native separator convention for portable scanner path handling.
-constexpr bool windows_paths() noexcept {
+constexpr auto windows_paths() noexcept -> bool {
 #ifdef _WIN32
     return true;
 #else
@@ -77,7 +77,7 @@ constexpr bool windows_paths() noexcept {
 }
 
 /// Report the planned platform path case policy.
-constexpr bool case_insensitive_paths() noexcept {
+constexpr auto case_insensitive_paths() noexcept -> bool {
 #if defined(_WIN32) || defined(__APPLE__)
     return true;
 #else
@@ -86,38 +86,38 @@ constexpr bool case_insensitive_paths() noexcept {
 }
 
 /// Convert an absolute Windows drive or UNC path to verbatim form.
-std::string to_verbatim(std::string_view path);
+auto to_verbatim(std::string_view path) -> std::string;
 
 /// List direct children without following symbolic links.
-DirListing read_dir(std::string_view dir);
+auto read_dir(std::string_view dir) -> DirListing;
 /// List direct children while explicitly following the final directory link.
-DirListing read_dir_follow(std::string_view dir);
+auto read_dir_follow(std::string_view dir) -> DirListing;
 /// Read metadata for a path without following its final symbolic link.
-RawEntry stat_nofollow(std::string_view path);
+auto stat_nofollow(std::string_view path) -> RawEntry;
 /// Read metadata for the final target of a symbolic link.
-RawEntry stat_follow(std::string_view path);
+auto stat_follow(std::string_view path) -> RawEntry;
 /// Read the volume containing a path when available.
-std::optional<VolumeInfo> volume_info(std::string_view path);
+auto volume_info(std::string_view path) -> std::optional<VolumeInfo>;
 /// List mounted volumes for drive and mount selection.
-std::vector<VolumeInfo> list_volumes();
+auto list_volumes() -> std::vector<VolumeInfo>;
 #ifdef _WIN32
 /// Return the process peak working set in bytes, or no value if unavailable.
 std::optional<std::uint64_t> peak_rss();
 #endif
 /// Read an owner identity and its display name.
-std::optional<std::pair<OwnerKey, std::string>> owner_of(std::string_view path);
+auto owner_of(std::string_view path) -> std::optional<std::pair<OwnerKey, std::string>>;
 /// Open the native Windows property sheet for an absolute path, or return false.
-bool show_properties(std::string_view path);
+auto show_properties(std::string_view path) -> bool;
 #ifdef _WIN32
 /// Count SID-to-account cache hits for test verification.
 std::uint64_t sid_cache_hits();
 #endif
 /// Resolve a POSIX user ID to a display name.
-std::optional<std::string> name_for_uid(std::uint32_t uid);
+auto name_for_uid(std::uint32_t uid) -> std::optional<std::string>;
 /// Report whether the process has elevated privileges.
-bool is_elevated();
+auto is_elevated() -> bool;
 /// Quote arguments (excluding argv[0]) for a Windows command line.
-std::wstring quote_windows_args(std::span<const std::wstring> args);
+auto quote_windows_args(std::span<const std::wstring> args) -> std::wstring;
 /// Relaunch the current executable with explicit native arguments and request elevation.
 /// Throws Cancelled if the request is declined and Unsupported on POSIX.
 void relaunch_elevated(std::span<const std::string> args);

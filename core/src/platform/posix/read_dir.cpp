@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <sys/types.h>
 #ifdef __linux__
@@ -19,24 +20,28 @@
 
 namespace dafree::platform {
 
-IssueKind issue_kind(int code) noexcept;
-int stat_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry);
+auto issue_kind(int code) noexcept -> IssueKind;
+auto stat_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry) -> int;
 #ifdef __APPLE__
 std::optional<DirListing> list_getattrlistbulk(int fd, std::string_view path);
 #endif
 
-static int open_directory_impl(std::string_view path, bool follow) {
+static auto open_directory_impl(std::string_view path, bool follow) -> int {
     if (path.empty()) {
         errno = ENOENT;
         return -1;
     }
     const std::string owned(path);
     const int direct =
+        // This typed argument list calls the required POSIX/Linux variadic ABI.
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
         ::open(owned.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC | (follow ? 0 : O_NOFOLLOW));
     if (direct >= 0 || errno != ENAMETOOLONG)
         return direct;
 
     const bool absolute = path.front() == '/';
+    // This typed argument list calls the required POSIX/Linux variadic ABI.
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     int current = ::open(absolute ? "/" : ".", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
     if (current < 0)
         return -1;
@@ -55,6 +60,8 @@ static int open_directory_impl(std::string_view path, bool follow) {
             ++next_component;
         const bool final = next_component == path.size();
         const int next =
+            // This typed argument list calls the required POSIX/Linux variadic ABI.
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
             ::openat(current, component.c_str(),
                      O_RDONLY | O_DIRECTORY | O_CLOEXEC | (final && !follow ? O_NOFOLLOW : 0));
         const int saved = errno;
@@ -69,9 +76,9 @@ static int open_directory_impl(std::string_view path, bool follow) {
     return guard.release();
 }
 
-int open_parent_directory(std::string_view path) { return open_directory_impl(path, true); }
+auto open_parent_directory(std::string_view path) -> int { return open_directory_impl(path, true); }
 
-static EntryKind kind_from_dtype(unsigned char type) noexcept {
+static auto kind_from_dtype(unsigned char type) noexcept -> EntryKind {
     switch (type) {
     case DT_REG:
         return EntryKind::File;
@@ -109,7 +116,7 @@ void add_entry(DirListing &listing, int fd, std::string_view dir, const char *na
     }
 }
 
-static DirListing list_readdir(int fd, std::string_view path) {
+static auto list_readdir(int fd, std::string_view path) -> DirListing {
     DirListing listing;
     DIR *stream = ::fdopendir(fd);
     if (stream == nullptr) {
@@ -131,17 +138,21 @@ static DirListing list_readdir(int fd, std::string_view path) {
             }
             break;
         }
-        add_entry(listing, fd, path, item->d_name, item->d_type);
+        add_entry(listing, fd, path, std::span(item->d_name).data(), item->d_type);
     }
     return listing;
 }
 
 #ifdef __linux__
-static DirListing list_getdents(int fd, std::string_view path) {
+static auto list_getdents(int fd, std::string_view path) -> DirListing {
     detail::UniqueFd guard(fd);
     DirListing listing;
-    alignas(8) std::array<char, 64 * 1024> buffer{};
+    constexpr std::size_t batch_bytes = std::size_t{64} * 1024;
+    constexpr std::size_t record_alignment = 8;
+    alignas(record_alignment) std::array<char, batch_bytes> buffer{};
     for (;;) {
+        // This typed argument list calls the required POSIX/Linux variadic ABI.
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
         const long bytes = ::syscall(SYS_getdents64, fd, buffer.data(), buffer.size());
         if (bytes == 0)
             break;
@@ -153,20 +164,23 @@ static DirListing list_getdents(int fd, std::string_view path) {
             listing.partial = true;
             break;
         }
-        const std::size_t length = static_cast<std::size_t>(bytes);
+        const auto length = static_cast<std::size_t>(bytes);
         std::size_t offset = 0;
+        // linux_dirent64 UAPI offsets are checked against both buffer and record lengths.
+        // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
         while (offset + 19u <= length) {
             std::uint16_t record_length = 0;
             std::memcpy(&record_length, buffer.data() + offset + 16u, sizeof(record_length));
             if (record_length < 20u || offset + record_length > length)
                 break;
-            const unsigned char dtype = static_cast<unsigned char>(buffer[offset + 18u]);
+            const auto dtype = static_cast<unsigned char>(buffer.at(offset + 18u));
             const char *name = buffer.data() + offset + 19u;
             if (std::memchr(name, '\0', record_length - 19u) == nullptr)
                 break;
             add_entry(listing, fd, path, name, dtype);
             offset += record_length;
         }
+        // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
         if (offset != length) {
             listing.issues.push_back(
                 {std::string(path), IssueKind::Io, "invalid getdents64 record"});
@@ -178,7 +192,7 @@ static DirListing list_getdents(int fd, std::string_view path) {
 }
 #endif
 
-static DirListing list_directory(std::string_view path, bool follow) {
+static auto list_directory(std::string_view path, bool follow) -> DirListing {
     const int fd = open_directory_impl(path, follow);
     if (fd < 0) {
         const int code = errno;
@@ -206,7 +220,7 @@ static DirListing list_directory(std::string_view path, bool follow) {
 #endif
 }
 
-DirListing read_dir(std::string_view path) { return list_directory(path, false); }
-DirListing read_dir_follow(std::string_view path) { return list_directory(path, true); }
+auto read_dir(std::string_view path) -> DirListing { return list_directory(path, false); }
+auto read_dir_follow(std::string_view path) -> DirListing { return list_directory(path, true); }
 
 } // namespace dafree::platform

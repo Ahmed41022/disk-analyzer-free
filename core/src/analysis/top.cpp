@@ -9,17 +9,19 @@
 namespace dafree {
 namespace {
 
-template <class Value> int compare(Value left, Value right) {
+constexpr std::size_t kParallelTopNNodeThreshold = 16'384;
+
+template <class Value> auto compare(Value left, Value right) -> int {
     return (left > right) - (left < right);
 }
 
-long double parent_fraction(const Tree &tree, const Node &node) {
+auto parent_fraction(const Tree &tree, const Node &node) -> long double {
     const auto size = node.parent == kNone ? 0 : tree.node(node.parent).size;
     return size == 0 ? 0 : static_cast<long double>(node.size) / static_cast<long double>(size);
 }
 
 // Rank across directories without changing the sibling-sort hot path.
-int compare_rank(const Tree &tree, NodeId left, NodeId right, SortKey key) {
+auto compare_rank(const Tree &tree, NodeId left, NodeId right, SortKey key) -> int {
     const auto &a = tree.node(left);
     const auto &b = tree.node(right);
     switch (key) {
@@ -46,7 +48,7 @@ int compare_rank(const Tree &tree, NodeId left, NodeId right, SortKey key) {
     throw std::invalid_argument("unknown ranking key");
 }
 
-bool candidate(const Tree &tree, NodeId id, TopKind kind, bool leaf_only) {
+auto candidate(const Tree &tree, NodeId id, TopKind kind, bool leaf_only) -> bool {
     const auto &node = tree.node(id);
     const bool dir = (node.flags & kDir) != 0;
     if (dir != (kind == TopKind::Dirs))
@@ -66,6 +68,8 @@ bool candidate(const Tree &tree, NodeId id, TopKind kind, bool leaf_only) {
 }
 
 template <class Better>
+// Top-N offers pair the candidate node with heap capacity in the established order.
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 void offer(std::vector<NodeId> &heap, NodeId id, std::size_t n, const Better &better) {
     if (heap.size() < n) {
         heap.push_back(id);
@@ -79,8 +83,8 @@ void offer(std::vector<NodeId> &heap, NodeId id, std::size_t n, const Better &be
 
 } // namespace
 
-std::vector<NodeId> top_n(const Tree &tree, NodeId scope, TopKind kind, std::size_t n, SortKey by,
-                          bool leaf_only) {
+auto top_n(const Tree &tree, NodeId scope, TopKind kind, std::size_t n, SortKey by, bool leaf_only)
+    -> std::vector<NodeId> {
     if (n == 0 || !analysis_detail::visible_scope(tree, scope))
         return {};
     const auto better = [&](NodeId left, NodeId right) {
@@ -96,7 +100,7 @@ std::vector<NodeId> top_n(const Tree &tree, NodeId scope, TopKind kind, std::siz
     };
 
     std::vector<NodeId> heap;
-    if (tree.size() < 16'384) {
+    if (tree.size() < kParallelTopNNodeThreshold) {
         analysis_detail::for_each_node(tree, scope, [&](NodeId id) { add(heap, id); });
     } else {
         auto root = scope;

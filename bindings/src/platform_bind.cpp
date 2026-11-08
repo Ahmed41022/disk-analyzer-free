@@ -7,7 +7,10 @@
 namespace dafree::bindings {
 namespace {
 struct PlatformNamespace {};
-std::mutex volumes_mutex;
+auto volume_enumeration_mutex() -> std::mutex & {
+    static std::mutex mutex;
+    return mutex;
+}
 } // namespace
 
 void bind_platform(nb::module_ &module) {
@@ -16,7 +19,7 @@ void bind_platform(nb::module_ &module) {
             "volumes",
             [] {
                 // Some host mount-table APIs use process-global scratch storage.
-                std::lock_guard lock(volumes_mutex);
+                std::lock_guard lock(volume_enumeration_mutex());
                 return platform::list_volumes();
             },
             nb::call_guard<nb::gil_scoped_release>(),
@@ -45,7 +48,7 @@ void bind_platform(nb::module_ &module) {
             "Relaunch the current executable with elevation and explicit arguments.")
         .def_static(
             "owner_of",
-            [](nb::str path) -> std::optional<nb::str> {
+            [](const nb::str &path) -> std::optional<nb::str> {
                 const auto native = encode_native(path);
                 std::optional<std::pair<OwnerKey, std::string>> owner;
                 {
@@ -61,7 +64,7 @@ void bind_platform(nb::module_ &module) {
             nb::arg("path"), "Return the file owner's account name when available.")
         .def_static(
             "show_properties",
-            [](nb::str path) {
+            [](const nb::str &path) {
                 const auto native = encode_native(path);
                 nb::gil_scoped_release release;
                 return platform::show_properties(native);

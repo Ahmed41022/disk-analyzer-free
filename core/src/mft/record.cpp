@@ -4,7 +4,8 @@
 
 namespace dafree {
 
-Expected<RecordHeader, MftError> parse_header(std::span<const std::byte> rec) {
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers) -- NTFS FILE record header offsets/layout.
+auto parse_header(std::span<const std::byte> rec) -> Expected<RecordHeader, MftError> {
     constexpr std::size_t fixed_header_size = 0x2a;
     const mft_detail::ByteReader reader(rec);
     const auto signature = reader.bytes(0, 4);
@@ -13,7 +14,7 @@ Expected<RecordHeader, MftError> parse_header(std::span<const std::byte> rec) {
 
     RecordHeader header{};
     for (std::size_t index = 0; index < header.signature.size(); ++index)
-        header.signature[index] =
+        header.signature.at(index) =
             static_cast<char>(std::to_integer<unsigned char>(signature.value()[index]));
     if (header.signature != std::array<char, 4>{'F', 'I', 'L', 'E'})
         return MftError::BadSignature;
@@ -62,5 +63,6 @@ Expected<RecordHeader, MftError> parse_header(std::span<const std::byte> rec) {
         return MftError::OutOfBounds;
     return header;
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 
 } // namespace dafree

@@ -29,6 +29,8 @@ struct RecordHeader {
 };
 
 /// A malformed record, invalid update sequence, or unsupported parser input.
+// Preserve the established public/native enum representation.
+// NOLINTNEXTLINE(performance-enum-size)
 enum class MftError { BadSignature, BadFixup, OutOfBounds, Unsupported };
 
 /// Decode a complete NTFS v3 record header without reading outside its span.
@@ -37,14 +39,14 @@ enum class MftError { BadSignature, BadFixup, OutOfBounds, Unsupported };
 /// The aligned USA must follow that prefix and precede the first aligned attribute;
 /// both must fit bytes_used <= bytes_allocated <= rec.size(). Unknown flags remain
 /// intact. Sector geometry and update-sequence values are checked by apply_fixups.
-Expected<RecordHeader, MftError> parse_header(std::span<const std::byte> rec);
+auto parse_header(std::span<const std::byte> rec) -> Expected<RecordHeader, MftError>;
 
 /// Verify every sector's update-sequence value, then restore its saved trailer.
 ///
 /// The declared bytes_allocated must equal rec.size(), and USA count must equal
 /// rec.size() / sector_size + 1. Invalid inputs return an error without partially
 /// restoring the record.
-Expected<void, MftError> apply_fixups(std::span<std::byte> rec, std::size_t sector_size);
+auto apply_fixups(std::span<std::byte> rec, std::size_t sector_size) -> Expected<void, MftError>;
 
 /// Standard-information times in Unix seconds, with raw NTFS file attributes.
 struct StdInfo {
@@ -91,24 +93,26 @@ class AttrIterator {
     /// Validate the header and borrow the record; errors are returned by next().
     explicit AttrIterator(std::span<const std::byte> rec);
     /// Return one attribute, end at the marker/used boundary, or a sticky typed error.
-    Expected<std::optional<Attr>, MftError> next();
+    auto next() -> Expected<std::optional<Attr>, MftError>;
 
   private:
-    Expected<std::u16string_view, MftError> read_name(std::span<const std::byte> chars);
+    auto read_name(std::span<const std::byte> chars) -> Expected<std::u16string_view, MftError>;
 
     std::span<const std::byte> record_;
     std::size_t position_ = 0, end_ = 0;
     std::optional<MftError> error_;
+    // NTFS filename attributes contain at most 255 UTF-16 code units.
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
     std::array<char16_t, 255> name_storage_;
 };
 
 /// Convert unsigned 100 ns ticks since 1601 to Unix seconds, flooring subsecond times.
-std::int64_t filetime_to_unix(std::uint64_t filetime);
+auto filetime_to_unix(std::uint64_t filetime) -> std::int64_t;
 
 /// A cluster extent; no LCN denotes a sparse run, and clusters is nonzero.
 struct Run {
     std::optional<std::int64_t> lcn;
-    std::uint64_t clusters;
+    std::uint64_t clusters = 0;
 };
 
 /// Decode zero-terminated mapping pairs with checked lengths, deltas and VCN totals.
@@ -117,7 +121,7 @@ struct Run {
 /// valid. Malformed/overflowing encodings return OutOfBounds. Output above 64 MiB
 /// returns Unsupported before allocation; valid output uses one exact reservation.
 /// Standard-library checked-iterator bookkeeping is separate from run storage.
-Expected<std::vector<Run>, MftError> decode_runlist(std::span<const std::byte> bytes);
+auto decode_runlist(std::span<const std::byte> bytes) -> Expected<std::vector<Run>, MftError>;
 
 class Tree;
 namespace mft_detail {
@@ -132,32 +136,33 @@ class MftIndex {
     /// Release all retained summaries.
     ~MftIndex();
     MftIndex(const MftIndex &) = delete;
-    MftIndex &operator=(const MftIndex &) = delete;
+    auto operator=(const MftIndex &) -> MftIndex & = delete;
     /// Transfer the retained summaries.
     MftIndex(MftIndex &&) noexcept;
     /// Replace summaries with those owned by another index.
-    MftIndex &operator=(MftIndex &&) noexcept;
+    auto operator=(MftIndex &&) noexcept -> MftIndex &;
     /// Verify/restore a raw record and copy only retained attributes; failures are issues.
     void ingest(std::uint64_t record_no, std::span<std::byte> rec, std::size_t sector);
     /// Combine independent parser batches; duplicates become conflicts rather than overwrite.
     void merge(MftIndex &&other);
 
   private:
-    friend Tree build_tree_from_mft(const MftIndex &, std::string_view,
+    friend auto build_tree_from_mft(const MftIndex &, std::string_view,
                                     std::optional<std::string_view>, const ScanOptions &,
-                                    IssueSink &);
+                                    IssueSink &) -> Tree;
     std::unique_ptr<mft_detail::IndexData> data_;
 };
 
 /// Encode UTF-16 losslessly, combining valid pairs and preserving lone surrogates.
-std::string utf16_to_wtf8(std::u16string_view input);
+auto utf16_to_wtf8(std::u16string_view input) -> std::string;
 
 /// Build a breadth-first tree rooted at record 5 or a selected relative/absolute subtree.
 ///
 /// Input and output retain native names. NTFS lookup is case/separator insensitive on
 /// every OS. No filesystem calls or reparse traversal occur. Issues are counted in the
 /// tree metadata, with the first 1,000 retained and every issue delivered to a nonempty sink.
-Tree build_tree_from_mft(const MftIndex &, std::string_view root_path,
-                         std::optional<std::string_view> subtree, const ScanOptions &, IssueSink &);
+auto build_tree_from_mft(const MftIndex &, std::string_view root_path,
+                         std::optional<std::string_view> subtree, const ScanOptions &, IssueSink &)
+    -> Tree;
 
 } // namespace dafree
