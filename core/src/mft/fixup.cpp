@@ -5,7 +5,8 @@
 namespace dafree {
 
 /// Validate the complete update-sequence array and all trailers before restoring bytes.
-Expected<void, MftError> apply_fixups(std::span<std::byte> rec, std::size_t sector_size) {
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers) -- NTFS update-sequence fixup layout.
+auto apply_fixups(std::span<std::byte> rec, std::size_t sector_size) -> Expected<void, MftError> {
     if (sector_size < sizeof(std::uint16_t) || (sector_size & (sector_size - 1)) != 0)
         return MftError::Unsupported;
     if (rec.empty() || rec.size() % sector_size != 0)
@@ -54,5 +55,6 @@ Expected<void, MftError> apply_fixups(std::span<std::byte> rec, std::size_t sect
     }
     return {};
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 
 } // namespace dafree

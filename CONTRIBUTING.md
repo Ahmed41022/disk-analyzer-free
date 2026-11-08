@@ -156,3 +156,15 @@ thresholds and artifacts remain mandatory without it. Use `coverage run
 --parallel-mode -m pytest -m "not slow"`, then `coverage combine --keep` and
 `coverage report` for a local report. Keep per-platform `COVERAGE_FILE` paths
 separate when testing Windows and WSL concurrently.
+
+
+### Native quality checks
+
+CI uses clang-format 19.1.7 for tracked C++ files and clang-tidy 18 for the native
+core/bindings compilation database, with the repository's warnings-as-errors
+configuration. Run the formatter's `--dry-run -Werror` check before submitting
+native changes. Keep source-specific analyzer exceptions narrow and explain the
+wire-format, C ABI, ownership, or lifetime constraint beside the affected code;
+ordinary policy values should have meaningful names. English source remains
+covered by the spelling check; translations and imported binary/Unicode data
+have explicit exclusions in `typos.toml`.

@@ -5,17 +5,18 @@
 namespace dafree::detail {
 namespace {
 
-bool digit(char value) noexcept { return value >= '0' && value <= '9'; }
+auto digit(char value) noexcept -> bool { return value >= '0' && value <= '9'; }
 
-char32_t fold_name(char32_t value) noexcept {
-    if (value < 128)
+auto fold_name(char32_t value) noexcept -> char32_t {
+    constexpr char32_t ascii_limit = 128;
+    if (value < ascii_limit)
         return value >= U'A' && value <= U'Z' ? value + (U'a' - U'A') : value;
     return fold_codepoint(value);
 }
 
 } // namespace
 
-int natural_compare(std::string_view left, std::string_view right) noexcept {
+auto natural_compare(std::string_view left, std::string_view right) noexcept -> int {
     std::size_t l = 0, r = 0;
     while (l < left.size() && r < right.size()) {
         if (digit(left[l]) && digit(right[r])) {

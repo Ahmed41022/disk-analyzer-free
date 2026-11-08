@@ -7,15 +7,17 @@
 namespace dafree {
 namespace {
 
-constexpr std::size_t kChunkSize = 1024 * 1024;
+constexpr std::size_t kChunkSize = std::size_t{1024} * 1024;
 
 } // namespace
 
-std::pair<std::uint32_t, std::uint16_t> NameArena::push(std::string_view native_bytes) {
+auto NameArena::push(std::string_view native_bytes) -> std::pair<std::uint32_t, std::uint16_t> {
     if (native_bytes.size() > std::numeric_limits<std::uint16_t>::max()) {
         throw NameTooLong();
     }
     if (chunks_.empty()) {
+        // Arena chunks are owning dynamic arrays whose addresses must remain stable.
+        // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
         chunks_.push_back({std::make_unique_for_overwrite<char[]>(kChunkSize), 0});
     }
 
@@ -25,6 +27,8 @@ std::pair<std::uint32_t, std::uint16_t> NameArena::push(std::string_view native_
         if (chunk_index > std::numeric_limits<std::uint32_t>::max() / kChunkSize) {
             throw CapacityError();
         }
+        // Arena chunks are owning dynamic arrays whose addresses must remain stable.
+        // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
         chunks_.push_back({std::make_unique_for_overwrite<char[]>(kChunkSize), 0});
         chunk = &chunks_.back();
     }
@@ -43,7 +47,9 @@ std::pair<std::uint32_t, std::uint16_t> NameArena::push(std::string_view native_
     return {offset, length};
 }
 
-std::string_view NameArena::get(std::uint32_t offset, std::uint16_t length) const {
+// The arena interface specifies a 32-bit offset and 16-bit length.
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+auto NameArena::get(std::uint32_t offset, std::uint16_t length) const -> std::string_view {
     if (length == 0) {
         return {};
     }
@@ -55,6 +61,6 @@ std::string_view NameArena::get(std::uint32_t offset, std::uint16_t length) cons
     return {chunks_[chunk_index].data.get() + local_offset, length};
 }
 
-std::size_t NameArena::heap_bytes() const noexcept { return chunks_.size() * kChunkSize; }
+auto NameArena::heap_bytes() const noexcept -> std::size_t { return chunks_.size() * kChunkSize; }
 
 } // namespace dafree

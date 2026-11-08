@@ -5,11 +5,11 @@
 namespace dafree::detail {
 namespace {
 
-template <class T> int compare(T left, T right) {
+template <class T> auto compare(T left, T right) -> int {
     return left < right ? -1 : (left > right ? 1 : 0);
 }
 
-int primary(const Tree &tree, NodeId left, NodeId right, SortKey key) {
+auto primary(const Tree &tree, NodeId left, NodeId right, SortKey key) -> int {
     const auto &a = tree.node(left);
     const auto &b = tree.node(right);
     switch (key) {

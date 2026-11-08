@@ -133,11 +133,11 @@ void bind_scan_types(nb::module_ &module) {
         .def(nb::init<>())
         .def_prop_rw(
             "mount", [](const VolumeInfo &value) { return decode_native(value.mount); },
-            [](VolumeInfo &value, nb::str mount) { value.mount = encode_native(mount); })
+            [](VolumeInfo &value, const nb::str &mount) { value.mount = encode_native(mount); })
         .def_rw("fs_type", &VolumeInfo::fs_type)
         .def_prop_rw(
             "label", [](const VolumeInfo &value) { return decode_native(value.label); },
-            [](VolumeInfo &value, nb::str label) { value.label = encode_native(label); })
+            [](VolumeInfo &value, const nb::str &label) { value.label = encode_native(label); })
         .def_rw("serial", &VolumeInfo::serial)
         .def_rw("total", &VolumeInfo::total)
         .def_rw("free", &VolumeInfo::free)
@@ -213,7 +213,7 @@ void bind_scan(nb::module_ &module) {
         .def(
             "drain_issues",
             [](BoundScanHandle &self, std::size_t max) { return self.handle().drain_issues(max); },
-            nb::arg("max") = 1000, "Drain live diagnostics.")
+            nb::arg("max") = detail::kRetainedIssueLimit, "Drain live diagnostics.")
         .def(
             "drain_notices", [](BoundScanHandle &self) { return self.handle().drain_notices(); },
             "Drain policy notices.")

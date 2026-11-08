@@ -1,5 +1,29 @@
+[files]
+# These are natural-language catalogues; keep application/source English checked.
+extend-exclude = [
+    "src/dafree/i18n/locales/ar/LC_MESSAGES/dafree.po",
+    "src/dafree/i18n/locales/de/LC_MESSAGES/dafree.po",
+    # Upstream Unicode database names are not English prose.
+    "tools/data/CaseFolding-17.0.0.txt",
+    # Binary NTFS records can contain coincidental text-like byte sequences.
+    "core/tests/golden/mft/*.bin",
+]
+
+[default.extend-identifiers]
+# Valid standard-library, Windows SDK, and C++20 API names.
+setp = "setp"
+countr_zero = "countr_zero"
+ERROR_FILENAME_EXCED_RANGE = "ERROR_FILENAME_EXCED_RANGE"
+# Clang's official analyzer check namespace.
+optin = "optin"
+
 [default.extend-words]
 dafree = "dafree"
 nanobind = "nanobind"
 nam = "nam"
 pn = "pn"
+# Valid file-extension abbreviations and technical ownership terminology.
+caf = "caf"
+odf = "odf"
+sav = "sav"
+unparented = "unparented"

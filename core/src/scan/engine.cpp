@@ -21,40 +21,52 @@ namespace dafree {
 namespace {
 
 using Clock = std::chrono::steady_clock;
+constexpr unsigned kNetworkThreads = 16;
+constexpr unsigned kRotationalThreads = 2;
+constexpr unsigned kMaximumParallelCpus = 16;
+constexpr unsigned kThreadsPerCpu = 2;
+constexpr float kIdentityLoadFactor = 0.9F;
+constexpr std::size_t kLiveIssueQueueLimit = 100000;
+constexpr auto kSlowAggregateThreshold = std::chrono::milliseconds(200);
+constexpr auto kResultPollInterval = std::chrono::milliseconds(20);
+constexpr std::string_view kExtendedUncPrefix = "//?/UNC/";
+constexpr std::string_view kExtendedDrivePrefix = "//?/";
+constexpr std::size_t kDrivePrefixLength = 3;
+constexpr std::size_t kUncRootComponents = 2;
 
-std::string normalize_target(std::string_view input) {
+auto normalize_target(std::string_view input) -> std::string {
     if (input.empty() || input.find('\0') != std::string_view::npos)
         throw ScanError(ScanError::Code::InvalidTarget, "empty target or embedded NUL");
     std::string path(input);
     const bool windows = platform::windows_paths();
     if (windows) {
         std::replace(path.begin(), path.end(), '\\', '/');
-        if (path.starts_with("//?/UNC/"))
-            path = "//" + path.substr(8);
-        else if (path.starts_with("//?/"))
-            path.erase(0, 4);
+        if (path.starts_with(kExtendedUncPrefix))
+            path = "//" + path.substr(kExtendedUncPrefix.size());
+        else if (path.starts_with(kExtendedDrivePrefix))
+            path.erase(0, kExtendedDrivePrefix.size());
     }
-    const bool drive = windows && path.size() >= 3 &&
+    const bool drive = windows && path.size() >= kDrivePrefixLength &&
                        ((path[0] >= 'A' && path[0] <= 'Z') || (path[0] >= 'a' && path[0] <= 'z')) &&
                        path[1] == ':' && path[2] == '/';
     const bool unc = windows && path.starts_with("//");
     if (windows ? !(drive || unc) : !path.starts_with('/'))
         throw ScanError(ScanError::Code::InvalidTarget, "scan targets must be absolute");
-    std::size_t offset = drive ? 3 : (unc ? 2 : 1);
+    std::size_t offset = drive ? kDrivePrefixLength : (unc ? 2 : 1);
     std::string result = path.substr(0, offset);
     std::vector<std::string_view> components;
     while (offset < path.size()) {
         const auto end = path.find('/', offset);
         const auto stop = end == std::string::npos ? path.size() : end;
-        const std::string_view part(path.data() + offset, stop - offset);
+        const auto part = std::string_view(path).substr(offset, stop - offset);
         if (part == "..") {
-            if (components.size() > (unc ? 2u : 0u))
+            if (components.size() > (unc ? kUncRootComponents : 0u))
                 components.pop_back();
         } else if (!part.empty() && part != ".")
             components.push_back(part);
         offset = stop + 1;
     }
-    if (unc && components.size() < 2)
+    if (unc && components.size() < kUncRootComponents)
         throw ScanError(ScanError::Code::InvalidTarget, "UNC target requires a server and share");
     for (const auto part : components) {
         if (!result.ends_with('/'))
@@ -66,7 +78,7 @@ std::string normalize_target(std::string_view input) {
     return result;
 }
 
-bool path_under(std::string_view path, std::string_view prefix) {
+auto path_under(std::string_view path, std::string_view prefix) -> bool {
     std::size_t a = 0, b = 0;
     while (b < prefix.size()) {
         if (a == path.size())
@@ -84,36 +96,41 @@ bool path_under(std::string_view path, std::string_view prefix) {
     return a == path.size() || prefix.back() == separator || path[a] == separator;
 }
 
-bool is_directory(const RawEntry &entry) {
+auto is_directory(const RawEntry &entry) -> bool {
     return entry.kind == EntryKind::Dir || entry.kind == EntryKind::MountPoint ||
            entry.kind == EntryKind::Junction;
 }
 
-bool is_link(const RawEntry &entry) {
+auto is_link(const RawEntry &entry) -> bool {
     return entry.kind == EntryKind::Symlink || entry.kind == EntryKind::Junction;
 }
 
 struct Identity {
     std::uint64_t dev, hi, lo;
-    bool operator==(const Identity &) const = default;
+    auto operator==(const Identity &) const -> bool = default;
 };
+// SplitMix64 finalizer constants and fixed lane rotations define identity hashing.
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
 struct IdentityHash {
-    static std::uint64_t mix(std::uint64_t value) noexcept {
+    static auto mix(std::uint64_t value) noexcept -> std::uint64_t {
         value = (value ^ (value >> 30u)) * 0xBF58476D1CE4E5B9ULL;
         value = (value ^ (value >> 27u)) * 0x94D049BB133111EBULL;
         return value ^ (value >> 31u);
     }
-    std::size_t operator()(const Identity &id) const noexcept {
+    auto operator()(const Identity &id) const noexcept -> std::size_t {
         return static_cast<std::size_t>(mix(id.dev) ^ std::rotl(mix(id.hi), 21) ^
                                         std::rotl(mix(id.lo), 42));
     }
 };
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 using IdentitySet = tsl::robin_set<Identity, IdentityHash>;
 
-Identity identity(const RawEntry &entry) { return {entry.dev, entry.ino_hi, entry.ino_lo}; }
-bool known_identity(const RawEntry &entry) { return entry.ino_hi != 0 || entry.ino_lo != 0; }
+auto identity(const RawEntry &entry) -> Identity { return {entry.dev, entry.ino_hi, entry.ino_lo}; }
+auto known_identity(const RawEntry &entry) -> bool {
+    return entry.ino_hi != 0 || entry.ino_lo != 0;
+}
 
-std::uint16_t flags_for(const RawEntry &entry) {
+auto flags_for(const RawEntry &entry) -> std::uint16_t {
     unsigned flags = 0;
     if (is_directory(entry))
         flags |= kDir;
@@ -138,7 +155,7 @@ std::uint16_t flags_for(const RawEntry &entry) {
     return static_cast<std::uint16_t>(flags);
 }
 
-std::uint32_t node_time(std::optional<std::int64_t> timestamp) {
+auto node_time(std::optional<std::int64_t> timestamp) -> std::uint32_t {
     if (!timestamp || *timestamp <= 0)
         return 0;
     return static_cast<std::uint32_t>(std::min<std::uint64_t>(
@@ -155,7 +172,7 @@ void add_saturated(std::atomic<std::uint64_t> &counter, std::uint64_t amount) {
     }
 }
 
-std::int64_t unix_now() {
+auto unix_now() -> std::int64_t {
     return std::chrono::duration_cast<std::chrono::seconds>(
                std::chrono::system_clock::now().time_since_epoch())
         .count();
@@ -168,7 +185,7 @@ struct Prepared {
     std::vector<VolumeInfo> volumes;
 };
 
-Prepared prepare(ScanOptions options, FsBackend &backend) {
+auto prepare(ScanOptions options, FsBackend &backend) -> Prepared {
     if (options.targets.empty())
         throw ScanError(ScanError::Code::EmptyTargets, "at least one scan target is required");
     if (options.mode == ScanMode::Mft && !backend.supports_local_mft())
@@ -203,7 +220,10 @@ Prepared prepare(ScanOptions options, FsBackend &backend) {
     }
     if (options.threads == 0) {
         const unsigned cpus = std::max(1u, std::thread::hardware_concurrency());
-        options.threads = network ? 16u : (rotational ? 2u : std::min(cpus, 16u) * 2u);
+        options.threads =
+            network ? kNetworkThreads
+                    : (rotational ? kRotationalThreads
+                                  : std::min(cpus, kMaximumParallelCpus) * kThreadsPerCpu);
     }
     prepared.options = std::move(options);
     return prepared;
@@ -211,21 +231,29 @@ Prepared prepare(ScanOptions options, FsBackend &backend) {
 
 } // namespace
 
+// One engine owns worker threads and lock-ordered state; preserving that declaration
+// order is intentional. The bounded, per-scan padding is independent of tree size.
+// NOLINTNEXTLINE(clang-analyzer-optin.performance.Padding)
 class ScanEngine {
   public:
+    // Active workers and locks require one stable, noncopyable engine address.
+    ScanEngine(const ScanEngine &) = delete;
+    auto operator=(const ScanEngine &) -> ScanEngine & = delete;
+    ScanEngine(ScanEngine &&) = delete;
+    auto operator=(ScanEngine &&) -> ScanEngine & = delete;
     ScanEngine(ScanOptions options, std::shared_ptr<FsBackend> backend)
         : backend_(std::move(backend)), input_(prepare(std::move(options), *backend_)),
           builder_(input_.options.targets),
           results_(4u * static_cast<std::size_t>(input_.options.threads)),
-          remaining_(input_.options.threads), started_(Clock::now()),
+          remaining_(input_.options.threads),
+          backend_mode_(backend_->kind() == BackendKind::Sftp ? ScanModeUsed::Sftp
+                                                              : ScanModeUsed::Walk),
+          current_(input_.options.targets.front()), started_(Clock::now()),
           last_snapshot_(started_ - std::chrono::seconds(1)), last_progress_(started_),
-          started_at_(unix_now()), identity_(platform::system_identity()) {
-        backend_mode_ =
-            backend_->kind() == BackendKind::Sftp ? ScanModeUsed::Sftp : ScanModeUsed::Walk;
-        current_ = input_.options.targets.front();
-        track_directories_ = input_.options.follow_symlinks || input_.options.cross_filesystems;
-        seen_files_.max_load_factor(0.9f);
-        seen_directories_.max_load_factor(0.9f);
+          started_at_(unix_now()), identity_(platform::system_identity()),
+          track_directories_(input_.options.follow_symlinks || input_.options.cross_filesystems) {
+        seen_files_.max_load_factor(kIdentityLoadFactor);
+        seen_directories_.max_load_factor(kIdentityLoadFactor);
         for (std::size_t index = 0; index < input_.roots.size(); ++index) {
             const auto id = static_cast<NodeId>(index + 1);
             const auto &entry = input_.roots[index];
@@ -308,7 +336,7 @@ class ScanEngine {
         }
     }
 
-    ScanProgress progress() const {
+    auto progress() const -> ScanProgress {
         ScanProgress value;
         value.files = files_.load(std::memory_order_relaxed);
         value.dirs = dirs_.load(std::memory_order_relaxed);
@@ -349,11 +377,11 @@ class ScanEngine {
         jobs_.close(true);
         gate_.notify_all();
     }
-    bool wait(std::chrono::milliseconds timeout) {
+    auto wait(std::chrono::milliseconds timeout) -> bool {
         std::unique_lock lock(done_mutex_);
         return done_.wait_for(lock, timeout, [&] { return finished_; });
     }
-    ScanResult take_result() {
+    auto take_result() -> ScanResult {
         {
             std::lock_guard lock(done_mutex_);
             if (!finished_)
@@ -365,10 +393,12 @@ class ScanEngine {
             std::rethrow_exception(failure_);
         if (taken_)
             throw ScanError(ScanError::Code::AlreadyTaken, "scan result was already consumed");
+        if (!result_)
+            throw ScanError(ScanError::Code::InvalidHandle, "scan completed without a result");
         taken_ = true;
         return std::move(*result_);
     }
-    std::vector<ScanIssue> drain_issues(std::size_t max) {
+    auto drain_issues(std::size_t max) -> std::vector<ScanIssue> {
         std::lock_guard lock(issue_mutex_);
         std::vector<ScanIssue> drained;
         drained.reserve(std::min(max, issues_.size()));
@@ -378,7 +408,7 @@ class ScanEngine {
         }
         return drained;
     }
-    std::vector<Notice> drain_notices() {
+    auto drain_notices() -> std::vector<Notice> {
         std::lock_guard lock(notice_mutex_);
         std::vector<Notice> drained;
         drained.reserve(notices_.size());
@@ -388,7 +418,7 @@ class ScanEngine {
         }
         return drained;
     }
-    std::shared_ptr<const Tree> partial_tree() const {
+    auto partial_tree() const -> std::shared_ptr<const Tree> {
         snapshot_requested_.store(true, std::memory_order_release);
         std::lock_guard lock(snapshot_mutex_);
         return snapshot_;
@@ -415,8 +445,8 @@ class ScanEngine {
         bool descend = false, follow = false;
     };
 
-    Traversal inspect(const RawEntry &original, std::string_view path,
-                      std::optional<std::uint64_t> parent_device) {
+    auto inspect(const RawEntry &original, std::string_view path,
+                 std::optional<std::uint64_t> parent_device) -> Traversal {
         Traversal value;
         unsigned flags = flags_for(original);
         const bool alias = is_link(original);
@@ -482,11 +512,11 @@ class ScanEngine {
         return value;
     }
 
-    static bool terminal(ScanState state) {
+    static auto terminal(ScanState state) -> bool {
         return state == ScanState::Done || state == ScanState::Cancelled ||
                state == ScanState::Failed;
     }
-    std::uint64_t elapsed_now() const {
+    auto elapsed_now() const -> std::uint64_t {
         return static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - started_).count());
     }
@@ -532,6 +562,8 @@ class ScanEngine {
         if (remaining_.fetch_sub(1, std::memory_order_acq_rel) == 1)
             results_.close();
     }
+    // Scan accounting keeps flags, logical bytes, and allocated bytes in their defined roles.
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     void count(std::uint16_t flags, std::uint64_t size, std::uint64_t allocation) {
         if ((flags & kDir) != 0)
             add_saturated(dirs_, 1);
@@ -548,12 +580,12 @@ class ScanEngine {
         auto index = static_cast<std::size_t>(value.kind);
         if (index >= issue_summary_.counts.size())
             index = static_cast<std::size_t>(IssueKind::Other);
-        ++issue_summary_.counts[index];
-        if (issue_summary_.first.size() < 1000)
+        ++issue_summary_.counts.at(index);
+        if (issue_summary_.first.size() < detail::kRetainedIssueLimit)
             issue_summary_.first.push_back(value);
         issue_count_.store(issue_summary_.total, std::memory_order_relaxed);
         std::lock_guard lock(issue_mutex_);
-        if (issues_.size() < 100000)
+        if (issues_.size() < kLiveIssueQueueLimit)
             issues_.push_back(std::move(value));
         else
             ++issue_summary_.overflow;
@@ -638,7 +670,7 @@ class ScanEngine {
             last_progress_ = now;
         }
     }
-    ScanMeta metadata() const {
+    auto metadata() const -> ScanMeta {
         ScanMeta meta;
         meta.started_at = started_at_;
         meta.finished_at = unix_now();
@@ -652,7 +684,7 @@ class ScanEngine {
         meta.cancelled = cancelled_.load(std::memory_order_acquire);
         return meta;
     }
-    std::shared_ptr<const Tree> clone_tree() {
+    auto clone_tree() -> std::shared_ptr<const Tree> {
         auto copy = std::make_shared<Tree>();
         const auto &source = builder_.tree_;
         copy->roots_ = source.roots_;
@@ -678,7 +710,7 @@ class ScanEngine {
         snapshot_requested_.store(false, std::memory_order_release);
         const auto start = Clock::now();
         builder_.aggregate_partial();
-        slow_aggregate_ = Clock::now() - start > std::chrono::milliseconds(200);
+        slow_aggregate_ = Clock::now() - start > kSlowAggregateThreshold;
         auto copy = clone_tree();
         {
             std::lock_guard lock(snapshot_mutex_);
@@ -767,7 +799,7 @@ class ScanEngine {
         }
 #endif
         while (!results_.drained()) {
-            if (auto result = results_.pop_for(std::chrono::milliseconds(20)))
+            if (auto result = results_.pop_for(kResultPollInterval))
                 consume(std::move(*result));
             maybe_snapshot();
         }
@@ -848,25 +880,27 @@ class ScanEngine {
 
 ScanHandle::~ScanHandle() = default;
 ScanHandle::ScanHandle(ScanHandle &&) noexcept = default;
-ScanHandle &ScanHandle::operator=(ScanHandle &&) noexcept = default;
-ScanEngine &ScanHandle::engine() const {
+auto ScanHandle::operator=(ScanHandle &&) noexcept -> ScanHandle & = default;
+auto ScanHandle::engine() const -> ScanEngine & {
     if (!engine_)
         throw ScanError(ScanError::Code::InvalidHandle, "scan handle was moved");
     return *engine_;
 }
-ScanProgress ScanHandle::progress() const { return engine().progress(); }
-std::vector<ScanIssue> ScanHandle::drain_issues(std::size_t max) {
+auto ScanHandle::progress() const -> ScanProgress { return engine().progress(); }
+auto ScanHandle::drain_issues(std::size_t max) -> std::vector<ScanIssue> {
     return engine().drain_issues(max);
 }
-std::vector<Notice> ScanHandle::drain_notices() { return engine().drain_notices(); }
+auto ScanHandle::drain_notices() -> std::vector<Notice> { return engine().drain_notices(); }
 void ScanHandle::pause() { engine().pause(); }
 void ScanHandle::resume() { engine().resume(); }
 void ScanHandle::cancel() { engine().cancel(); }
-bool ScanHandle::wait(std::chrono::milliseconds timeout) { return engine().wait(timeout); }
-std::shared_ptr<const Tree> ScanHandle::partial_tree() const { return engine().partial_tree(); }
-ScanResult ScanHandle::take_result() { return engine().take_result(); }
+auto ScanHandle::wait(std::chrono::milliseconds timeout) -> bool { return engine().wait(timeout); }
+auto ScanHandle::partial_tree() const -> std::shared_ptr<const Tree> {
+    return engine().partial_tree();
+}
+auto ScanHandle::take_result() -> ScanResult { return engine().take_result(); }
 
-ScanHandle start_scan(ScanOptions options, std::shared_ptr<FsBackend> backend) {
+auto start_scan(ScanOptions options, std::shared_ptr<FsBackend> backend) -> ScanHandle {
     if (!backend)
         backend = make_local_backend();
     auto engine = std::make_shared<ScanEngine>(std::move(options), std::move(backend));

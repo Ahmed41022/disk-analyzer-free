@@ -58,19 +58,19 @@ template <typename T, typename E> class Expected {
     Expected(E error) : storage_(std::in_place_index<1>, std::move(error)) {}
 
     /// Return true when the result contains a value.
-    [[nodiscard]] bool has_value() const noexcept { return storage_.index() == 0; }
+    [[nodiscard]] auto has_value() const noexcept -> bool { return storage_.index() == 0; }
 
     /// Return the contained value.
-    [[nodiscard]] T &value() { return std::get<0>(storage_); }
+    [[nodiscard]] auto value() -> T & { return std::get<0>(storage_); }
 
     /// Return the contained value.
-    [[nodiscard]] const T &value() const { return std::get<0>(storage_); }
+    [[nodiscard]] auto value() const -> const T & { return std::get<0>(storage_); }
 
     /// Return the contained error.
-    [[nodiscard]] E &error() { return std::get<1>(storage_); }
+    [[nodiscard]] auto error() -> E & { return std::get<1>(storage_); }
 
     /// Return the contained error.
-    [[nodiscard]] const E &error() const { return std::get<1>(storage_); }
+    [[nodiscard]] auto error() const -> const E & { return std::get<1>(storage_); }
 
   private:
     std::variant<T, E> storage_;
@@ -86,13 +86,21 @@ template <typename E> class Expected<void, E> {
     Expected(E error) : error_(std::move(error)) {}
 
     /// Return true when the result represents success.
-    [[nodiscard]] bool has_value() const noexcept { return !error_.has_value(); }
+    [[nodiscard]] auto has_value() const noexcept -> bool { return !error_.has_value(); }
 
     /// Return the contained error.
-    [[nodiscard]] E &error() { return error_.value(); }
+    [[nodiscard]] auto error() -> E & {
+        if (!error_)
+            throw std::bad_optional_access();
+        return *error_;
+    }
 
     /// Return the contained error.
-    [[nodiscard]] const E &error() const { return error_.value(); }
+    [[nodiscard]] auto error() const -> const E & {
+        if (!error_)
+            throw std::bad_optional_access();
+        return *error_;
+    }
 
   private:
     std::optional<E> error_;

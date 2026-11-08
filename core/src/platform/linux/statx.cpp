@@ -14,15 +14,19 @@
 
 namespace dafree::platform {
 
+constexpr std::uint64_t kStatBlockBytes = 512;
+
 #ifdef STATX_ATTR_MOUNT_ROOT
 static_assert(detail::kStatxMountRoot == STATX_ATTR_MOUNT_ROOT);
 #endif
 
-EntryKind kind_from_mode(mode_t mode) noexcept;
+auto kind_from_mode(mode_t mode) noexcept -> EntryKind;
 
-int statx_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry) {
+auto statx_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry) -> int {
     struct statx metadata{};
     const int flags = follow ? 0 : AT_SYMLINK_NOFOLLOW;
+    // This typed argument list calls the required POSIX/Linux variadic ABI.
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     if (::syscall(SYS_statx, dirfd, name, flags, STATX_BASIC_STATS | STATX_BTIME, &metadata) != 0)
         return errno;
 
@@ -32,7 +36,7 @@ int statx_entry_at(int dirfd, const char *name, bool follow, RawEntry &entry) {
         detail::statx_is_mount_root(metadata.stx_attributes, metadata.stx_attributes_mask))
         entry.kind = EntryKind::MountPoint;
     entry.size = metadata.stx_size;
-    entry.alloc = metadata.stx_blocks * 512u;
+    entry.alloc = metadata.stx_blocks * kStatBlockBytes;
     entry.mtime = metadata.stx_mtime.tv_sec;
     entry.atime = metadata.stx_atime.tv_sec;
     if ((metadata.stx_mask & STATX_BTIME) != 0)

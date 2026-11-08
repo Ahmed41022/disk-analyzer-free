@@ -4,7 +4,7 @@
 
 namespace dafree::platform {
 
-std::wstring quote_windows_args(std::span<const std::wstring> args) {
+auto quote_windows_args(std::span<const std::wstring> args) -> std::wstring {
     std::wstring command;
     for (const auto &arg : args) {
         if (arg.find(L'\0') != std::wstring::npos)

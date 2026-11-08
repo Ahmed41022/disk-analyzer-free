@@ -8,7 +8,7 @@
 namespace nb = nanobind;
 
 namespace dafree {
-const char *version() noexcept;
+auto version() noexcept -> const char *;
 }
 
 NB_MODULE(_core, module) {

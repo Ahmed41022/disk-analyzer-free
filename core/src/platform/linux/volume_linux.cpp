@@ -14,14 +14,14 @@
 
 namespace dafree::platform {
 
-std::uint64_t volume_bytes(std::uint64_t blocks, std::uint64_t fragment_size) noexcept;
+auto volume_bytes(std::uint64_t blocks, std::uint64_t fragment_size) noexcept -> std::uint64_t;
 
 struct MountRow {
     std::string path;
     std::string fs_type;
 };
 
-static std::string unescape_mount(std::string_view input) {
+static auto unescape_mount(std::string_view input) -> std::string {
     std::string output;
     output.reserve(input.size());
     for (std::size_t index = 0; index < input.size(); ++index) {
@@ -40,7 +40,7 @@ static std::string unescape_mount(std::string_view input) {
     return output;
 }
 
-static std::vector<MountRow> mount_rows() {
+static auto mount_rows() -> std::vector<MountRow> {
     std::ifstream input("/proc/self/mountinfo");
     std::vector<MountRow> rows;
     std::string line;
@@ -61,13 +61,13 @@ static std::vector<MountRow> mount_rows() {
     return rows;
 }
 
-static bool contains_path(std::string_view path, std::string_view mount) {
+static auto contains_path(std::string_view path, std::string_view mount) -> bool {
     return mount == "/" ||
            (path.starts_with(mount) && (path.size() == mount.size() || path[mount.size()] == '/'));
 }
 
-static std::optional<bool> sysfs_flag(unsigned major_id, unsigned minor_id,
-                                      std::string_view filename) {
+static auto sysfs_flag(unsigned major_id, unsigned minor_id, std::string_view filename)
+    -> std::optional<bool> {
     const std::string base =
         "/sys/dev/block/" + std::to_string(major_id) + ":" + std::to_string(minor_id);
     for (const std::string &candidate :
@@ -80,7 +80,7 @@ static std::optional<bool> sysfs_flag(unsigned major_id, unsigned minor_id,
     return std::nullopt;
 }
 
-std::optional<VolumeInfo> volume_info(std::string_view path) {
+auto volume_info(std::string_view path) -> std::optional<VolumeInfo> {
     const std::string owned(path);
     struct statvfs fs{};
     struct stat metadata{};
@@ -112,7 +112,7 @@ std::optional<VolumeInfo> volume_info(std::string_view path) {
     return info;
 }
 
-std::vector<VolumeInfo> list_volumes() {
+auto list_volumes() -> std::vector<VolumeInfo> {
     std::vector<VolumeInfo> volumes;
     for (const MountRow &row : mount_rows()) {
         if (auto info = volume_info(row.path))

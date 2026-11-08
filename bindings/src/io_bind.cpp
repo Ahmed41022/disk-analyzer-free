@@ -17,7 +17,7 @@ class PythonOutput : public std::streambuf {
     explicit PythonOutput(nb::object write) : write_(std::move(write)) { reset(); }
 
   private:
-    int sync() override {
+    auto sync() -> int override {
         if (pbase() == pptr())
             return 0;
         nb::gil_scoped_acquire acquire;
@@ -27,13 +27,15 @@ class PythonOutput : public std::streambuf {
             const auto written = nb::cast<std::size_t>(write_(nb::bytes(next, size)));
             if (written == 0 || written > size)
                 throw Error("invalid byte count from report stream");
+            // The callback count was checked against the remaining owned buffer.
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             next += written;
         }
         reset();
         return 0;
     }
 
-    int_type overflow(int_type value) override {
+    auto overflow(int_type value) -> int_type override {
         sync();
         if (!traits_type::eq_int_type(value, traits_type::eof())) {
             *pptr() = traits_type::to_char_type(value);
@@ -42,10 +44,15 @@ class PythonOutput : public std::streambuf {
         return traits_type::not_eof(value);
     }
 
-    void reset() { setp(buffer_.data(), buffer_.data() + buffer_.size()); }
+    void reset() {
+        // streambuf borrows the half-open range of this owned, fixed-size array.
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        setp(buffer_.data(), buffer_.data() + buffer_.size());
+    }
 
     nb::object write_;
-    std::array<char, 64 * 1024> buffer_;
+    static constexpr std::size_t buffer_bytes = std::size_t{64} * 1024;
+    std::array<char, buffer_bytes> buffer_{};
 };
 
 } // namespace

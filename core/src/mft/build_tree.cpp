@@ -16,28 +16,35 @@
 namespace dafree {
 namespace {
 
+constexpr unsigned kFileReferenceRecordBits = 48;
+constexpr std::uint32_t kNtfsReparsePointAttribute = 0x400;
 constexpr std::uint64_t reference_mask = UINT64_C(0x0000ffffffffffff);
 constexpr std::size_t no_entity = std::numeric_limits<std::size_t>::max();
+constexpr char32_t kInvalidUtf8ByteBase = 0x110000;
+constexpr std::string_view kWindowsExtendedUncPrefix = "//?/UNC/";
+constexpr std::string_view kWindowsExtendedPathPrefix = "//?/";
 
-std::uint64_t saturated(std::uint64_t left, std::uint64_t right) {
+auto saturated(std::uint64_t left, std::uint64_t right) -> std::uint64_t {
     const auto maximum = std::numeric_limits<std::uint64_t>::max();
     return right > maximum - left ? maximum : left + right;
 }
 
-std::string folded(std::string_view text) {
+auto folded(std::string_view text) -> std::string {
     std::string result;
     result.reserve(text.size());
     for (std::size_t position = 0; position < text.size();) {
         const auto value = detail::next_codepoint(text, position);
-        if (value >= 0x110000)
-            result.push_back(static_cast<char>(value - 0x110000));
+        if (value >= kInvalidUtf8ByteBase)
+            result.push_back(static_cast<char>(value - kInvalidUtf8ByteBase));
         else
             mft_detail::append_utf8(result, detail::fold_codepoint(value));
     }
     return result;
 }
 
-std::string joined(std::string_view parent, std::string_view name) {
+// The path join interface specifies parent first and child name second.
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+auto joined(std::string_view parent, std::string_view name) -> std::string {
     std::string result(parent);
     if (!result.empty() && result.back() != '/' && result.back() != '\\') {
 #ifdef _WIN32
@@ -52,18 +59,18 @@ std::string joined(std::string_view parent, std::string_view name) {
 
 struct NormalPath {
     std::string text;
-    bool absolute;
+    bool absolute = false;
 };
 
-NormalPath normalize(std::string_view input) {
+auto normalize(std::string_view input) -> NormalPath {
     if (input.find('\0') != std::string_view::npos)
         throw ScanError(ScanError::Code::InvalidTarget, "MFT paths cannot contain NUL");
     std::string path(input);
     std::replace(path.begin(), path.end(), '\\', '/');
-    if (path.starts_with("//?/UNC/"))
-        path = "//" + path.substr(8);
-    else if (path.starts_with("//?/"))
-        path.erase(0, 4);
+    if (path.starts_with(kWindowsExtendedUncPrefix))
+        path = "//" + path.substr(kWindowsExtendedUncPrefix.size());
+    else if (path.starts_with(kWindowsExtendedPathPrefix))
+        path.erase(0, kWindowsExtendedPathPrefix.size());
     std::size_t start = 0;
     std::string prefix;
     if (path.size() >= 3 && path[1] == ':' && path[2] == '/') {
@@ -77,7 +84,7 @@ NormalPath normalize(std::string_view input) {
     while (start < path.size()) {
         const auto slash = path.find('/', start);
         const auto end = slash == std::string::npos ? path.size() : slash;
-        const std::string_view component(path.data() + start, end - start);
+        const auto component = std::string_view(path).substr(start, end - start);
         if (component == "..") {
             if (components.empty())
                 throw ScanError(ScanError::Code::InvalidTarget, "MFT path escapes its root");
@@ -95,7 +102,7 @@ NormalPath normalize(std::string_view input) {
     return {std::move(prefix), absolute};
 }
 
-std::optional<std::size_t> under(std::string_view path, std::string_view parent) {
+auto under(std::string_view path, std::string_view parent) -> std::optional<std::size_t> {
     if (!path.starts_with(parent))
         return std::nullopt;
     if (path.size() == parent.size() || parent.ends_with('/') || path[parent.size()] == '/')
@@ -112,9 +119,9 @@ class Reporter {
         ScanIssue issue{joined(root_, "$MFT:" + std::to_string(record)), kind, std::move(message)};
         auto &summary = meta_.issues;
         summary.total = saturated(summary.total, 1);
-        auto &count = summary.counts[static_cast<std::size_t>(kind)];
+        auto &count = summary.counts.at(static_cast<std::size_t>(kind));
         count = saturated(count, 1);
-        if (summary.first.size() < 1000)
+        if (summary.first.size() < detail::kRetainedIssueLimit)
             summary.first.push_back(issue);
         else
             summary.overflow = saturated(summary.overflow, 1);
@@ -123,12 +130,20 @@ class Reporter {
     }
 
   private:
+    // ScanMeta is borrowed for the scan lifetime.
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
     ScanMeta &meta_;
+    // The caller-owned sink outlives synchronous reporting.
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
     IssueSink &sink_;
     std::string root_;
 };
 
-std::vector<std::uint64_t> ordered_numbers(const mft_detail::IndexData &index) {
+auto ordered_numbers(const mft_detail::IndexData &index) -> std::vector<std::uint64_t> {
+    constexpr unsigned kRadixDigitBits = std::numeric_limits<unsigned char>::digits;
+    constexpr unsigned kRadixValueBits = std::numeric_limits<std::uint64_t>::digits;
+    constexpr std::size_t kRadixBucketCount = std::size_t{1} << kRadixDigitBits;
+    constexpr std::uint64_t kRadixDigitMask = kRadixBucketCount - 1;
     std::vector<std::uint64_t> numbers;
     numbers.reserve(index.records.size());
     for (const auto &[number, record] : index.records) {
@@ -136,10 +151,10 @@ std::vector<std::uint64_t> ordered_numbers(const mft_detail::IndexData &index) {
         numbers.push_back(number);
     }
     std::vector<std::uint64_t> scratch(numbers.size());
-    for (unsigned shift = 0; shift < 64; shift += 8) {
-        std::array<std::size_t, 256> counts{};
+    for (unsigned shift = 0; shift < kRadixValueBits; shift += kRadixDigitBits) {
+        std::array<std::size_t, kRadixBucketCount> counts{};
         for (const auto number : numbers)
-            ++counts[static_cast<std::size_t>((number >> shift) & 0xff)];
+            ++counts.at(static_cast<std::size_t>((number >> shift) & kRadixDigitMask));
         std::size_t offset = 0;
         for (auto &count : counts) {
             const auto size = count;
@@ -147,7 +162,8 @@ std::vector<std::uint64_t> ordered_numbers(const mft_detail::IndexData &index) {
             offset += size;
         }
         for (const auto number : numbers)
-            scratch[counts[static_cast<std::size_t>((number >> shift) & 0xff)]++] = number;
+            scratch[counts.at(static_cast<std::size_t>((number >> shift) & kRadixDigitMask))++] =
+                number;
         numbers.swap(scratch);
     }
     return numbers;
@@ -162,7 +178,7 @@ struct Entity {
     std::vector<const mft_detail::IndexedStream *> streams;
     std::uint64_t size = 0, alloc = 0;
 
-    bool directory() const { return (base->header.flags & 2) != 0; }
+    [[nodiscard]] auto directory() const -> bool { return (base->header.flags & 2) != 0; }
 
     void append(const mft_detail::IndexedRecord &record) {
         if (!standard && record.standard)
@@ -187,14 +203,14 @@ struct Entity {
             size = saturated(size, stream->size);
             alloc = saturated(alloc, stream->alloc);
         }
-        if (standard && (standard->file_attributes & 0x400) != 0)
+        if (standard && (standard->file_attributes & kNtfsReparsePointAttribute) != 0)
             reparse = true;
     }
 };
 
 struct Edge {
-    std::size_t parent, child;
-    const mft_detail::IndexedName *name;
+    std::size_t parent = no_entity, child = no_entity;
+    const mft_detail::IndexedName *name = nullptr;
     bool metafile = false, blocked = false;
 };
 
@@ -209,18 +225,18 @@ struct Graph {
 struct NameKey {
     std::uint64_t parent;
     std::string_view name;
-    bool operator==(const NameKey &) const = default;
+    auto operator==(const NameKey &) const -> bool = default;
 };
 
 struct NameHash {
-    std::size_t operator()(const NameKey &value) const {
+    auto operator()(const NameKey &value) const -> std::size_t {
         return std::hash<std::uint64_t>{}(value.parent) ^
                (std::hash<std::string_view>{}(value.name) << 1);
     }
 };
 
-Graph make_graph(const mft_detail::IndexData &index, const ScanOptions &options,
-                 Reporter &reporter) {
+auto make_graph(const mft_detail::IndexData &index, const ScanOptions &options, Reporter &reporter)
+    -> Graph {
     Graph graph;
     const auto numbers = ordered_numbers(index);
     graph.entities.reserve(numbers.size());
@@ -246,7 +262,8 @@ Graph make_graph(const mft_detail::IndexData &index, const ScanOptions &options,
             continue;
         const auto base = graph.by_number.find(record.header.base_record & reference_mask);
         if (base == graph.by_number.end() ||
-            graph.entities[base->second].base->header.sequence != record.header.base_record >> 48) {
+            graph.entities[base->second].base->header.sequence !=
+                record.header.base_record >> kFileReferenceRecordBits) {
             reporter.emit(number, IssueKind::Orphaned, "MFT extension base is absent or stale");
             continue;
         }
@@ -280,7 +297,8 @@ Graph make_graph(const mft_detail::IndexData &index, const ScanOptions &options,
             }
             const auto parent = graph.by_number.find(name->parent & reference_mask);
             if (parent == graph.by_number.end() || !graph.entities[parent->second].directory() ||
-                graph.entities[parent->second].base->header.sequence != name->parent >> 48) {
+                graph.entities[parent->second].base->header.sequence !=
+                    name->parent >> kFileReferenceRecordBits) {
                 reporter.emit(entity.number, IssueKind::Orphaned, "MFT parent is absent or stale");
                 entity.orphan_reported = true;
                 continue;
@@ -351,8 +369,8 @@ struct Selection {
     bool metafile = false;
 };
 
-Selection select(const Graph &graph, std::string_view root,
-                 std::optional<std::string_view> subtree) {
+auto select(const Graph &graph, std::string_view root, std::optional<std::string_view> subtree)
+    -> Selection {
     const auto normalized_root = normalize(root);
     if (!normalized_root.absolute)
         throw ScanError(ScanError::Code::InvalidTarget, "MFT volume root must be absolute");
@@ -431,9 +449,10 @@ class Exclusions {
         compiled_ = CompiledExcludes::compile(translated, anchor());
     }
 
-    bool needs_paths() const { return compiled_.has_value(); }
+    [[nodiscard]] auto needs_paths() const -> bool { return compiled_.has_value(); }
 
-    bool excluded(std::string_view relative, std::string_view name, std::uint16_t flags) const {
+    [[nodiscard]] auto excluded(std::string_view relative, std::string_view name,
+                                std::uint16_t flags) const -> bool {
         if ((hidden_ && (flags & kHidden) != 0) || (system_ && (flags & kSystem) != 0))
             return true;
         if (!compiled_)
@@ -444,7 +463,7 @@ class Exclusions {
     }
 
   private:
-    static std::string anchor() {
+    static auto anchor() -> std::string {
 #ifdef _WIN32
         return "C:/mft";
 #else
@@ -456,7 +475,9 @@ class Exclusions {
     std::optional<CompiledExcludes> compiled_;
 };
 
-std::uint16_t flags_of(const Entity &entity, bool metafile) {
+// FILE_ATTRIBUTE bit values are the NTFS on-disk contract.
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
+auto flags_of(const Entity &entity, bool metafile) -> std::uint16_t {
     unsigned flags = entity.directory() ? kDir : 0;
     const auto attributes = entity.standard ? entity.standard->file_attributes : 0;
     if (attributes & 0x2)
@@ -475,15 +496,17 @@ std::uint16_t flags_of(const Entity &entity, bool metafile) {
         flags |= kHidden | kSystem;
     return static_cast<std::uint16_t>(flags);
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 
-std::uint32_t node_time(std::int64_t seconds) {
+auto node_time(std::int64_t seconds) -> std::uint32_t {
     if (seconds <= 0)
         return 1;
     return static_cast<std::uint32_t>(std::min<std::uint64_t>(
         static_cast<std::uint64_t>(seconds), std::numeric_limits<std::uint32_t>::max()));
 }
 
-TreeBuilder::NewNode node_for(const Entity &entity, std::string_view name, std::uint16_t flags) {
+auto node_for(const Entity &entity, std::string_view name, std::uint16_t flags)
+    -> TreeBuilder::NewNode {
     return {name,
             flags,
             entity.size,
@@ -496,9 +519,9 @@ TreeBuilder::NewNode node_for(const Entity &entity, std::string_view name, std::
 
 } // namespace
 
-Tree build_tree_from_mft(const MftIndex &index, std::string_view root_path,
+auto build_tree_from_mft(const MftIndex &index, std::string_view root_path,
                          std::optional<std::string_view> subtree, const ScanOptions &options,
-                         IssueSink &sink) {
+                         IssueSink &sink) -> Tree {
     if (options.follow_symlinks)
         throw ScanError(ScanError::Code::UnsupportedMode,
                         "MFT scanning cannot follow reparse points");

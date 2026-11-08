@@ -10,8 +10,12 @@ namespace dafree {
 class ExcludeError : public Error {
   public:
     /// Construct an exclusion syntax error.
+    // The established error interface pairs its original pattern with a message.
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     ExcludeError(std::string input, const std::string &message)
         : Error(message), pattern(std::move(input)) {}
+    // Diagnostics expose an immutable pattern for the error lifetime.
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
     const std::string pattern;
 };
 
@@ -19,10 +23,10 @@ class ExcludeError : public Error {
 class CompiledExcludes {
   public:
     /// Validate patterns and resolve excluded paths relative to the root.
-    static CompiledExcludes compile(const ExcludeRules &rules, std::string_view root);
+    static auto compile(const ExcludeRules &rules, std::string_view root) -> CompiledExcludes;
     /// Test a root-relative path and native entry name without filesystem access.
-    [[nodiscard]] bool excluded(std::string_view rel_path, std::string_view name,
-                                const RawEntry &entry) const;
+    [[nodiscard]] auto excluded(std::string_view rel_path, std::string_view name,
+                                const RawEntry &entry) const -> bool;
 
   private:
     struct Impl;
@@ -33,6 +37,8 @@ class CompiledExcludes {
 /// Invalid scan input or misuse of a scan handle.
 class ScanError : public Error {
   public:
+    // Preserve the established public/native enum representation.
+    // NOLINTNEXTLINE(performance-enum-size)
     enum class Code {
         EmptyTargets,
         InvalidTarget,
@@ -45,7 +51,7 @@ class ScanError : public Error {
     /// Construct an error with a stable category.
     ScanError(Code code, const std::string &message) : Error(message), code_(code) {}
     /// Return the error category.
-    [[nodiscard]] Code code() const noexcept { return code_; }
+    [[nodiscard]] auto code() const noexcept -> Code { return code_; }
 
   private:
     Code code_;
@@ -72,17 +78,17 @@ class ScanHandle {
     /// Cancel and join unfinished work before releasing its resources.
     ~ScanHandle();
     ScanHandle(const ScanHandle &) = delete;
-    ScanHandle &operator=(const ScanHandle &) = delete;
+    auto operator=(const ScanHandle &) -> ScanHandle & = delete;
     /// Transfer ownership of a running scan.
     ScanHandle(ScanHandle &&) noexcept;
     /// Cancel existing work and take ownership of another scan.
-    ScanHandle &operator=(ScanHandle &&) noexcept;
+    auto operator=(ScanHandle &&) noexcept -> ScanHandle &;
     /// Return a progress snapshot without waiting for I/O.
-    [[nodiscard]] ScanProgress progress() const;
+    [[nodiscard]] auto progress() const -> ScanProgress;
     /// Remove up to max live diagnostics from the bounded issue queue.
-    std::vector<ScanIssue> drain_issues(std::size_t max = 1000);
+    auto drain_issues(std::size_t max = detail::kRetainedIssueLimit) -> std::vector<ScanIssue>;
     /// Remove all currently queued policy notices.
-    std::vector<Notice> drain_notices();
+    auto drain_notices() -> std::vector<Notice>;
     /// Stop workers between directory reads.
     void pause();
     /// Resume workers after a pause.
@@ -90,21 +96,21 @@ class ScanHandle {
     /// Request cancellation and wake paused or idle workers.
     void cancel();
     /// Wait up to the supplied duration for all scan threads to finish.
-    bool wait(std::chrono::milliseconds timeout);
+    auto wait(std::chrono::milliseconds timeout) -> bool;
     /// Request a throttled snapshot and return the latest available immutable tree.
-    [[nodiscard]] std::shared_ptr<const Tree> partial_tree() const;
+    [[nodiscard]] auto partial_tree() const -> std::shared_ptr<const Tree>;
     /// Consume the final result once; throw if unfinished, failed, or already consumed.
-    ScanResult take_result();
+    auto take_result() -> ScanResult;
 
   private:
-    friend ScanHandle start_scan(ScanOptions, std::shared_ptr<FsBackend>);
+    friend auto start_scan(ScanOptions, std::shared_ptr<FsBackend>) -> ScanHandle;
     explicit ScanHandle(std::shared_ptr<ScanEngine> engine) : engine_(std::move(engine)) {}
-    [[nodiscard]] ScanEngine &engine() const;
+    [[nodiscard]] auto engine() const -> ScanEngine &;
     std::shared_ptr<ScanEngine> engine_;
 };
 
 /// Validate targets and begin a scan using the supplied or local backend.
-ScanHandle start_scan(ScanOptions options, std::shared_ptr<FsBackend> backend = nullptr);
+auto start_scan(ScanOptions options, std::shared_ptr<FsBackend> backend = nullptr) -> ScanHandle;
 
 /// Resolve unresolved identities referenced by selected nodes; readers see atomic batches.
 void resolve_owners(TreeHandle &tree, std::span<const NodeId> ids, FsBackend &backend);

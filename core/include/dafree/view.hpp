@@ -15,7 +15,7 @@ struct Cmp64 {
     enum Op : std::uint8_t { Lt, Le, Eq, Ge, Gt } op{};
     std::uint64_t v = 0;
     /// Compare filter values without recompiling unchanged predicates.
-    friend bool operator==(const Cmp64 &, const Cmp64 &) = default;
+    friend auto operator==(const Cmp64 &, const Cmp64 &) -> bool = default;
 };
 
 /// Native filter expression; strings remain lossless native UTF-8/WTF-8 bytes.
@@ -45,7 +45,7 @@ struct FilterSpec {
     std::uint16_t flag = 0;
     bool type_dir = false;
     /// Compare expression structure when only display/sort options change.
-    friend bool operator==(const FilterSpec &, const FilterSpec &) = default;
+    friend auto operator==(const FilterSpec &, const FilterSpec &) -> bool = default;
 };
 
 /// Per-directory sort key; percentages have the same order as size within a parent.
@@ -84,30 +84,33 @@ class TreeView {
     TreeView(std::shared_ptr<TreeHandle> tree, std::shared_ptr<FsBackend> backend,
              ViewOptions options);
     ~TreeView();
+    /// Keep views immobile because their implementation owns stable row state.
+    TreeView(TreeView &&) = delete;
+    auto operator=(TreeView &&) -> TreeView & = delete;
     TreeView(const TreeView &) = delete;
-    TreeView &operator=(const TreeView &) = delete;
+    auto operator=(const TreeView &) -> TreeView & = delete;
     /// Return the number of visible rows, excluding the synthetic root.
-    [[nodiscard]] std::uint32_t row_count() const;
+    [[nodiscard]] auto row_count() const -> std::uint32_t;
     /// Copy a window of at most 500 rows; an out-of-range start returns an empty window.
-    [[nodiscard]] std::vector<Row> rows(std::uint32_t start, std::uint32_t count) const;
+    [[nodiscard]] auto rows(std::uint32_t start, std::uint32_t count) const -> std::vector<Row>;
     /// Expand a directory and return the number of inserted visible rows.
-    std::uint32_t expand(NodeId id);
+    auto expand(NodeId id) -> std::uint32_t;
     /// Count rows an expansion would insert, without changing rows or sort caches.
-    [[nodiscard]] std::uint32_t expansion_count(NodeId id) const;
+    [[nodiscard]] auto expansion_count(NodeId id) const -> std::uint32_t;
     /// Count visible descendants a collapse would remove, without changing expansion state.
-    [[nodiscard]] std::uint32_t collapse_count(NodeId id) const;
+    [[nodiscard]] auto collapse_count(NodeId id) const -> std::uint32_t;
     /// Expand a directory and its eligible immediate child directories in native code.
     void expand_children(NodeId id);
     /// Collapse a directory while retaining descendant expansion preferences.
-    std::uint32_t collapse(NodeId id);
+    auto collapse(NodeId id) -> std::uint32_t;
     /// Expand ancestors and return the node's visible row index; hidden nodes are rejected.
-    std::uint32_t expand_to(NodeId id);
+    auto expand_to(NodeId id) -> std::uint32_t;
     /// Re-sort/re-filter while retaining expanded paths.
     void set_options(ViewOptions options);
     /// Copy the active options so clients preserve unrelated settings during a sort.
-    [[nodiscard]] ViewOptions options() const;
+    [[nodiscard]] auto options() const -> ViewOptions;
     /// Locate a visible node; absent/filtered nodes have no row index.
-    [[nodiscard]] std::optional<std::uint32_t> index_of(NodeId id) const;
+    [[nodiscard]] auto index_of(NodeId id) const -> std::optional<std::uint32_t>;
 
   private:
     struct Impl;

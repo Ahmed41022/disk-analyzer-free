@@ -39,7 +39,7 @@ void append_utf8(std::string &output, char32_t codepoint) {
 }
 #endif
 
-std::string normalized_path(std::string_view path) {
+auto normalized_path(std::string_view path) -> std::string {
 #ifdef _WIN32
     constexpr char separator = '\\';
 #else
@@ -116,23 +116,23 @@ std::string normalized_path(std::string_view path) {
 
 } // namespace
 
-std::uint32_t Tree::size() const noexcept { return nodes_.size(); }
+auto Tree::size() const noexcept -> std::uint32_t { return nodes_.size(); }
 
-const Node &Tree::node(NodeId id) const {
+auto Tree::node(NodeId id) const -> const Node & {
     if (id >= nodes_.size()) {
         throw std::out_of_range("tree node ID is out of range");
     }
     return nodes_[id];
 }
 
-Counts Tree::counts(NodeId id) const {
+auto Tree::counts(NodeId id) const -> Counts {
     if (id >= counts_.size()) {
         throw std::out_of_range("tree node ID is out of range");
     }
     return counts_[id];
 }
 
-std::string_view Tree::name_bytes(NodeId id) const {
+auto Tree::name_bytes(NodeId id) const -> std::string_view {
     const auto &entry = node(id);
     if (id == kRoot) {
         return {};
@@ -140,7 +140,7 @@ std::string_view Tree::name_bytes(NodeId id) const {
     return names_.get(entry.name_off, entry.name_len);
 }
 
-std::optional<std::string_view> Tree::ext(NodeId id) const {
+auto Tree::ext(NodeId id) const -> std::optional<std::string_view> {
     const auto extension_id = node(id).ext_id;
     if (extension_id == 0) {
         return std::nullopt;
@@ -148,7 +148,7 @@ std::optional<std::string_view> Tree::ext(NodeId id) const {
     return exts_.get(extension_id);
 }
 
-std::optional<std::string_view> Tree::owner_name(NodeId id) const {
+auto Tree::owner_name(NodeId id) const -> std::optional<std::string_view> {
     const auto owner_id = node(id).owner;
     if (owner_id == 0) {
         return std::nullopt;
@@ -156,7 +156,7 @@ std::optional<std::string_view> Tree::owner_name(NodeId id) const {
     return owners_.get(owner_id);
 }
 
-std::pair<NodeId, NodeId> Tree::children(NodeId id) const {
+auto Tree::children(NodeId id) const -> std::pair<NodeId, NodeId> {
     const auto &entry = node(id);
     if (entry.child_count == 0) {
         return {kNone, kNone};
@@ -164,7 +164,7 @@ std::pair<NodeId, NodeId> Tree::children(NodeId id) const {
     return {entry.first_child, entry.first_child + entry.child_count};
 }
 
-std::optional<NodeId> Tree::parent(NodeId id) const {
+auto Tree::parent(NodeId id) const -> std::optional<NodeId> {
     const auto parent_id = node(id).parent;
     if (parent_id == kNone) {
         return std::nullopt;
@@ -172,7 +172,7 @@ std::optional<NodeId> Tree::parent(NodeId id) const {
     return parent_id;
 }
 
-std::string Tree::path_bytes(NodeId id) const {
+auto Tree::path_bytes(NodeId id) const -> std::string {
     if (id == kRoot) {
         return {};
     }
@@ -194,7 +194,7 @@ std::string Tree::path_bytes(NodeId id) const {
     return path;
 }
 
-std::uint16_t Tree::depth(NodeId id) const {
+auto Tree::depth(NodeId id) const -> std::uint16_t {
     const auto &entry = node(id);
     if (entry.parent == kNone || entry.parent == kRoot) {
         return 0;
@@ -206,7 +206,7 @@ std::uint16_t Tree::depth(NodeId id) const {
     return static_cast<std::uint16_t>(parent_depth + 1);
 }
 
-std::optional<NodeId> Tree::find_path(std::string_view native_path) const {
+auto Tree::find_path(std::string_view native_path) const -> std::optional<NodeId> {
     const auto target = normalized_path(native_path);
     for (NodeId id = 1; id < nodes_.size(); ++id) {
         if (normalized_path(path_bytes(id)) == target) {
@@ -216,9 +216,9 @@ std::optional<NodeId> Tree::find_path(std::string_view native_path) const {
     return std::nullopt;
 }
 
-std::span<const NodeId> Tree::roots() const { return roots_; }
+auto Tree::roots() const -> std::span<const NodeId> { return roots_; }
 
-MemoryReport Tree::memory_usage() const {
+auto Tree::memory_usage() const -> MemoryReport {
     std::size_t roots_bytes =
         roots_.capacity() * sizeof(NodeId) + root_paths_.capacity() * sizeof(std::string);
     for (const auto &path : root_paths_) {
@@ -228,11 +228,11 @@ MemoryReport Tree::memory_usage() const {
             exts_.heap_bytes() + owners_.heap_bytes() + roots_bytes};
 }
 
-void Tree::set_owner(NodeId id, OwnerKey key, std::string_view display) {
+void Tree::set_owner(NodeId id, const OwnerKey &key, std::string_view display) {
     (void)node(id);
     nodes_[id].owner = owners_.intern(key, display);
 }
 
-const ScanMeta &Tree::meta() const noexcept { return meta_; }
+auto Tree::meta() const noexcept -> const ScanMeta & { return meta_; }
 
 } // namespace dafree

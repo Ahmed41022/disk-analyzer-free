@@ -23,10 +23,10 @@ struct UnitStyle {
 };
 
 /// Format a byte count using one decimal for scaled values.
-[[nodiscard]] std::string format_size(std::uint64_t bytes, UnitMode mode = UnitMode::Auto,
-                                      UnitStyle style = {});
+[[nodiscard]] auto format_size(std::uint64_t bytes, UnitMode mode = UnitMode::Auto,
+                               UnitStyle style = {}) -> std::string;
 
 /// Parse a byte count with an optional K/M/G/T/P/E suffix, rejecting overflow.
-[[nodiscard]] std::uint64_t parse_size(std::string_view text, UnitStyle style = {});
+[[nodiscard]] auto parse_size(std::string_view text, UnitStyle style = {}) -> std::uint64_t;
 
 } // namespace dafree

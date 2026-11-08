@@ -7,6 +7,7 @@
 
 namespace dafree::mft_detail {
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers) -- UTF-8/WTF-8 bit and surrogate encoding.
 void append_utf8(std::string &output, char32_t value) {
     if (value <= 0x7f) {
         output.push_back(static_cast<char>(value));
@@ -31,7 +32,7 @@ namespace dafree {
 namespace {
 
 void insert_record(mft_detail::IndexData &data, std::uint64_t number,
-                   mft_detail::IndexedRecord record) {
+                   mft_detail::IndexedRecord &&record) {
     const auto [found, inserted] = data.records.try_emplace(number, std::move(record));
     if (!inserted) {
         found->second = {};
@@ -41,7 +42,7 @@ void insert_record(mft_detail::IndexData &data, std::uint64_t number,
 
 } // namespace
 
-std::string utf16_to_wtf8(std::u16string_view input) {
+auto utf16_to_wtf8(std::u16string_view input) -> std::string {
     std::string output;
     output.reserve(input.size());
     for (std::size_t index = 0; index < input.size(); ++index) {
@@ -57,11 +58,12 @@ std::string utf16_to_wtf8(std::u16string_view input) {
     }
     return output;
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 
 MftIndex::MftIndex() : data_(std::make_unique<mft_detail::IndexData>()) {}
 MftIndex::~MftIndex() = default;
 MftIndex::MftIndex(MftIndex &&) noexcept = default;
-MftIndex &MftIndex::operator=(MftIndex &&) noexcept = default;
+auto MftIndex::operator=(MftIndex &&) noexcept -> MftIndex & = default;
 
 void MftIndex::ingest(std::uint64_t record_no, std::span<std::byte> rec, std::size_t sector) {
     const auto signature = mft_detail::ByteReader(rec).bytes(0, 4);
@@ -126,6 +128,8 @@ void MftIndex::ingest(std::uint64_t record_no, std::span<std::byte> rec, std::si
     insert_record(*data_, record_no, std::move(record));
 }
 
+// Records are moved individually, preserving a usable empty source index.
+// NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
 void MftIndex::merge(MftIndex &&other) {
     if (this == &other || !other.data_)
         return;

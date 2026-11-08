@@ -76,7 +76,7 @@ void bind_view(nb::module_ &module) {
             })
         .def_prop_rw(
             "regex", [](const FilterSpec &self) { return decode_native(self.regex); },
-            [](FilterSpec &self, nb::str value) { self.regex = encode_native(value); })
+            [](FilterSpec &self, const nb::str &value) { self.regex = encode_native(value); })
         .def_rw("flag", &FilterSpec::flag)
         .def_rw("type_dir", &FilterSpec::type_dir);
     nb::class_<ViewOptions>(module, "ViewOptions", "Copied view display options.")

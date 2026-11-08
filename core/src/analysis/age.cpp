@@ -5,8 +5,8 @@
 
 namespace dafree {
 
-std::vector<AgeStat> age_histogram(const Tree &tree, NodeId scope, TimeField field,
-                                   std::span<const AgeBucket> buckets, std::uint32_t now) {
+auto age_histogram(const Tree &tree, NodeId scope, TimeField field,
+                   std::span<const AgeBucket> buckets, std::uint32_t now) -> std::vector<AgeStat> {
     if (buckets.empty() || buckets.back().max_age_secs)
         throw std::invalid_argument("the last age bucket must be unbounded");
 

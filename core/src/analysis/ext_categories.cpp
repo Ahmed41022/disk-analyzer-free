@@ -36,7 +36,7 @@ constexpr std::string_view kSystemExtensions =
     "manifest meta package plist service socket winmd cat drv inf sys pch pdb obj lib "
     "class pyo so dylib";
 
-constexpr bool equal_ascii_fold(std::string_view left, std::string_view right) noexcept {
+constexpr auto equal_ascii_fold(std::string_view left, std::string_view right) noexcept -> bool {
     if (left.size() != right.size())
         return false;
     for (std::size_t index = 0; index < left.size(); ++index) {
@@ -52,7 +52,7 @@ constexpr bool equal_ascii_fold(std::string_view left, std::string_view right) n
     return true;
 }
 
-constexpr bool contains(std::string_view extensions, std::string_view ext) noexcept {
+constexpr auto contains(std::string_view extensions, std::string_view ext) noexcept -> bool {
     std::size_t start = 0;
     while (start < extensions.size()) {
         while (start < extensions.size() && extensions[start] == ' ')
@@ -69,7 +69,7 @@ constexpr bool contains(std::string_view extensions, std::string_view ext) noexc
 
 } // namespace
 
-ExtCategory classify_extension(std::string_view ext) noexcept {
+auto classify_extension(std::string_view ext) noexcept -> ExtCategory {
     if (contains(kImages, ext))
         return ExtCategory::Image;
     if (contains(kVideos, ext))

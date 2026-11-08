@@ -53,6 +53,11 @@ jobs:
           python -m pip install ".[gui]"
       - run: ruff check .
       - run: ruff format --check .
+      - name: C++ formatting
+        run: |
+          python -m pip install clang-format==19.1.7
+          git ls-files -z '*.cpp' '*.hpp' | xargs -0 clang-format --dry-run -Werror
+      - uses: crate-ci/typos@v1
       - run: mypy
       - name: Native stubs are current
         run: |
@@ -78,16 +83,35 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+      - uses: actions/cache@v6
+        with:
+          path: .deps
+          key: deps-${{ runner.os }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+      - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: cpp-${{ matrix.os }}
+          variant: ${{ runner.os == 'Windows' && 'sccache' || 'ccache' }}
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
       - name: Install CMake and Ninja
         run: python -m pip install cmake ninja Babel
       - name: Configure
-        run: cmake --preset dev -DDAFREE_BUILD_BENCH=${{ env.DAFREE_FULL_CI == 'true' && 'ON' || 'OFF' }}
+        run: >-
+          cmake --preset dev
+          -DDAFREE_BUILD_BENCH=${{ env.DAFREE_FULL_CI == 'true' && 'ON' || 'OFF' }}
+          -DCMAKE_CXX_COMPILER_LAUNCHER=${{ runner.os == 'Windows' && 'sccache' || 'ccache' }}
+          -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+          -DCMAKE_POLICY_DEFAULT_CMP0141=NEW
       - name: Build
         run: cmake --build --preset dev
       - name: Unit tests
         run: ctest --preset dev --output-junit cpp-junit.xml
+      - name: C++ static analysis
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes clang-tidy-18
+          run-clang-tidy-18 -p build/dev -j 3 -quiet 'core/src/.*\.cpp$' 'bindings/src/.*\.cpp$'
       - name: Capture the runner-owned NTFS fixture record
         if: runner.os == 'Windows'
         run: |
@@ -560,10 +584,21 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  pr-title:
+    name: PR title follows Conventional Commits
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   ci-success:
     name: ci-success
     if: always()
-    needs: [lint, cpp, python, sanitizers, coverage, tsan, fuzz, wheels, audit, docs, view-perf, bench, frozen-smoke]
+    needs: [lint, cpp, python, sanitizers, coverage, tsan, fuzz, wheels, audit, docs, view-perf, bench, frozen-smoke, pr-title]
     runs-on: ubuntu-24.04
     steps:
       - name: Check all jobs
@@ -573,7 +608,7 @@ jobs:
           echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
           bad=$(echo "$RESULTS" | jq -r 'to_entries[]
             | select(.value.result != "success" and
-                (.key != "bench" or .value.result != "skipped")) | .key')
+                ((.key != "bench" and .key != "pr-title") or .value.result != "skipped")) | .key')
           if [ -n "$bad" ]; then
             echo "::error::Failed jobs: $bad"
             exit 1

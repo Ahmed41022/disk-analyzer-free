@@ -11,7 +11,7 @@ namespace dafree {
 
 namespace {
 
-std::string normalized(std::string_view input) {
+auto normalized(std::string_view input) -> std::string {
     if (input.empty())
         throw std::invalid_argument("mock path is empty");
     std::string path(input);
@@ -23,7 +23,9 @@ std::string normalized(std::string_view input) {
     return path;
 }
 
-bool directory(EntryKind kind) { return kind == EntryKind::Dir || kind == EntryKind::MountPoint; }
+auto directory(EntryKind kind) -> bool {
+    return kind == EntryKind::Dir || kind == EntryKind::MountPoint;
+}
 
 } // namespace
 
@@ -92,16 +94,16 @@ struct MockBackend::Impl {
         if (spec.delay.count() > 0) {
             const auto start = std::chrono::steady_clock::now();
             auto remaining = spec.delay;
-            do {
+            while (remaining.count() > 0) {
                 std::this_thread::sleep_for(remaining);
                 // A platform sleep can return early; the mock promises a minimum delay.
                 remaining = spec.delay - std::chrono::duration_cast<std::chrono::milliseconds>(
                                              std::chrono::steady_clock::now() - start);
-            } while (remaining.count() > 0);
+            }
         }
     }
 
-    std::string resolve(std::string path, bool final) const {
+    auto resolve(std::string path, bool final) const -> std::string {
         if (const auto fault = errors.find(path); fault != errors.end())
             throw IoError(path, fault->second, "injected mock error");
         std::unordered_set<std::string> seen;
@@ -127,7 +129,7 @@ struct MockBackend::Impl {
         }
     }
 
-    std::size_t lookup(const std::string &path) const {
+    auto lookup(const std::string &path) const -> std::size_t {
         if (const auto fault = errors.find(path); fault != errors.end())
             throw IoError(path, fault->second, "injected mock error");
         const auto found = index.find(path);
@@ -144,14 +146,14 @@ struct MockBackend::Impl {
 
 MockBackend::MockBackend(MockSpec spec) : impl_(std::make_unique<Impl>(std::move(spec))) {}
 MockBackend::~MockBackend() = default;
-BackendKind MockBackend::kind() const { return BackendKind::Local; }
+auto MockBackend::kind() const -> BackendKind { return BackendKind::Local; }
 
-RawEntry MockBackend::stat_root(std::string_view path) {
+auto MockBackend::stat_root(std::string_view path) -> RawEntry {
     impl_->pause();
     return impl_->spec.entries[impl_->lookup(impl_->resolve(normalized(path), false))].entry;
 }
 
-RawEntry MockBackend::stat_follow(std::string_view path) {
+auto MockBackend::stat_follow(std::string_view path) -> RawEntry {
     impl_->pause();
     const auto key = normalized(path);
     auto entry = impl_->spec.entries[impl_->lookup(impl_->resolve(key, true))].entry;
@@ -160,7 +162,7 @@ RawEntry MockBackend::stat_follow(std::string_view path) {
     return entry;
 }
 
-DirListing MockBackend::read_dir(std::string_view path, const DirHint &hint) {
+auto MockBackend::read_dir(std::string_view path, const DirHint &hint) -> DirListing {
     impl_->reads.fetch_add(1, std::memory_order_relaxed);
     impl_->pause();
     const auto key = normalized(path);
@@ -202,7 +204,7 @@ DirListing MockBackend::read_dir(std::string_view path, const DirHint &hint) {
     return listing;
 }
 
-std::optional<VolumeInfo> MockBackend::volume_info(std::string_view path) {
+auto MockBackend::volume_info(std::string_view path) -> std::optional<VolumeInfo> {
     impl_->pause();
     try {
         (void)impl_->lookup(impl_->resolve(normalized(path), true));
@@ -212,8 +214,8 @@ std::optional<VolumeInfo> MockBackend::volume_info(std::string_view path) {
     return impl_->spec.volume;
 }
 
-std::optional<std::pair<OwnerKey, std::string>> MockBackend::resolve_owner(std::string_view path,
-                                                                           const OwnerKey *hint) {
+auto MockBackend::resolve_owner(std::string_view path, const OwnerKey *hint)
+    -> std::optional<std::pair<OwnerKey, std::string>> {
     impl_->owners.fetch_add(1, std::memory_order_relaxed);
     impl_->pause();
     std::optional<OwnerKey> key;
@@ -236,15 +238,15 @@ std::optional<std::pair<OwnerKey, std::string>> MockBackend::resolve_owner(std::
                                                                   : found->second};
 }
 
-std::uint64_t MockBackend::read_dir_calls() const noexcept {
+auto MockBackend::read_dir_calls() const noexcept -> std::uint64_t {
     return impl_->reads.load(std::memory_order_relaxed);
 }
 
-std::uint64_t MockBackend::owner_resolution_calls() const noexcept {
+auto MockBackend::owner_resolution_calls() const noexcept -> std::uint64_t {
     return impl_->owners.load(std::memory_order_relaxed);
 }
 
-std::shared_ptr<FsBackend> make_mock_backend(MockSpec spec) {
+auto make_mock_backend(MockSpec spec) -> std::shared_ptr<FsBackend> {
     return std::make_shared<MockBackend>(std::move(spec));
 }
 

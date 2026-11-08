@@ -8,7 +8,9 @@
 
 namespace dafree::detail {
 
-char32_t next_codepoint(std::string_view input, std::size_t &offset) noexcept {
+// UTF-8/WTF-8 byte masks, shifts, and invalid-byte sentinels follow Unicode.
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
+auto next_codepoint(std::string_view input, std::size_t &offset) noexcept -> char32_t {
     const auto first = static_cast<unsigned char>(input[offset]);
     if (first < 0x80u) {
         ++offset;
@@ -47,9 +49,11 @@ char32_t next_codepoint(std::string_view input, std::size_t &offset) noexcept {
     ++offset;
     return 0x110000u + first;
 }
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 
-char32_t fold_codepoint(char32_t value) noexcept {
-    if (value > 0xFFFFu)
+auto fold_codepoint(char32_t value) noexcept -> char32_t {
+    constexpr char32_t last_bmp_codepoint = 0xFFFF;
+    if (value > last_bmp_codepoint)
         return value;
     const auto found = std::lower_bound(
         kSimpleFoldPairs.begin(), kSimpleFoldPairs.end(), value,
@@ -57,7 +61,7 @@ char32_t fold_codepoint(char32_t value) noexcept {
     return found != kSimpleFoldPairs.end() && found->source == value ? found->target : value;
 }
 
-CompiledGlob CompiledGlob::compile(std::string_view pattern, bool ignore_case) {
+auto CompiledGlob::compile(std::string_view pattern, bool ignore_case) -> CompiledGlob {
     CompiledGlob result;
     result.ignore_case_ = ignore_case;
     const auto fail = [&](const std::string &message) {
@@ -123,12 +127,15 @@ CompiledGlob CompiledGlob::compile(std::string_view pattern, bool ignore_case) {
     return result;
 }
 
-bool CompiledGlob::matches(std::string_view input, bool windows_path) const {
+auto CompiledGlob::matches(std::string_view input, bool windows_path) const -> bool {
     Workspace workspace;
     return matches(input, windows_path, workspace);
 }
 
-bool CompiledGlob::matches(std::string_view input, bool windows_path, Workspace &workspace) const {
+// NFA pointers select equally-sized owned stack/vector ranges; token indices stay inside states.
+// NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+auto CompiledGlob::matches(std::string_view input, bool windows_path, Workspace &workspace) const
+    -> bool {
     constexpr std::size_t stack_capacity = 257;
     std::array<std::uint8_t, stack_capacity> stack_current{}, stack_next{};
     const std::size_t states = tokens_.size() + 1;
@@ -193,5 +200,6 @@ bool CompiledGlob::matches(std::string_view input, bool windows_path, Workspace 
     }
     return current[tokens_.size()] != 0;
 }
+// NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
 } // namespace dafree::detail

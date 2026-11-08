@@ -21,28 +21,32 @@ struct ScanOptions;
 class FastScanSink;
 
 /// Non-recursive filesystem operations consumed by the scan engine.
+// Stateless abstract interface: virtual destruction does not change copy semantics.
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 class FsBackend {
   public:
     virtual ~FsBackend() = default;
     /// Return the transport represented by this backend.
-    [[nodiscard]] virtual BackendKind kind() const = 0;
+    [[nodiscard]] virtual auto kind() const -> BackendKind = 0;
     /// Read root metadata without following a final link; throw IoError on failure.
-    virtual RawEntry stat_root(std::string_view path) = 0;
+    virtual auto stat_root(std::string_view path) -> RawEntry = 0;
     /// Read a followed target when supported; default backends retain no-follow behavior.
-    virtual RawEntry stat_follow(std::string_view path) { return stat_root(path); }
+    virtual auto stat_follow(std::string_view path) -> RawEntry { return stat_root(path); }
     /// Enumerate direct children; follow the final directory only when explicitly hinted.
-    virtual DirListing read_dir(std::string_view dir, const DirHint &hint) = 0;
+    virtual auto read_dir(std::string_view dir, const DirHint &hint) -> DirListing = 0;
     /// Return volume properties if the backend can supply them.
-    virtual std::optional<VolumeInfo> volume_info(std::string_view path) = 0;
+    virtual auto volume_info(std::string_view path) -> std::optional<VolumeInfo> = 0;
     /// Return whether this backend can use the host Windows NTFS reader.
-    virtual bool supports_local_mft() const noexcept { return false; }
+    [[nodiscard]] virtual auto supports_local_mft() const noexcept -> bool { return false; }
     /// Attempt the optional fast scan protocol; false means unsupported.
-    virtual bool fast_scan(std::string_view, const ScanOptions &, FastScanSink &) { return false; }
+    virtual auto fast_scan(std::string_view, const ScanOptions &, FastScanSink &) -> bool {
+        return false;
+    }
     /// Return whether owner metadata can be read lazily by path without an identity hint.
-    virtual bool can_resolve_owner_by_path() const noexcept { return false; }
+    [[nodiscard]] virtual auto can_resolve_owner_by_path() const noexcept -> bool { return false; }
     /// Resolve an owner using an optional identity hint.
-    virtual std::optional<std::pair<OwnerKey, std::string>> resolve_owner(std::string_view path,
-                                                                          const OwnerKey *hint) = 0;
+    virtual auto resolve_owner(std::string_view path, const OwnerKey *hint)
+        -> std::optional<std::pair<OwnerKey, std::string>> = 0;
 };
 
 /// One native-path entry in an in-memory filesystem description.
@@ -68,23 +72,28 @@ class MockBackend final : public FsBackend {
     /// Validate and index an immutable filesystem description.
     explicit MockBackend(MockSpec spec);
     ~MockBackend() override;
+    /// Backends retain one immutable implementation and cannot be copied or moved.
+    MockBackend(const MockBackend &) = delete;
+    auto operator=(const MockBackend &) -> MockBackend & = delete;
+    MockBackend(MockBackend &&) = delete;
+    auto operator=(MockBackend &&) -> MockBackend & = delete;
     /// Report local semantics without accessing the real filesystem.
-    [[nodiscard]] BackendKind kind() const override;
+    [[nodiscard]] auto kind() const -> BackendKind override;
     /// Read synthetic metadata or throw an injected error.
-    RawEntry stat_root(std::string_view path) override;
+    auto stat_root(std::string_view path) -> RawEntry override;
     /// Resolve synthetic aliases while rejecting loops in the alias chain.
-    RawEntry stat_follow(std::string_view path) override;
+    auto stat_follow(std::string_view path) -> RawEntry override;
     /// Return synthetic direct children and deterministic per-entry issues.
-    DirListing read_dir(std::string_view dir, const DirHint &hint) override;
+    auto read_dir(std::string_view dir, const DirHint &hint) -> DirListing override;
     /// Return the optional synthetic volume information.
-    std::optional<VolumeInfo> volume_info(std::string_view path) override;
+    auto volume_info(std::string_view path) -> std::optional<VolumeInfo> override;
     /// Resolve a supplied UID through the synthetic owner table, with numeric fallback.
-    std::optional<std::pair<OwnerKey, std::string>> resolve_owner(std::string_view path,
-                                                                  const OwnerKey *hint) override;
+    auto resolve_owner(std::string_view path, const OwnerKey *hint)
+        -> std::optional<std::pair<OwnerKey, std::string>> override;
     /// Count all attempted directory reads, including failed reads.
-    [[nodiscard]] std::uint64_t read_dir_calls() const noexcept;
+    [[nodiscard]] auto read_dir_calls() const noexcept -> std::uint64_t;
     /// Count all attempted owner resolutions.
-    [[nodiscard]] std::uint64_t owner_resolution_calls() const noexcept;
+    [[nodiscard]] auto owner_resolution_calls() const noexcept -> std::uint64_t;
 
   private:
     struct Impl;
@@ -92,8 +101,8 @@ class MockBackend final : public FsBackend {
 };
 
 /// Create a backend over the host filesystem.
-std::shared_ptr<FsBackend> make_local_backend();
+auto make_local_backend() -> std::shared_ptr<FsBackend>;
 /// Create an in-memory backend from the supplied test description.
-std::shared_ptr<FsBackend> make_mock_backend(MockSpec spec);
+auto make_mock_backend(MockSpec spec) -> std::shared_ptr<FsBackend>;
 
 } // namespace dafree

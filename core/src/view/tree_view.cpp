@@ -4,15 +4,32 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <ranges>
 #include <utility>
+
+namespace {
+
+constexpr std::uint32_t kTreapPriorityXorshift32Seed = 0x7F4A7C15;
+constexpr std::uint32_t kTreapPriorityXorshift32FirstLeftShift = 13;
+constexpr std::uint32_t kTreapPriorityXorshift32RightShift = 17;
+constexpr std::uint32_t kTreapPriorityXorshift32FinalLeftShift = 5;
+constexpr std::uint64_t kPackedSortKeyMask = 0x7F;
+constexpr unsigned int kPackedSortKeyShift = 1;
+constexpr unsigned int kPackedParentIdShift = std::numeric_limits<std::uint8_t>::digits;
+constexpr std::uint32_t kFilteredChildrenReserveHint = 1024;
+constexpr std::size_t kSortedChildrenCacheCapacity = 256;
+constexpr std::uint32_t kRowsFetchLimit = 500;
+constexpr std::uint32_t kMaximumRepresentableRowDepth = std::numeric_limits<std::uint16_t>::max();
+
+} // namespace
 
 namespace dafree::detail {
 
 struct VisibleRows::Storage {
     static constexpr std::size_t capacity = 512;
     struct Block {
-        NodeId id;
-        std::uint32_t priority, total = 0;
+        NodeId id = kNone;
+        std::uint32_t priority = 0, total = 0;
         Block *left = nullptr, *right = nullptr, *parent = nullptr;
         Block *previous = nullptr, *next = nullptr;
         std::vector<RowRef> rows;
@@ -20,10 +37,10 @@ struct VisibleRows::Storage {
     Block *root = nullptr;
     std::vector<std::unique_ptr<Block>> blocks;
     std::vector<NodeId> free_ids, location;
-    std::uint32_t random = 0x7F4A7C15;
+    std::uint32_t random = kTreapPriorityXorshift32Seed;
 
     explicit Storage(std::uint32_t nodes) : location(nodes, kNone) {}
-    static std::uint32_t count(const Block *node) { return node ? node->total : 0; }
+    static auto count(const Block *node) -> std::uint32_t { return node ? node->total : 0; }
     static void update(Block *node) {
         node->total =
             count(node->left) + count(node->right) + static_cast<std::uint32_t>(node->rows.size());
@@ -38,13 +55,13 @@ struct VisibleRows::Storage {
             node = node->parent;
         }
     }
-    static Block *first(Block *node) {
+    static auto first(Block *node) -> Block * {
         if (node)
             while (node->left)
                 node = node->left;
         return node;
     }
-    static Block *last(Block *node) {
+    static auto last(Block *node) -> Block * {
         if (node)
             while (node->right)
                 node = node->right;
@@ -56,8 +73,8 @@ struct VisibleRows::Storage {
         if (right)
             right->previous = left;
     }
-    Block *make(std::span<const RowRef> rows) {
-        NodeId id;
+    auto make(std::span<const RowRef> rows) -> Block * {
+        NodeId id = kNone;
         if (free_ids.empty()) {
             id = static_cast<NodeId>(blocks.size());
             blocks.push_back(nullptr);
@@ -65,9 +82,9 @@ struct VisibleRows::Storage {
             id = free_ids.back();
             free_ids.pop_back();
         }
-        random ^= random << 13;
-        random ^= random >> 17;
-        random ^= random << 5;
+        random ^= random << kTreapPriorityXorshift32FirstLeftShift;
+        random ^= random >> kTreapPriorityXorshift32RightShift;
+        random ^= random << kTreapPriorityXorshift32FinalLeftShift;
         auto block = std::make_unique<Block>();
         block->id = id;
         block->priority = random;
@@ -79,14 +96,14 @@ struct VisibleRows::Storage {
         blocks[id] = std::move(block);
         return blocks[id].get();
     }
-    static Block *merge(Block *left, Block *right) {
+    static auto merge(Block *left, Block *right) -> Block * {
         if (!left || !right) {
             auto *result = left ? left : right;
             if (result)
                 result->parent = nullptr;
             return result;
         }
-        Block *result;
+        Block *result = nullptr;
         if (left->priority < right->priority) {
             left->right = merge(left->right, right);
             result = left;
@@ -98,7 +115,7 @@ struct VisibleRows::Storage {
         result->parent = nullptr;
         return result;
     }
-    std::pair<Block *, Block *> split(Block *node, std::uint32_t at) {
+    auto split(Block *node, std::uint32_t at) -> std::pair<Block *, Block *> {
         if (!node)
             return {nullptr, nullptr};
         const auto before = count(node->left);
@@ -146,7 +163,7 @@ struct VisibleRows::Storage {
         node->parent = nullptr;
         return {node, merge(suffix, right)};
     }
-    std::pair<Block *, std::uint32_t> find(std::uint32_t at) const {
+    [[nodiscard]] auto find(std::uint32_t at) const -> std::pair<Block *, std::uint32_t> {
         auto *node = root;
         while (node) {
             const auto before = count(node->left);
@@ -166,10 +183,10 @@ struct VisibleRows::Storage {
 VisibleRows::VisibleRows(std::uint32_t nodes) : storage_(std::make_unique<Storage>(nodes)) {}
 VisibleRows::~VisibleRows() = default;
 VisibleRows::VisibleRows(VisibleRows &&) noexcept = default;
-VisibleRows &VisibleRows::operator=(VisibleRows &&) noexcept = default;
-std::uint32_t VisibleRows::size() const { return Storage::count(storage_->root); }
+auto VisibleRows::operator=(VisibleRows &&) noexcept -> VisibleRows & = default;
+auto VisibleRows::size() const -> std::uint32_t { return Storage::count(storage_->root); }
 
-std::optional<std::uint32_t> VisibleRows::index_of(NodeId id) const {
+auto VisibleRows::index_of(NodeId id) const -> std::optional<std::uint32_t> {
     if (id >= storage_->location.size() || storage_->location[id] == kNone)
         return std::nullopt;
     auto *block = storage_->blocks[storage_->location[id]].get();
@@ -185,7 +202,7 @@ std::optional<std::uint32_t> VisibleRows::index_of(NodeId id) const {
     return index;
 }
 
-RowRef VisibleRows::at(std::uint32_t index) const {
+auto VisibleRows::at(std::uint32_t index) const -> RowRef {
     const auto [block, offset] = storage_->find(index);
     return block->rows[offset];
 }
@@ -307,18 +324,18 @@ struct TreeView::Impl {
         });
         set(std::move(opts));
     }
-    std::uint32_t node_count() const {
+    auto node_count() const -> std::uint32_t {
         if (!handle)
             throw std::invalid_argument("view requires a tree handle");
         return handle->read([](const Tree &tree) { return tree.size(); });
     }
-    bool eligible(const Tree &tree, NodeId id, const ViewOptions &opts,
-                  const detail::Visibility &filter) const {
+    auto eligible(const Tree &tree, NodeId id, const ViewOptions &opts,
+                  const detail::Visibility &filter) const -> bool {
         const auto &node = tree.node(id);
         return (node.flags & kExcluded) == 0 && (opts.show_files || (node.flags & kDir) != 0) &&
                (!filter.filtered || filter.eligible.get(id));
     }
-    bool children(const Tree &tree, NodeId id) const {
+    auto children(const Tree &tree, NodeId id) const -> bool {
         if ((tree.node(id).flags & kDir) == 0)
             return false;
         if (visibility.filtered)
@@ -340,7 +357,8 @@ struct TreeView::Impl {
         if (backend) {
             resolve_owners(*handle, ids, *backend);
             for (auto entry = cache.begin(); entry != cache.end();) {
-                if (((entry->key >> 1) & 0x7Fu) == static_cast<unsigned>(SortKey::Owner)) {
+                if (((entry->key >> kPackedSortKeyShift) & kPackedSortKeyMask) ==
+                    static_cast<unsigned>(SortKey::Owner)) {
                     cached.erase(entry->key);
                     entry = cache.erase(entry);
                 } else {
@@ -351,10 +369,10 @@ struct TreeView::Impl {
             throw std::invalid_argument("lazy owner lookup requires a tree handle and backend");
         }
     }
-    const std::vector<NodeId> &sorted(const Tree &tree, NodeId parent, const ViewOptions &opts,
-                                      const detail::Visibility &filter) {
-        const auto key = (static_cast<std::uint64_t>(parent) << 8) |
-                         (static_cast<std::uint64_t>(opts.sort) << 1) |
+    auto sorted(const Tree &tree, NodeId parent, const ViewOptions &opts,
+                const detail::Visibility &filter) -> const std::vector<NodeId> & {
+        const auto key = (static_cast<std::uint64_t>(parent) << kPackedParentIdShift) |
+                         (static_cast<std::uint64_t>(opts.sort) << kPackedSortKeyShift) |
                          static_cast<unsigned>(opts.descending);
         if (const auto found = cached.find(key); found != cached.end()) {
             cache.splice(cache.begin(), cache, found->second);
@@ -367,7 +385,7 @@ struct TreeView::Impl {
             opts.show_files ? std::uint64_t{counts.files} + counts.dirs : counts.dirs;
         const bool empty = filter.filtered ? !filter.has_children.get(parent) : possible == 0;
         if (!empty) {
-            ids.reserve(filter.filtered ? std::min(end - begin, 1024u)
+            ids.reserve(filter.filtered ? std::min(end - begin, kFilteredChildrenReserveHint)
                                         : static_cast<std::size_t>(
                                               std::min<std::uint64_t>(end - begin, possible)));
             for (auto id = begin; id < end; ++id)
@@ -377,7 +395,7 @@ struct TreeView::Impl {
         detail::sort_children(tree, ids, opts);
         cache.push_front({key, std::move(ids)});
         cached.emplace(key, cache.begin());
-        if (cache.size() > 256) {
+        if (cache.size() > kSortedChildrenCacheCapacity) {
             cached.erase(cache.back().key);
             cache.pop_back();
         }
@@ -410,9 +428,10 @@ struct TreeView::Impl {
         });
         resolve(ids);
     }
-    std::vector<detail::RowRef> descendants(const Tree &tree, NodeId parent, std::uint32_t depth,
-                                            const ViewOptions &opts,
-                                            const detail::Visibility &filter) {
+    // The view interface specifies node identity followed by traversal depth.
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+    auto descendants(const Tree &tree, NodeId parent, std::uint32_t depth, const ViewOptions &opts,
+                     const detail::Visibility &filter) -> std::vector<detail::RowRef> {
         std::vector<detail::RowRef> result;
         struct Frame {
             std::vector<NodeId> ids;
@@ -475,7 +494,7 @@ struct TreeView::Impl {
             visibility = std::move(next_filter);
         visible = std::move(next);
     }
-    std::uint32_t expand(NodeId id) {
+    auto expand(NodeId id) -> std::uint32_t {
         const auto index = visible.index_of(id);
         const bool directory =
             handle->read([&](const Tree &tree) { return (tree.node(id).flags & kDir) != 0; });
@@ -493,7 +512,7 @@ struct TreeView::Impl {
         expanded[id] = true;
         return static_cast<std::uint32_t>(inserted.size());
     }
-    std::uint32_t collapse_count(NodeId id) const {
+    auto collapse_count(NodeId id) const -> std::uint32_t {
         if (id >= expanded.size())
             throw std::out_of_range("tree node ID is out of range");
         const auto index = visible.index_of(id);
@@ -518,15 +537,15 @@ TreeView::TreeView(std::shared_ptr<TreeHandle> tree, std::shared_ptr<FsBackend> 
     : impl_(std::make_unique<Impl>(std::move(tree), std::move(backend), std::move(options))) {}
 TreeView::~TreeView() = default;
 
-std::uint32_t TreeView::row_count() const {
+auto TreeView::row_count() const -> std::uint32_t {
     std::lock_guard lock(impl_->mutex);
     return impl_->visible.size();
 }
-ViewOptions TreeView::options() const {
+auto TreeView::options() const -> ViewOptions {
     std::lock_guard lock(impl_->mutex);
     return impl_->options;
 }
-std::optional<std::uint32_t> TreeView::index_of(NodeId id) const {
+auto TreeView::index_of(NodeId id) const -> std::optional<std::uint32_t> {
     std::lock_guard lock(impl_->mutex);
     return impl_->visible.index_of(id);
 }
@@ -534,12 +553,12 @@ void TreeView::set_options(ViewOptions options) {
     std::lock_guard lock(impl_->mutex);
     impl_->set(std::move(options));
 }
-std::uint32_t TreeView::expand(NodeId id) {
+auto TreeView::expand(NodeId id) -> std::uint32_t {
     std::lock_guard lock(impl_->mutex);
     return impl_->expand(id);
 }
 
-std::uint32_t TreeView::expansion_count(NodeId id) const {
+auto TreeView::expansion_count(NodeId id) const -> std::uint32_t {
     std::lock_guard lock(impl_->mutex);
     return impl_->handle->read([&](const Tree &tree) {
         const auto &node = tree.node(id); // Validate even when the node is hidden.
@@ -564,7 +583,7 @@ std::uint32_t TreeView::expansion_count(NodeId id) const {
     });
 }
 
-std::uint32_t TreeView::collapse_count(NodeId id) const {
+auto TreeView::collapse_count(NodeId id) const -> std::uint32_t {
     std::lock_guard lock(impl_->mutex);
     return impl_->collapse_count(id);
 }
@@ -587,7 +606,7 @@ void TreeView::expand_children(NodeId id) {
         impl_->expand(child);
 }
 
-std::uint32_t TreeView::collapse(NodeId id) {
+auto TreeView::collapse(NodeId id) -> std::uint32_t {
     std::lock_guard lock(impl_->mutex);
     const auto removed = impl_->collapse_count(id);
     if (id == kRoot || !impl_->expanded[id])
@@ -600,7 +619,7 @@ std::uint32_t TreeView::collapse(NodeId id) {
     return removed;
 }
 
-std::uint32_t TreeView::expand_to(NodeId id) {
+auto TreeView::expand_to(NodeId id) -> std::uint32_t {
     std::lock_guard lock(impl_->mutex);
     const auto ancestors = impl_->handle->read([&](const Tree &tree) {
         if (id == kRoot || !impl_->eligible(tree, id, impl_->options, impl_->visibility))
@@ -611,24 +630,24 @@ std::uint32_t TreeView::expand_to(NodeId id) {
             result.push_back(parent);
         return result;
     });
-    for (auto cursor = ancestors.rbegin(); cursor != ancestors.rend(); ++cursor)
-        impl_->expand(*cursor);
+    for (unsigned int ancestor : std::ranges::reverse_view(ancestors))
+        impl_->expand(ancestor);
     const auto index = impl_->visible.index_of(id);
     if (!index)
         throw std::invalid_argument("node is hidden by an excluded ancestor");
     return *index;
 }
 
-std::vector<Row> TreeView::rows(std::uint32_t start, std::uint32_t count) const {
+auto TreeView::rows(std::uint32_t start, std::uint32_t count) const -> std::vector<Row> {
     std::lock_guard lock(impl_->mutex);
     if (start >= impl_->visible.size() || count == 0)
         return {};
-    count = std::min({count, 500u, impl_->visible.size() - start});
+    count = std::min({count, kRowsFetchLimit, impl_->visible.size() - start});
     if (impl_->options.resolve_owner) {
-        std::array<NodeId, 500> ids{};
+        std::array<NodeId, kRowsFetchLimit> ids{};
         std::size_t used = 0;
         impl_->visible.visit(start, count, [&](const detail::RowRef &row) {
-            ids[used++] = row.id;
+            ids.at(used++) = row.id;
             return true;
         });
         impl_->resolve(std::span(ids).first(used), true);
@@ -646,7 +665,8 @@ std::vector<Row> TreeView::rows(std::uint32_t start, std::uint32_t count) const 
             };
             const bool has_children = impl_->children(tree, ref.id);
             result.push_back(
-                {ref.id, static_cast<std::uint16_t>(std::min(ref.depth, std::uint32_t{65535})),
+                {ref.id,
+                 static_cast<std::uint16_t>(std::min(ref.depth, kMaximumRepresentableRowDepth)),
                  has_children, has_children && impl_->expanded[ref.id],
                  std::string(tree.name_bytes(ref.id)), node.size, node.alloc,
                  parent_size != 0 ? static_cast<float>(static_cast<double>(node.size) /
