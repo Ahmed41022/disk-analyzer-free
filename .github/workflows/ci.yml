@@ -472,10 +472,10 @@ jobs:
         run: |
           cmake --preset bench -DDAFREE_BUILD_TESTS=OFF
           cmake --build build/bench --target dafree_bench
-      - name: Enforce cold expansion and ten-million-row window budgets
+      - name: Enforce view and treemap release budgets
         run: |
           ./build/bench/core/bench/dafree_bench \
-            --benchmark_filter='BM_(Expand100kChildren|RowsWindow10M)' \
+            --benchmark_filter='BM_(Expand100kChildren|RowsWindow10M|Layout50k|Render1920x1080Cushion)' \
             --benchmark_min_time=0.2s --benchmark_repetitions=5 \
             --benchmark_out=build/view-bench.json --benchmark_out_format=json
           python -m tools.view_bench_check build/view-bench.json

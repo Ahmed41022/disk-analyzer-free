@@ -1,5 +1,9 @@
 import enum
 from collections.abc import Callable, Sequence
+from typing import Annotated
+
+import numpy
+from numpy.typing import NDArray
 
 def version() -> str:
     """Return the installed package version."""
@@ -902,3 +906,76 @@ def age_histogram(
     tree: Tree, scope: int, field: TimeField, buckets: Sequence[AgeBucket], now: int
 ) -> list[AgeStat]:
     """Partition file counts and bytes by age."""
+
+class TreemapOptions:
+    """Treemap layout limits and spacing."""
+
+    def __init__(self) -> None: ...
+    @property
+    def max_depth(self) -> int: ...
+    @max_depth.setter
+    def max_depth(self, arg: int, /) -> None: ...
+    @property
+    def min_px(self) -> float: ...
+    @min_px.setter
+    def min_px(self, arg: float, /) -> None: ...
+    @property
+    def padding(self) -> float: ...
+    @padding.setter
+    def padding(self, arg: float, /) -> None: ...
+    @property
+    def header_px(self) -> float: ...
+    @header_px.setter
+    def header_px(self, arg: float, /) -> None: ...
+    @property
+    def max_rects(self) -> int: ...
+    @max_rects.setter
+    def max_rects(self, arg: int, /) -> None: ...
+
+class Palette:
+    """RGBA colors packed as 0xRRGGBBAA."""
+
+    def __init__(self) -> None: ...
+    @property
+    def by_class(self) -> list[int]: ...
+    @by_class.setter
+    def by_class(self, arg: Sequence[int], /) -> None: ...
+    @property
+    def dir_by_depth(self) -> list[int]: ...
+    @dir_by_depth.setter
+    def dir_by_depth(self, arg: Sequence[int], /) -> None: ...
+    @property
+    def background(self) -> int: ...
+    @background.setter
+    def background(self, arg: int, /) -> None: ...
+    @property
+    def border(self) -> int: ...
+    @border.setter
+    def border(self, arg: int, /) -> None: ...
+
+class TmFlags(enum.Enum):
+    OTHER = 1
+
+    DIRECTORY = 2
+
+class TreemapLayout:
+    """Immutable native treemap layout."""
+
+    @property
+    def raw_rects(self) -> Annotated[NDArray[numpy.uint8], dict(writable=False)]:
+        """Read-only zero-copy native rectangle bytes, owned by this layout."""
+
+    @property
+    def width(self) -> float: ...
+    @property
+    def height(self) -> float: ...
+    def hit_test(self, x: float, y: float) -> int | None: ...
+    def small_items(self, index: int) -> int: ...
+
+def treemap_layout(
+    tree: Tree, root: int, width: float, height: float, options: TreemapOptions = ...
+) -> TreemapLayout:
+    """Compute a native squarified treemap layout."""
+
+def treemap_render(layout: TreemapLayout, palette: Palette, cushion: bool = True) -> bytes:
+    """Render the layout to an RGBA8888 bytes buffer."""

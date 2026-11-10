@@ -1602,18 +1602,19 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
 
 ### M5 — Visualizations
 
-- [ ] **T5.1 — Treemap layout, render, hit test (C++)**
+- [x] **T5.1 — Treemap layout, render, hit test (C++)**
   - **Files:** C `core/include/dafree/treemap.hpp`, `core/src/viz/{squarify.cpp,cushion.cpp,hit_test.cpp}`, `core/tests/test_treemap.cpp`, `core/bench/bench_treemap.cpp`, M `bindings/src/treemap_bind.cpp`.
   - **Interface:**
     ```cpp
     struct TreemapOptions { std::uint8_t max_depth = 12; float min_px = 3, padding = 1, header_px = 0; std::uint32_t max_rects = 50'000; };
     struct TmRect { float x, y, w, h; std::uint32_t node; std::uint8_t depth, cls, flags, pad; };   // 24 bytes
-    class TreemapLayout { public: std::span<const TmRect> rects() const; std::optional<std::uint32_t> hit_test(float x, float y) const; };
+    class TreemapLayout { public: std::span<const TmRect> rects() const; std::optional<std::uint32_t> hit_test(float x, float y) const; float width() const; float height() const; std::uint32_t small_items(std::size_t index) const; };
     TreemapLayout treemap_layout(const Tree&, NodeId root, float w, float h, const TreemapOptions&);
     struct Palette { std::array<std::uint32_t, 16> by_class; std::array<std::uint32_t, 8> dir_by_depth; std::uint32_t background, border; };
     std::vector<std::uint8_t> treemap_render(const TreemapLayout&, int w, int h, const Palette&, bool cushion); // RGBA8888
     ```
   - **Behavior:** §2.14. Bindings return rects as a NumPy structured array (zero-copy view owned by the layout object) and the image as `bytes`.
+  - **Clarifications:** D-0083 defines the OTHER/DIRECTORY flags, parallel aggregate counts, dimension accessors, half-open float32 edges rounded inward, pixel-center clipping, RGBA color packing, and bounded sparse-grid indexing. `dafree.api.treemap_layout`/`treemap_render` are the typed public facade; T5.2's widget remains separate. Per-layout extension-class caching avoids repeating classification for identical interned extensions.
   - **Depends on:** T1.4
   - **Acceptance:** doctest `rects_within_parent`, `siblings_do_not_overlap`, `area_proportional_to_size`, `respects_max_rects`, `hit_test_smallest_containing`; benchmarks `BM_Layout50k` < 100 ms, `BM_Render1920x1080Cushion` < 60 ms.
 
