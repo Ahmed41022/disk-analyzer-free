@@ -11,6 +11,9 @@ Find out what's using your disk space — fast, free and open source.
 
 > **Project status:** early development. The Python API supports cross-platform walk scanning, progress controls, link policies, exclusions, owner resolution, and native paged views. Desktop bootstrap, background scanning, the virtual tree table, the transactional settings dialog, and the main-window/sidebar integration are implemented; the scan dialog, detailed progress panel, properties inspection, and Issues actions are available. Customizable keyboard shortcuts are available in Settings; analysis, scheduling, and file actions remain in development. The CLI scans one or more paths and streams table, JSON, NDJSON, and CSV reports. Windows supports elevated NTFS MFT scans with automatic Walk fallback. An offscreen [GUI self-test](docs/gui.md#automated-self-test) and frozen-bundle verification are available; published installers remain planned.
 
+Developers can use the [native treemap API](docs/reference/treemap.md) for layout,
+RGBA rendering, and hit testing. Its interactive GUI widget is the next task.
+
 ## Screenshots
 
 Screenshots of the light and dark interfaces will be added when the GUI milestone is complete.

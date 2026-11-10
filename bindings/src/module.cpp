@@ -43,4 +43,5 @@ NB_MODULE(_core, module) {
     dafree::bindings::bind_platform(module);
     dafree::bindings::bind_io(module);
     dafree::bindings::bind_analysis(module);
+    dafree::bindings::bind_treemap(module);
 }

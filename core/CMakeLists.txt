@@ -6,6 +6,7 @@ target_sources(dafree_core PRIVATE src/scan/exclude.cpp src/scan/glob.cpp)
 target_sources(dafree_core PRIVATE src/scan/engine.cpp src/scan/owner_resolve.cpp)
 target_sources(dafree_core PRIVATE src/view/tree_view.cpp src/view/sort.cpp
                                   src/view/filter.cpp src/view/natural_compare.cpp)
+target_sources(dafree_core PRIVATE src/viz/squarify.cpp src/viz/cushion.cpp src/viz/hit_test.cpp)
 
 target_sources(dafree_core PRIVATE src/mft/record.cpp src/mft/fixup.cpp src/mft/attr.cpp
                                   src/mft/runlist.cpp src/mft/index.cpp src/mft/build_tree.cpp)
@@ -71,6 +72,7 @@ if(DAFREE_BUILD_TESTS)
                                      tests/test_json.cpp
                                      tests/test_csv.cpp
                                      tests/test_view.cpp
+                                     tests/test_treemap.cpp
                                      tests/test_backends.cpp tests/test_exclude.cpp tests/test_engine.cpp)
   target_link_libraries(dafree_core_tests PRIVATE doctest::doctest_with_main dafree_core)
   if(MINGW)

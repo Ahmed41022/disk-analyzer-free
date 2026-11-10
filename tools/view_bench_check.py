@@ -1,11 +1,16 @@
-"""Enforce T4.1's absolute release-build latency budgets from Google Benchmark JSON."""
+"""Enforce view and treemap release-build latency budgets from benchmark JSON."""
 
 import argparse
 from pathlib import Path
 
 from tools.bench_compare import benchmark_medians
 
-LIMITS_MS = {"BM_Expand100kChildren": 150.0, "BM_RowsWindow10M": 2.0}
+LIMITS_MS = {
+    "BM_Expand100kChildren": 150.0,
+    "BM_RowsWindow10M": 2.0,
+    "BM_Layout50k": 100.0,
+    "BM_Render1920x1080Cushion": 60.0,
+}
 
 
 def check(path: Path) -> bool:

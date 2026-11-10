@@ -29,6 +29,14 @@ from dafree.api.errors import (
 from dafree.api.export import write_csv, write_json
 from dafree.api.scan import ScanHandle, ScanResult, scan, start_scan
 from dafree.api.tree import Tree
+from dafree.api.treemap import (
+    Palette,
+    TmFlags,
+    TreemapLayout,
+    TreemapOptions,
+    treemap_layout,
+    treemap_render,
+)
 from dafree.api.types import (
     Backend,
     EntryKind,
@@ -192,6 +200,7 @@ __all__ = [
     "Notice",
     "NoticeKind",
     "OwnerMode",
+    "Palette",
     "QueryError",
     "Row",
     "ScanError",
@@ -207,9 +216,12 @@ __all__ = [
     "ScanSummary",
     "SortKey",
     "TimeField",
+    "TmFlags",
     "TopKind",
     "Tree",
     "TreeView",
+    "TreemapLayout",
+    "TreemapOptions",
     "UnitMode",
     "UnitStyle",
     "UnitSystem",
@@ -226,6 +238,8 @@ __all__ = [
     "scan",
     "start_scan",
     "top_n",
+    "treemap_layout",
+    "treemap_render",
     "write_csv",
     "write_json",
 ]

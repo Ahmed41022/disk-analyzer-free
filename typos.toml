@@ -14,6 +14,8 @@ extend-exclude = [
 setp = "setp"
 countr_zero = "countr_zero"
 ERROR_FILENAME_EXCED_RANGE = "ERROR_FILENAME_EXCED_RANGE"
+# NumPy's public ndarray.flags attribute uses this spelling.
+writeable = "writeable"
 # Clang's official analyzer check namespace.
 optin = "optin"
 

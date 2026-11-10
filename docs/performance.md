@@ -193,6 +193,13 @@ budget for the head. The first PR introducing `scan` measures head against that
 absolute budget and compares the native benchmarks against the base commit.
 Relative CLI gates start once the base has the command.
 
+The release-performance CI job also requires `BM_Layout50k` below 100 ms and
+`BM_Render1920x1080Cushion` below 60 ms, using the median of five repetitions.
+The fixture asserts 50,000 emitted rectangles and the full 1920×1080 RGBA buffer;
+setup is outside the timed loops. Missing measurements and equality with either
+limit fail the gate. Run `python -m tools.view_bench_check report.json` against
+Google Benchmark output containing the two view and two treemap benchmarks.
+
 ## Nightly fuzzing
 
 The nightly workflow runs the Clang ASan and UBSan builds of the glob, run-list,
