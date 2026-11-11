@@ -1618,7 +1618,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T1.4
   - **Acceptance:** doctest `rects_within_parent`, `siblings_do_not_overlap`, `area_proportional_to_size`, `respects_max_rects`, `hit_test_smallest_containing`; benchmarks `BM_Layout50k` < 100 ms, `BM_Render1920x1080Cushion` < 60 ms.
 
-- [ ] **T5.2 — Treemap widget**
+- [x] **T5.2 — Treemap widget**
   - **Files:** C `src/dafree/gui/widgets/treemap.py`, `src/dafree/gui/views/treemap_tab.py`, M `src/dafree/gui/accessibility.py`, `tests/gui/test_treemap_widget.py`.
   - **Behavior:** layout+render in `TaskRunner` (debounced 150 ms on resize; device-pixel-ratio aware); `QImage(buffer, w, h, Format_RGBA8888)` keeping the buffer referenced; hover tooltip (name, size, % of zoom root); click selects and syncs tree selection; double-click zooms into a dir; breadcrumb to zoom out; right-click opens the shared context menu (T8.5); setting "flat colours" disables cushions. Accessibility interface exposes the 50 largest rects as children with name/size.
   - **Depends on:** T5.1, T4.6

@@ -37,6 +37,7 @@ class TreeTab(QWidget):
     ready = Signal()
     propertiesRequested = Signal(object, object)
     contextMenuRequested = Signal(object, object, object)
+    nodeSelected = Signal(object, object)
 
     def __init__(
         self,
@@ -88,9 +89,9 @@ class TreeTab(QWidget):
         self.message.setText(_("Choose a target to start a scan."))
         self.message.show()
 
-    def set_tree(self, tree: api.Tree) -> None:
+    def set_tree(self, tree: api.Tree, *, selected_node: int | None = None) -> None:
         """Coalesce incoming snapshots, retaining sort policy and the focused native path."""
-        if tree is self.requested_tree:
+        if tree is self.requested_tree and selected_node is None:
             return
         self.requested_tree = tree
         self._generation += 1
@@ -99,8 +100,8 @@ class TreeTab(QWidget):
             if self.table
             else api.ViewOptions(filter=self._filter)
         )
-        node = None
-        if self.table and (index := self.table.currentIndex()).isValid():
+        node = selected_node
+        if node is None and self.table and (index := self.table.currentIndex()).isValid():
             node = self.table.tree_model.node_at(index.row())
         self._pending = (_ViewJob(self._owner, self._generation), tree, options, node)
         self.message.setText(_("Preparing tree view…"))
@@ -166,11 +167,18 @@ class TreeTab(QWidget):
             self._submit_pending()
 
     def select_node(self, node: int) -> None:
-        """Select a visible parent using native lookup instead of displayed path parsing."""
-        if self.table is not None:
+        """Select a node, preparing hidden ancestors off-thread when needed."""
+        if self._building and self.requested_tree is not None:
+            self.set_tree(self.requested_tree, selected_node=node)
+            return
+        if self.table is not None and self.tree is self.requested_tree:
             row = self.table.tree_model.row_of(node)
             if row is not None:
                 self.table.setCurrentIndex(self.table.tree_model.index(row, 0))
+                self.table.scrollTo(self.table.currentIndex())
+                return
+        if self.requested_tree is not None:
+            self.set_tree(self.requested_tree, selected_node=node)
 
     def set_filter(self, spec: api.FilterSpec | None) -> None:
         """Retain the latest valid filter across pending snapshots and new scans."""
@@ -190,6 +198,8 @@ class TreeTab(QWidget):
         if self.table is None or self.tree is None or not current.isValid():
             return
         row = self.table.tree_model.row_data(current.row())
+        if self._building and self.tree is self.requested_tree and previous.isValid():
+            self.set_tree(self.tree, selected_node=row[0])
         self.breadcrumb.set_node(self.tree, row[0])
         self.details.setText(
             _(
@@ -202,3 +212,4 @@ class TreeTab(QWidget):
                 folders=QLocale().toString(row[9]),
             )
         )
+        self.nodeSelected.emit(self.tree, row[0])

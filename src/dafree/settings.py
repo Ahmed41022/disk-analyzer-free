@@ -110,13 +110,14 @@ class WindowState:
 
 @dataclass
 class TreemapSettings:
-    """Persist the planned native treemap options without implementing layout."""
+    """Persist native geometry and the widget's shading preference."""
 
     max_depth: int = 12
     min_px: float = 3.0
     padding: float = 1.0
     header_px: float = 0.0
     max_rects: int = 50_000
+    flat_colours: bool = False
 
 
 @dataclass

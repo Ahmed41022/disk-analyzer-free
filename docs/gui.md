@@ -9,7 +9,7 @@ dafree gui
 
 The initial window uses Fusion and the shared `theme` and `locale` preferences.
 Open **Settings** from the main window to choose a system, light, or dark theme,
-language, units and labels, row density, scan defaults, and duplicate-analysis
+language, units and labels, row density, flat treemap colours, scan defaults, and duplicate-analysis
 defaults. Settings are staged in the dialog and saved atomically on **OK**;
 **Cancel** leaves both the saved and live preferences unchanged. The system
 theme follows operating-system color-scheme changes while selected. Language
@@ -90,7 +90,7 @@ percentage without exposing internal numeric IDs.
 
 The main window includes a Locations sidebar, the planned tab positions, and a
 status bar with mode, file/folder counts, total size, elapsed time, and a clickable
-issue count. Tree and Issues contents are created only when activated. Later
+issue count. Tree, Treemap and Issues contents are created only when activated. Later
 analysis tabs and deferred toolbar actions remain disabled. The sidebar discovers
 native volumes in a worker, shows used/free capacity and network icons, and retains
 recent targets and the snapshot directory. Snapshot opening belongs to M6.
@@ -106,6 +106,12 @@ localized tooltip. The structured query grammar is deferred to T6.1. The units
 selector (Automatic, Bytes, and kilo through exa) changes displayed size formatting
 for the cached rows, selection details, and scan total; it does not fetch rows again or
 rescan the filesystem.
+The [Treemap tab](reference/treemap.md) renders in the background. Click a rectangle
+to select its node in the Tree tab, double-click a directory to zoom, and use **Up**
+to return to the parent. Hover for size and percentage of the zoom root; right-click
+for **Properties**. Monitor scaling is applied to rendering and mouse hit testing.
+Screen readers receive the names and sizes of up to 50 of the largest rectangles.
+
 The Tree tab prepares native views off-thread and pairs its table with a breadcrumb
 and selection metadata; miniature charts remain M5 work. Issues retain the native
 summary's first 1,000 entries and show its complete count; kind filtering applies

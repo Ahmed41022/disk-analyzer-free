@@ -109,6 +109,7 @@ def test_settings_saved_on_ok_not_on_cancel(
     canceled.theme.setCurrentIndex(canceled.theme.findData("dark"))
     canceled.follow_symlinks.setChecked(True)
     canceled.density.setCurrentIndex(canceled.density.findData("comfortable"))
+    canceled.flat_colours.setChecked(True)
     canceled.reject()
     assert settings == original
     assert (paths.config / "settings.json").read_bytes() == before
@@ -117,9 +118,11 @@ def test_settings_saved_on_ok_not_on_cancel(
     accepted.theme.setCurrentIndex(accepted.theme.findData("dark"))
     accepted.follow_symlinks.setChecked(True)
     accepted.density.setCurrentIndex(accepted.density.findData("comfortable"))
+    accepted.flat_colours.setChecked(True)
     accepted.accept()
     assert settings.default_scan.follow_symlinks
     assert settings.row_density == "comfortable"
+    assert settings.treemap.flat_colours
     assert load_settings(paths) == settings
 
 
