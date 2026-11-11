@@ -226,6 +226,9 @@ class SettingsDialog(QDialog):
             self._initial.row_density,
         )
         self._row(form, _("Row density"), self.density)
+        self.flat_colours = QCheckBox(_("Flat colours in treemap"), self)
+        self.flat_colours.setChecked(self._initial.treemap.flat_colours)
+        form.addRow(self.flat_colours)
 
     def _scanning(self) -> None:
         form = self._page(_("Scanning defaults"))
@@ -373,6 +376,7 @@ class SettingsDialog(QDialog):
             self._settings.unit_style.decimal_separator,
         )
         candidate.row_density = cast(Literal["compact", "comfortable"], self.density.currentData())
+        candidate.treemap.flat_colours = self.flat_colours.isChecked()
         scan = candidate.default_scan
         scan.mode = api.ScanMode(self.mode.currentData())
         scan.threads = int(self.threads.value())
@@ -430,6 +434,7 @@ class SettingsDialog(QDialog):
             "units",
             "unit_style",
             "row_density",
+            "treemap",
             "default_scan",
             "dupes",
             "show_ntfs_metafiles",

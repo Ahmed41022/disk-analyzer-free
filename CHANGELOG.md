@@ -6,6 +6,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Changed
 
+- Added the interactive Treemap tab with background rendering, scaled-display support, synchronized tree selection, directory zoom, accessible rectangles, and a flat-colours setting.
+
 - Added the native treemap API with squarified layout, cushion/flat RGBA rendering, spatial hit testing, and read-only zero-copy NumPy rectangles.
 
 - Completed pre-M5 CI quality gates with C++ formatting/static analysis, spelling checks, compiler caches, and Conventional Commit PR titles.

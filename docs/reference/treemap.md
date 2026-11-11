@@ -1,13 +1,23 @@
 # Treemap API
 
 `dafree.api.treemap_layout` computes geometry in C++; `treemap_render` returns
-RGBA8888 pixels. T5.1 provides this API; the interactive widget belongs to T5.2.
+RGBA8888 pixels. The desktop Treemap tab uses this API for interactive navigation.
+
+After a scan, open **Treemap**. Hover for a name, size and percentage of the zoom
+root; click to select the same node in the Tree tab. Double-click a directory to
+zoom in, then use the breadcrumb's **Up** button to return to its parent. Right-click
+for the shared **Properties** action. In **Settings → General**, **Flat colours in
+treemap** turns off cushion shading. Settings apply after pressing OK.
+
+Layout and rendering run in the background. Resizes wait 150 ms after the last
+change; rendering and hit testing account for the monitor's pixel ratio. Screen
+readers see up to 50 of the largest real rectangles with their names and sizes.
 
 ```python
 from pathlib import Path
 from dafree.api import Palette, ScanRequest, TreemapOptions, scan, treemap_layout, treemap_render
 
-result = scan(ScanRequest(roots=[Path("/path/to/folder")]))
+result = scan(ScanRequest(targets=[Path("/path/to/folder")]))
 tree = result.tree
 options = TreemapOptions()
 options.max_rects = 50_000

@@ -43,8 +43,11 @@ class Breadcrumb(QWidget):
 
     nodeActivated = Signal(object)
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(
+        self, parent: QWidget | None = None, *, allow_synthetic_root: bool = False
+    ) -> None:
         super().__init__(parent)
+        self._allow_synthetic_root = allow_synthetic_root
         self._tree: api.Tree | None = None
         self._parent_node: int | None = None
         layout = QHBoxLayout(self)
@@ -64,8 +67,10 @@ class Breadcrumb(QWidget):
         """Read one path/parent from the API; never reconstruct a path from displayed text."""
         self._tree = tree
         self._parent_node = tree.parent(node)
-        self.path_label.set_path(tree.path(node))
-        self.up.setEnabled(self._parent_node not in (None, 0))
+        self.path_label.set_path(
+            _("All scan targets") if node == 0 and self._allow_synthetic_root else tree.path(node)
+        )
+        self.up.setEnabled(self._can_go_up())
 
     def clear(self) -> None:
         """Clear navigation when a new scan replaces the node-ID namespace."""
@@ -75,5 +80,10 @@ class Breadcrumb(QWidget):
         self.up.setEnabled(False)
 
     def _activate_parent(self) -> None:
-        if self._parent_node not in (None, 0):
+        if self._can_go_up():
             self.nodeActivated.emit(self._parent_node)
+
+    def _can_go_up(self) -> bool:
+        return self._parent_node is not None and (
+            self._parent_node != 0 or self._allow_synthetic_root
+        )

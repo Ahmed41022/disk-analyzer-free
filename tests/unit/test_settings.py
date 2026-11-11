@@ -65,6 +65,22 @@ def test_settings_atomic_write(paths: AppPaths, monkeypatch: pytest.MonkeyPatch)
     assert not list(paths.config.glob(".settings-*.tmp"))
 
 
+def test_flat_colours_additive_default_and_typed_persistence(paths: AppPaths) -> None:
+    """Older preferences keep cushions; typed edits persist the new boolean."""
+    save_settings(Settings(), paths)
+    target = paths.config / "settings.json"
+    data = json.loads(target.read_text(encoding="utf-8"))
+    del data["treemap"]["flat_colours"]
+    target.write_text(json.dumps(data), encoding="utf-8")
+    settings = load_settings(paths)
+    assert not settings.treemap.flat_colours
+    settings = set_dotted(settings, "treemap.flat_colours", "true")
+    save_settings(settings, paths)
+    assert load_settings(paths).treemap.flat_colours
+    with pytest.raises(ValueError):
+        set_dotted(settings, "treemap.flat_colours", "yes")
+
+
 def test_failed_write_preserves_original(paths: AppPaths, monkeypatch: pytest.MonkeyPatch) -> None:
     """A failed atomic replace leaves valid old preferences and cleans its temporary file."""
     save_settings(Settings(), paths)

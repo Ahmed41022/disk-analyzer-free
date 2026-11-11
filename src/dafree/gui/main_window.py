@@ -40,6 +40,7 @@ from dafree.gui.shortcuts import ShortcutRegistry, shortcut_specs
 from dafree.gui.theme.palette import ThemeController
 from dafree.gui.views.issues_tab import IssuesTab
 from dafree.gui.views.tree_tab import TreeTab
+from dafree.gui.views.treemap_tab import TreemapTab
 from dafree.gui.widgets.breadcrumb import ElidedPathLabel
 from dafree.gui.widgets.progress_panel import ProgressPanel, elapsed_text
 from dafree.gui.widgets.query_edit import QueryEdit
@@ -97,7 +98,7 @@ class MainWindow(QMainWindow):
         self._total_bytes = 0
         self._issues: list[ScanIssue] = []
         self._issue_total = 0
-        self._pages: dict[str, TreeTab | IssuesTab] = {}
+        self._pages: dict[str, TreeTab | TreemapTab | IssuesTab] = {}
         self._tab_keys: list[str] = []
         self._closing = False
         self.runner = TaskRunner(self)
@@ -258,6 +259,9 @@ class MainWindow(QMainWindow):
         page = self._pages.get("tree")
         if isinstance(page, TreeTab):
             page.refresh_units()
+        treemap = self._pages.get("treemap")
+        if isinstance(treemap, TreemapTab):
+            treemap.refresh_settings()
         self.total_label.setText(
             _("Total: {size}").format(
                 size=_format_size(
@@ -329,7 +333,7 @@ class MainWindow(QMainWindow):
             page.setObjectName(f"tab.{key}")
             index = self.tabs.addTab(page, title)
             self._tab_keys.append(key)
-            self.tabs.setTabEnabled(index, key in ("tree", "issues"))
+            self.tabs.setTabEnabled(index, key in ("tree", "treemap", "issues"))
         self.tabs.currentChanged.connect(self._activate_tab)
         self._activate_tab(0)
 
@@ -351,14 +355,20 @@ class MainWindow(QMainWindow):
         if index < 0:
             return
         key = self._tab_keys[index]
-        if key not in ("tree", "issues"):
+        if key not in ("tree", "treemap", "issues"):
             return
         if key not in self._pages:
             if key == "tree":
                 tree_page = TreeTab(self._settings, self.runner, self.tabs, paths=self._paths)
                 tree_page.propertiesRequested.connect(self.propertiesRequested.emit)
                 tree_page.contextMenuRequested.connect(self.contextMenuRequested.emit)
-                page: TreeTab | IssuesTab = tree_page
+                tree_page.nodeSelected.connect(self._tree_selected)
+                page: TreeTab | TreemapTab | IssuesTab = tree_page
+            elif key == "treemap":
+                treemap = TreemapTab(self._settings, self.runner, self.tabs)
+                treemap.nodeSelected.connect(self._treemap_selected)
+                treemap.contextMenuRequested.connect(self.contextMenuRequested.emit)
+                page = treemap
             else:
                 page = IssuesTab(self.tabs, runner=self.runner)
             self._pages[key] = page
@@ -370,14 +380,37 @@ class MainWindow(QMainWindow):
             if old is not None:
                 old.deleteLater()
         selected = self._pages[key]
-        if isinstance(selected, TreeTab) and self._latest_tree is not None:
+        if isinstance(selected, (TreeTab, TreemapTab)) and self._latest_tree is not None:
             selected.set_tree(self._latest_tree)
+            if isinstance(selected, TreemapTab):
+                current_tree_page = self._pages.get("tree")
+                if (
+                    isinstance(current_tree_page, TreeTab)
+                    and current_tree_page.tree is self._latest_tree
+                    and current_tree_page.table is not None
+                ):
+                    current = current_tree_page.table.currentIndex()
+                    if current.isValid():
+                        selected.select_node(
+                            current_tree_page.table.tree_model.node_at(current.row())
+                        )
         elif isinstance(selected, IssuesTab):
             selected.set_issues(self._issues, self._issue_total)
 
     def show_tab(self, key: str) -> None:
         """Activate an implemented tab, creating its contents on first use."""
         self.tabs.setCurrentIndex(self._tab_keys.index(key))
+
+    def _tree_selected(self, tree: api.Tree, node: int) -> None:
+        page = self._pages.get("treemap")
+        if isinstance(page, TreemapTab) and page.widget.tree is tree:
+            page.select_node(node)
+
+    def _treemap_selected(self, tree: api.Tree, node: int) -> None:
+        page = self._pages.get("tree")
+        if isinstance(page, TreeTab) and tree is self._latest_tree:
+            page.set_tree(tree)
+            page.select_node(node)
 
     def _build_status(self, provider: Callable[[], bool] | None) -> None:
         bar = self.statusBar()
@@ -519,6 +552,9 @@ class MainWindow(QMainWindow):
         tree_page = self._pages.get("tree")
         if isinstance(tree_page, TreeTab):
             tree_page.clear()
+        treemap = self._pages.get("treemap")
+        if isinstance(treemap, TreemapTab):
+            treemap.clear()
         issues_page = self._pages.get("issues")
         if isinstance(issues_page, IssuesTab):
             issues_page.set_issues([], 0)
@@ -548,9 +584,9 @@ class MainWindow(QMainWindow):
 
     def _tree_ready(self, tree: api.Tree) -> None:
         self._latest_tree = tree
-        if not self._closing and self._tab_keys[self.tabs.currentIndex()] == "tree":
-            page = self._pages.get("tree")
-            if isinstance(page, TreeTab):
+        if not self._closing:
+            page = self._pages.get(self._tab_keys[self.tabs.currentIndex()])
+            if isinstance(page, (TreeTab, TreemapTab)):
                 page.set_tree(tree)
 
     def _finished(self, result: api.ScanResult) -> None:

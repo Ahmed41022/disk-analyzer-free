@@ -78,6 +78,9 @@ msgstr ""
 msgid "All kinds"
 msgstr ""
 
+msgid "All scan targets"
+msgstr ""
+
 msgid "Allocated"
 msgstr ""
 
@@ -130,6 +133,9 @@ msgstr ""
 msgid "Checking folder…"
 msgstr ""
 
+msgid "Choose a target to scan."
+msgstr ""
+
 msgid "Choose a target to start a scan."
 msgstr ""
 
@@ -180,6 +186,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Could not prepare tree: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Could not prepare treemap: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -311,6 +321,9 @@ msgid "Find"
 msgstr ""
 
 msgid "Finishing scan…"
+msgstr ""
+
+msgid "Flat colours in treemap"
 msgstr ""
 
 msgid "Focus query"
@@ -530,6 +543,9 @@ msgid "Preparing scan…"
 msgstr ""
 
 msgid "Preparing tree view…"
+msgstr ""
+
+msgid "Preparing treemap…"
 msgstr ""
 
 msgid "Print a setting as JSON."
@@ -872,7 +888,18 @@ msgid ""
 msgstr ""
 
 #, python-brace-format
+msgid ""
+"{name}\n"
+"Size: {size}\n"
+"{percent} of zoom root"
+msgstr ""
+
+#, python-brace-format
 msgid "{name}, {kind}, {size}, {percent} of parent"
+msgstr ""
+
+#, python-brace-format
+msgid "{name}, {size}"
 msgstr ""
 
 #, python-brace-format
