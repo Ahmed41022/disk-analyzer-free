@@ -932,3 +932,81 @@ msgstr ""
 #, python-brace-format
 msgid "{name}, {size}"
 msgstr "{name}، {size}"
+
+msgid "Archives"
+msgstr "أرشيفات"
+
+msgid "Audio"
+msgstr "صوتيات"
+
+msgid "Bar chart"
+msgstr "مخطط شريطي"
+
+msgid "Categories by size"
+msgstr "الفئات حسب الحجم"
+
+msgid "Chart metric"
+msgstr "مقياس الرسم البياني"
+
+msgid "Children by allocated space"
+msgstr "العناصر المباشرة حسب المساحة المخصصة"
+
+msgid "Children by file count"
+msgstr "العناصر المباشرة حسب عدد الملفات"
+
+msgid "Children by size"
+msgstr "العناصر المباشرة حسب الحجم"
+
+msgid "Code"
+msgstr "شيفرة برمجية"
+
+#, python-brace-format
+msgid "Could not prepare charts: {error}"
+msgstr "تعذر إعداد الرسوم البيانية: {error}"
+
+msgid "Disk images"
+msgstr "صور أقراص"
+
+msgid "Documents"
+msgstr "مستندات"
+
+msgid "Executables"
+msgstr "ملفات تنفيذية"
+
+msgid "Extensions by file count"
+msgstr "الامتدادات حسب عدد الملفات"
+
+msgid "Extensions by size"
+msgstr "الامتدادات حسب الحجم"
+
+msgid "Images"
+msgstr "صور"
+
+msgid "No data for this selection."
+msgstr "لا توجد بيانات لهذا التحديد."
+
+msgid "No extension"
+msgstr "بلا امتداد"
+
+msgid "Other file types"
+msgstr "أنواع ملفات أخرى"
+
+msgid "Pie chart"
+msgstr "مخطط دائري"
+
+msgid "Preparing charts…"
+msgstr "جارٍ إعداد الرسوم البيانية…"
+
+msgid "System files"
+msgstr "ملفات النظام"
+
+msgid "Videos"
+msgstr "فيديوهات"
+
+#, python-brace-format
+msgid "{chart}: {slice}"
+msgstr "{chart}: {slice}"
+
+#, python-brace-format
+msgid "{label}: {value} ({percent})"
+msgstr "{label}: {value} ({percent})"

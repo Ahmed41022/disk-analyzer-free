@@ -90,7 +90,7 @@ percentage without exposing internal numeric IDs.
 
 The main window includes a Locations sidebar, the planned tab positions, and a
 status bar with mode, file/folder counts, total size, elapsed time, and a clickable
-issue count. Tree, Treemap and Issues contents are created only when activated. Later
+issue count. Tree, Treemap, Charts and Issues contents are created only when activated. Later
 analysis tabs and deferred toolbar actions remain disabled. The sidebar discovers
 native volumes in a worker, shows used/free capacity and network icons, and retains
 recent targets and the snapshot directory. Snapshot opening belongs to M6.
@@ -111,6 +111,16 @@ to select its node in the Tree tab, double-click a directory to zoom, and use **
 to return to the parent. Hover for size and percentage of the zoom root; right-click
 for **Properties**. Monitor scaling is applied to rendering and mouse hit testing.
 Screen readers receive the names and sizes of up to 50 of the largest rectangles.
+
+The **Charts** tab shows matching pie and bar charts. Choose **Chart metric** for
+direct children by size, allocated space or file count; extensions by size or count;
+or categories by size. Each report shows the largest 15 groups plus **Other**.
+Legends include the value and percentage of the displayed report. Counts use count
+labels; byte values follow the shared units preference. Selecting a file in Tree
+charts its parent. Click a folder slice to select and chart that folder, then use
+**Up** to return. Focus either chart and use arrows or **Home/End** to move between
+slices, and **Enter/Space** to activate a folder. Full labels remain available to
+screen readers and on hover when a narrow window elides visible legend text.
 
 The Tree tab prepares native views off-thread and pairs its table with a breadcrumb
 and selection metadata; miniature charts remain M5 work. Issues retain the native

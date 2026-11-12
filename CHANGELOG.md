@@ -6,6 +6,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Changed
 
+- Added folder, extension and category pie/bar charts with background reports, bounded Other groups, synchronized folder selection, localized legends and keyboard navigation.
+
 - Added the interactive Treemap tab with background rendering, scaled-display support, synchronized tree selection, directory zoom, accessible rectangles, and a flat-colours setting.
 
 - Added the native treemap API with squarified layout, cushion/flat RGBA rendering, spatial hit testing, and read-only zero-copy NumPy rectangles.

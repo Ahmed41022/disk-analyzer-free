@@ -54,6 +54,21 @@ auto classify_extension(std::string_view ext) noexcept -> ExtCategory;
 /// Return file totals grouped by extension, ordered by descending logical size.
 auto ext_breakdown(const Tree &, NodeId scope) -> std::vector<ExtStat>;
 
+/// Byte/count field used to rank direct-child chart slices.
+enum class ChildChartField : std::uint8_t { Size, Alloc, Files };
+
+/// One ranked direct-child slice; node kNone marks the aggregated remainder.
+struct ChildChartRow {
+    NodeId node = kNone;
+    std::uint64_t value = 0;
+    bool other = false;
+};
+
+/// Return at most top direct children and one saturated uint64 remainder row.
+/// Excluded entries and hard-link duplicates are omitted; equal values use stable name/ID order.
+auto child_chart_data(const Tree &, NodeId scope, ChildChartField, std::size_t top)
+    -> std::vector<ChildChartRow>;
+
 /// Age interval with an exclusive upper bound, or an unbounded final interval.
 struct AgeBucket {
     std::string label;

@@ -1624,7 +1624,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T5.1, T4.6
   - **Acceptance:** `test_click_selects_node_in_tree`, `test_double_click_zooms_and_breadcrumb_returns`, `test_tooltip_text`, `test_accessible_children_count`.
 
-- [ ] **T5.3 — Charts (pie/bar) by folder and by file type**
+- [x] **T5.3 — Charts (pie/bar) by folder and by file type**
   - **Files:** C `src/dafree/gui/widgets/{pie_chart.py,bar_chart.py}`, `src/dafree/gui/views/charts_tab.py`, `tests/gui/test_charts.py`.
   - **Interface:** `class ChartKind(Enum): CHILDREN_BY_SIZE, CHILDREN_BY_ALLOC, CHILDREN_BY_FILES, EXT_BY_SIZE, EXT_BY_COUNT, CATEGORY_BY_SIZE`; `def chart_data(tree, scope, kind, top=15) -> list[ChartSlice]` in `dafree.api.analysis` (uses C++ functions, adds "Other").
   - **Behavior:** QPainter rendering, legend with values and %, keyboard focus moves between slices (accessible names), click on a folder slice selects it; Okabe-Ito-based palette.

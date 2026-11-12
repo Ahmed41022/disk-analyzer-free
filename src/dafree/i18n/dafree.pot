@@ -93,6 +93,12 @@ msgstr ""
 msgid "Arabic"
 msgstr ""
 
+msgid "Archives"
+msgstr ""
+
+msgid "Audio"
+msgstr ""
+
 msgid "Auto"
 msgstr ""
 
@@ -100,6 +106,9 @@ msgid "Automatic"
 msgstr ""
 
 msgid "BLAKE3"
+msgstr ""
+
+msgid "Bar chart"
 msgstr ""
 
 msgid "Binary (KB, MB)"
@@ -124,13 +133,28 @@ msgstr ""
 msgid "Cannot access preferences: {error}"
 msgstr ""
 
+msgid "Categories by size"
+msgstr ""
+
 msgid "Changed during scan"
+msgstr ""
+
+msgid "Chart metric"
 msgstr ""
 
 msgid "Charts"
 msgstr ""
 
 msgid "Checking folder…"
+msgstr ""
+
+msgid "Children by allocated space"
+msgstr ""
+
+msgid "Children by file count"
+msgstr ""
+
+msgid "Children by size"
 msgstr ""
 
 msgid "Choose a target to scan."
@@ -143,6 +167,9 @@ msgid "Choose scan folder"
 msgstr ""
 
 msgid "Cloud placeholder"
+msgstr ""
+
+msgid "Code"
 msgstr ""
 
 msgid "Combined scan"
@@ -182,6 +209,10 @@ msgid "Could not open the log folder."
 msgstr ""
 
 msgid "Could not pass arguments to the other instance."
+msgstr ""
+
+#, python-brace-format
+msgid "Could not prepare charts: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -239,6 +270,12 @@ msgstr ""
 msgid "Disk Analyzer Free"
 msgstr ""
 
+msgid "Disk images"
+msgstr ""
+
+msgid "Documents"
+msgstr ""
+
 msgid "Duplicate I/O threads"
 msgstr ""
 
@@ -285,6 +322,9 @@ msgstr ""
 msgid "Excluded paths, one per line"
 msgstr ""
 
+msgid "Executables"
+msgstr ""
+
 msgid "Export"
 msgstr ""
 
@@ -305,6 +345,12 @@ msgid "Exporting issues…"
 msgstr ""
 
 msgid "Extension"
+msgstr ""
+
+msgid "Extensions by file count"
+msgstr ""
+
+msgid "Extensions by size"
 msgstr ""
 
 msgid "File"
@@ -383,6 +429,9 @@ msgid "I/O error"
 msgstr ""
 
 msgid "IEC (KiB, MiB)"
+msgstr ""
+
+msgid "Images"
 msgstr ""
 
 msgid "Include alternate data streams (Windows only)"
@@ -473,6 +522,12 @@ msgstr ""
 msgid "New scan"
 msgstr ""
 
+msgid "No data for this selection."
+msgstr ""
+
+msgid "No extension"
+msgstr ""
+
 msgid "No scan issues."
 msgstr ""
 
@@ -495,6 +550,9 @@ msgid "Orphaned entry"
 msgstr ""
 
 msgid "Other"
+msgstr ""
+
+msgid "Other file types"
 msgstr ""
 
 msgid "Owner"
@@ -533,10 +591,16 @@ msgstr ""
 msgid "Petabytes"
 msgstr ""
 
+msgid "Pie chart"
+msgstr ""
+
 msgid "Portable mode is not available yet"
 msgstr ""
 
 msgid "Prefix bytes"
+msgstr ""
+
+msgid "Preparing charts…"
 msgstr ""
 
 msgid "Preparing scan…"
@@ -719,6 +783,9 @@ msgstr ""
 msgid "System"
 msgstr ""
 
+msgid "System files"
+msgstr ""
+
 msgid "System language"
 msgstr ""
 
@@ -791,6 +858,9 @@ msgstr ""
 msgid "Verify matching bytes"
 msgstr ""
 
+msgid "Videos"
+msgstr ""
+
 msgid "Volume"
 msgstr ""
 
@@ -848,6 +918,10 @@ msgid "user preference (version is managed by migrations)"
 msgstr ""
 
 #, python-brace-format
+msgid "{chart}: {slice}"
+msgstr ""
+
+#, python-brace-format
 msgid "{days}d {time}"
 msgstr ""
 
@@ -872,6 +946,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{label} ({mount})"
+msgstr ""
+
+#, python-brace-format
+msgid "{label}: {value} ({percent})"
 msgstr ""
 
 #, python-brace-format

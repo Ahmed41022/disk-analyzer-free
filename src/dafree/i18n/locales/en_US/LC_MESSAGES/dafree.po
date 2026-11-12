@@ -927,3 +927,81 @@ msgstr ""
 #, python-brace-format
 msgid "{name}, {size}"
 msgstr "{name}, {size}"
+
+msgid "Archives"
+msgstr "Archives"
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Bar chart"
+msgstr "Bar chart"
+
+msgid "Categories by size"
+msgstr "Categories by size"
+
+msgid "Chart metric"
+msgstr "Chart metric"
+
+msgid "Children by allocated space"
+msgstr "Children by allocated space"
+
+msgid "Children by file count"
+msgstr "Children by file count"
+
+msgid "Children by size"
+msgstr "Children by size"
+
+msgid "Code"
+msgstr "Code"
+
+#, python-brace-format
+msgid "Could not prepare charts: {error}"
+msgstr "Could not prepare charts: {error}"
+
+msgid "Disk images"
+msgstr "Disk images"
+
+msgid "Documents"
+msgstr "Documents"
+
+msgid "Executables"
+msgstr "Executables"
+
+msgid "Extensions by file count"
+msgstr "Extensions by file count"
+
+msgid "Extensions by size"
+msgstr "Extensions by size"
+
+msgid "Images"
+msgstr "Images"
+
+msgid "No data for this selection."
+msgstr "No data for this selection."
+
+msgid "No extension"
+msgstr "No extension"
+
+msgid "Other file types"
+msgstr "Other file types"
+
+msgid "Pie chart"
+msgstr "Pie chart"
+
+msgid "Preparing charts…"
+msgstr "Preparing charts…"
+
+msgid "System files"
+msgstr "System files"
+
+msgid "Videos"
+msgstr "Videos"
+
+#, python-brace-format
+msgid "{chart}: {slice}"
+msgstr "{chart}: {slice}"
+
+#, python-brace-format
+msgid "{label}: {value} ({percent})"
+msgstr "{label}: {value} ({percent})"

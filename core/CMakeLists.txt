@@ -14,7 +14,8 @@ target_sources(dafree_core PRIVATE src/platform/windows/longpath.cpp
                                   src/platform/windows/quote_args.cpp)
 target_sources(dafree_core PRIVATE src/io/json.cpp src/io/csv.cpp)
 target_sources(dafree_core PRIVATE src/analysis/top.cpp src/analysis/ext_stats.cpp
-                                   src/analysis/ext_categories.cpp src/analysis/age.cpp)
+                                   src/analysis/ext_categories.cpp src/analysis/age.cpp
+                                   src/analysis/chart.cpp)
 target_include_directories(dafree_core PUBLIC include)
 target_compile_features(dafree_core PUBLIC cxx_std_20)
 find_package(Threads REQUIRED)
@@ -60,6 +61,7 @@ endif()
 
 if(DAFREE_BUILD_TESTS)
   add_executable(dafree_core_tests tests/test_smoke.cpp tests/test_names.cpp tests/test_analysis.cpp
+                                     tests/test_chart.cpp
                                      tests/test_memory.cpp src/testing/counting_alloc.cpp
                                      tests/test_aggregate.cpp tests/test_segvector.cpp
                                      tests/test_tree.cpp tests/test_units.cpp tests/test_longpath.cpp

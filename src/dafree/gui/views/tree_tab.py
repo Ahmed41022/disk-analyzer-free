@@ -192,9 +192,11 @@ class TreeTab(QWidget):
         """Reformat cached table values and the current selection details."""
         if self.table is not None:
             self.table.tree_model.set_units(self._settings.units, self._settings.unit_style)
-            self._selected(self.table.currentIndex(), QModelIndex())
+            self._selected(self.table.currentIndex(), QModelIndex(), notify=False)
 
-    def _selected(self, current: QModelIndex, previous: QModelIndex) -> None:
+    def _selected(
+        self, current: QModelIndex, previous: QModelIndex, *, notify: bool = True
+    ) -> None:
         if self.table is None or self.tree is None or not current.isValid():
             return
         row = self.table.tree_model.row_data(current.row())
@@ -212,4 +214,5 @@ class TreeTab(QWidget):
                 folders=QLocale().toString(row[9]),
             )
         )
-        self.nodeSelected.emit(self.tree, row[0])
+        if notify:
+            self.nodeSelected.emit(self.tree, row[0])

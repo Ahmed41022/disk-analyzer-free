@@ -28,6 +28,7 @@ nav:
   - JSON export: reference/json-export.md
   - CSV export: reference/csv-export.md
   - Treemap API: reference/treemap.md
+  - Chart data: reference/charts.md
   - Desktop bootstrap: gui.md
   - Keyboard shortcuts: guide/shortcuts.md
   - Performance and fixtures: performance.md
