@@ -38,6 +38,7 @@ from dafree.gui.dialogs.scan_dialog import ScanDialog
 from dafree.gui.dialogs.settings_dialog import SettingsDialog
 from dafree.gui.shortcuts import ShortcutRegistry, shortcut_specs
 from dafree.gui.theme.palette import ThemeController
+from dafree.gui.views.charts_tab import ChartsTab
 from dafree.gui.views.issues_tab import IssuesTab
 from dafree.gui.views.tree_tab import TreeTab
 from dafree.gui.views.treemap_tab import TreemapTab
@@ -98,7 +99,7 @@ class MainWindow(QMainWindow):
         self._total_bytes = 0
         self._issues: list[ScanIssue] = []
         self._issue_total = 0
-        self._pages: dict[str, TreeTab | TreemapTab | IssuesTab] = {}
+        self._pages: dict[str, TreeTab | TreemapTab | ChartsTab | IssuesTab] = {}
         self._tab_keys: list[str] = []
         self._closing = False
         self.runner = TaskRunner(self)
@@ -262,6 +263,9 @@ class MainWindow(QMainWindow):
         treemap = self._pages.get("treemap")
         if isinstance(treemap, TreemapTab):
             treemap.refresh_settings()
+        charts = self._pages.get("charts")
+        if isinstance(charts, ChartsTab):
+            charts.refresh_settings()
         self.total_label.setText(
             _("Total: {size}").format(
                 size=_format_size(
@@ -333,7 +337,7 @@ class MainWindow(QMainWindow):
             page.setObjectName(f"tab.{key}")
             index = self.tabs.addTab(page, title)
             self._tab_keys.append(key)
-            self.tabs.setTabEnabled(index, key in ("tree", "treemap", "issues"))
+            self.tabs.setTabEnabled(index, key in ("tree", "treemap", "charts", "issues"))
         self.tabs.currentChanged.connect(self._activate_tab)
         self._activate_tab(0)
 
@@ -351,26 +355,32 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.tabs, 1)
         self.setCentralWidget(body)
 
+    def _create_page(self, key: str) -> TreeTab | TreemapTab | ChartsTab | IssuesTab:
+        if key == "tree":
+            tree = TreeTab(self._settings, self.runner, self.tabs, paths=self._paths)
+            tree.propertiesRequested.connect(self.propertiesRequested.emit)
+            tree.contextMenuRequested.connect(self.contextMenuRequested.emit)
+            tree.nodeSelected.connect(self._tree_selected)
+            return tree
+        if key == "treemap":
+            treemap = TreemapTab(self._settings, self.runner, self.tabs)
+            treemap.nodeSelected.connect(self._treemap_selected)
+            treemap.contextMenuRequested.connect(self.contextMenuRequested.emit)
+            return treemap
+        if key == "charts":
+            charts = ChartsTab(self._settings, self.runner, self.tabs)
+            charts.nodeSelected.connect(self._treemap_selected)
+            return charts
+        return IssuesTab(self.tabs, runner=self.runner)
+
     def _activate_tab(self, index: int) -> None:
         if index < 0:
             return
         key = self._tab_keys[index]
-        if key not in ("tree", "treemap", "issues"):
+        if key not in ("tree", "treemap", "charts", "issues"):
             return
         if key not in self._pages:
-            if key == "tree":
-                tree_page = TreeTab(self._settings, self.runner, self.tabs, paths=self._paths)
-                tree_page.propertiesRequested.connect(self.propertiesRequested.emit)
-                tree_page.contextMenuRequested.connect(self.contextMenuRequested.emit)
-                tree_page.nodeSelected.connect(self._tree_selected)
-                page: TreeTab | TreemapTab | IssuesTab = tree_page
-            elif key == "treemap":
-                treemap = TreemapTab(self._settings, self.runner, self.tabs)
-                treemap.nodeSelected.connect(self._treemap_selected)
-                treemap.contextMenuRequested.connect(self.contextMenuRequested.emit)
-                page = treemap
-            else:
-                page = IssuesTab(self.tabs, runner=self.runner)
+            page = self._create_page(key)
             self._pages[key] = page
             old, title = self.tabs.widget(index), self.tabs.tabText(index)
             with QSignalBlocker(self.tabs):
@@ -380,9 +390,12 @@ class MainWindow(QMainWindow):
             if old is not None:
                 old.deleteLater()
         selected = self._pages[key]
-        if isinstance(selected, (TreeTab, TreemapTab)) and self._latest_tree is not None:
+        if isinstance(selected, (TreeTab, TreemapTab, ChartsTab)) and self._latest_tree is not None:
+            seed_chart_scope = (
+                isinstance(selected, ChartsTab) and selected.tree is not self._latest_tree
+            )
             selected.set_tree(self._latest_tree)
-            if isinstance(selected, TreemapTab):
+            if isinstance(selected, TreemapTab) or seed_chart_scope:
                 current_tree_page = self._pages.get("tree")
                 if (
                     isinstance(current_tree_page, TreeTab)
@@ -405,6 +418,9 @@ class MainWindow(QMainWindow):
         page = self._pages.get("treemap")
         if isinstance(page, TreemapTab) and page.widget.tree is tree:
             page.select_node(node)
+        charts = self._pages.get("charts")
+        if isinstance(charts, ChartsTab) and charts.tree is tree:
+            charts.select_node(node)
 
     def _treemap_selected(self, tree: api.Tree, node: int) -> None:
         page = self._pages.get("tree")
@@ -555,6 +571,9 @@ class MainWindow(QMainWindow):
         treemap = self._pages.get("treemap")
         if isinstance(treemap, TreemapTab):
             treemap.clear()
+        charts = self._pages.get("charts")
+        if isinstance(charts, ChartsTab):
+            charts.clear()
         issues_page = self._pages.get("issues")
         if isinstance(issues_page, IssuesTab):
             issues_page.set_issues([], 0)
@@ -586,7 +605,7 @@ class MainWindow(QMainWindow):
         self._latest_tree = tree
         if not self._closing:
             page = self._pages.get(self._tab_keys[self.tabs.currentIndex()])
-            if isinstance(page, (TreeTab, TreemapTab)):
+            if isinstance(page, (TreeTab, TreemapTab, ChartsTab)):
                 page.set_tree(tree)
 
     def _finished(self, result: api.ScanResult) -> None:

@@ -931,3 +931,81 @@ msgstr ""
 #, python-brace-format
 msgid "{name}, {size}"
 msgstr "{name}, {size}"
+
+msgid "Archives"
+msgstr "Archive"
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Bar chart"
+msgstr "Balkendiagramm"
+
+msgid "Categories by size"
+msgstr "Kategorien nach Größe"
+
+msgid "Chart metric"
+msgstr "Diagrammkennzahl"
+
+msgid "Children by allocated space"
+msgstr "Direkte Einträge nach belegtem Speicher"
+
+msgid "Children by file count"
+msgstr "Direkte Einträge nach Dateianzahl"
+
+msgid "Children by size"
+msgstr "Direkte Einträge nach Größe"
+
+msgid "Code"
+msgstr "Quellcode"
+
+#, python-brace-format
+msgid "Could not prepare charts: {error}"
+msgstr "Diagramme konnten nicht vorbereitet werden: {error}"
+
+msgid "Disk images"
+msgstr "Datenträgerabbilder"
+
+msgid "Documents"
+msgstr "Dokumente"
+
+msgid "Executables"
+msgstr "Ausführbare Dateien"
+
+msgid "Extensions by file count"
+msgstr "Erweiterungen nach Dateianzahl"
+
+msgid "Extensions by size"
+msgstr "Erweiterungen nach Größe"
+
+msgid "Images"
+msgstr "Bilder"
+
+msgid "No data for this selection."
+msgstr "Keine Daten für diese Auswahl."
+
+msgid "No extension"
+msgstr "Ohne Erweiterung"
+
+msgid "Other file types"
+msgstr "Andere Dateitypen"
+
+msgid "Pie chart"
+msgstr "Kreisdiagramm"
+
+msgid "Preparing charts…"
+msgstr "Diagramme werden vorbereitet…"
+
+msgid "System files"
+msgstr "Systemdateien"
+
+msgid "Videos"
+msgstr "Videos"
+
+#, python-brace-format
+msgid "{chart}: {slice}"
+msgstr "{chart}: {slice}"
+
+#, python-brace-format
+msgid "{label}: {value} ({percent})"
+msgstr "{label}: {value} ({percent})"

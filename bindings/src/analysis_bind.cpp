@@ -28,6 +28,14 @@ void bind_analysis(nb::module_ &module) {
         .def_ro("files", &AgeStat::files)
         .def_ro("size", &AgeStat::size)
         .def_ro("alloc", &AgeStat::alloc);
+    nb::enum_<ChildChartField>(module, "ChildChartField")
+        .value("SIZE", ChildChartField::Size)
+        .value("ALLOC", ChildChartField::Alloc)
+        .value("FILES", ChildChartField::Files);
+    nb::class_<ChildChartRow>(module, "ChildChartRow")
+        .def_ro("node", &ChildChartRow::node)
+        .def_ro("value", &ChildChartRow::value)
+        .def_ro("other", &ChildChartRow::other);
     module.def(
         "top_n",
         [](const BoundTree &bound, NodeId scope, TopKind kind, std::size_t n, SortKey by,
@@ -38,6 +46,15 @@ void bind_analysis(nb::module_ &module) {
         nb::arg("tree"), nb::arg("scope"), nb::arg("kind"), nb::arg("n"), nb::arg("by"),
         nb::arg("leaf_only") = false, nb::call_guard<nb::gil_scoped_release>(),
         "Rank file or directory IDs within the selected scope.");
+    module.def(
+        "child_chart_data",
+        [](const BoundTree &bound, NodeId scope, ChildChartField field, std::size_t top) {
+            return bound.handle->read(
+                [&](const Tree &tree) { return child_chart_data(tree, scope, field, top); });
+        },
+        nb::arg("tree"), nb::arg("scope"), nb::arg("field"), nb::arg("top"),
+        nb::call_guard<nb::gil_scoped_release>(),
+        "Rank direct children and aggregate the remaining chart values.");
     module.def(
         "ext_breakdown",
         [](const BoundTree &bound, NodeId scope) {

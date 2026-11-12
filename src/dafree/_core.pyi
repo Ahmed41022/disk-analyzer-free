@@ -894,10 +894,30 @@ class AgeStat:
     @property
     def alloc(self) -> int: ...
 
+class ChildChartField(enum.Enum):
+    SIZE = 0
+
+    ALLOC = 1
+
+    FILES = 2
+
+class ChildChartRow:
+    @property
+    def node(self) -> int: ...
+    @property
+    def value(self) -> int: ...
+    @property
+    def other(self) -> bool: ...
+
 def top_n(
     tree: Tree, scope: int, kind: TopKind, n: int, by: SortKey, leaf_only: bool = False
 ) -> list[int]:
     """Rank file or directory IDs within the selected scope."""
+
+def child_chart_data(
+    tree: Tree, scope: int, field: ChildChartField, top: int
+) -> list[ChildChartRow]:
+    """Rank direct children and aggregate the remaining chart values."""
 
 def ext_breakdown(tree: Tree, scope: int) -> list[ExtStat]:
     """Group file counts and bytes by extension."""

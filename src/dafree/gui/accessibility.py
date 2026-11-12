@@ -120,6 +120,11 @@ class _AccessibleRectInterface(QAccessibleObject):
         if isinstance(widget, QWidget):
             result.invisible = not widget.isVisible()
             result.disabled = not widget.isEnabled()
+            owner = obj.owner_ref()
+            if owner is not None and owner.focus_index is not None:
+                result.focusable = True
+                result.selected = owner._objects[owner.focus_index] is obj
+                result.focused = result.selected and widget.hasFocus()
         return result
 
 
@@ -133,6 +138,7 @@ class TreemapAccessibility:
         self._interfaces: dict[int, QAccessibleInterface] = {}
         self._interface: _TreemapAccessibleInterface | None = None
         self._destroyed = False
+        self.focus_index: int | None = None
         widget.accessibility = self  # type: ignore[attr-defined]
         widget.destroyed.connect(self._on_widget_destroyed)
         _FactoryRegistration.ensure_installed()
@@ -153,6 +159,7 @@ class TreemapAccessibility:
             return
 
         self._entries = tuple(entries)
+        self.focus_index = None
         for index, entry in enumerate(self._entries):
             if index < len(self._objects):
                 child = self._objects[index]
@@ -165,6 +172,16 @@ class TreemapAccessibility:
         if QAccessible.isActive():
             event = QAccessibleEvent(widget, QAccessible.Event.ObjectReorder)
             QAccessible.updateAccessibility(event)
+
+    def set_focus(self, index: int) -> None:
+        """Expose the canvas's active virtual item to screen-reader focus queries."""
+        if not 0 <= index < len(self._entries):
+            raise IndexError(index)
+        self.focus_index = index
+        if QAccessible.isActive():
+            QAccessible.updateAccessibility(
+                QAccessibleEvent(self._objects[index], QAccessible.Event.Focus)
+            )
 
     def _interface_for(self, index: int) -> QAccessibleInterface | None:
         if index < 0 or index >= len(self._objects):
@@ -189,6 +206,7 @@ class TreemapAccessibility:
 
     def _on_widget_destroyed(self, _object: QObject | None = None) -> None:
         self._destroyed = True
+        self.focus_index = None
         self._entries = ()
         for child in self._objects:
             child.active = False
@@ -221,6 +239,13 @@ class _TreemapAccessibleInterface(QAccessibleWidget):
     def childCount(self) -> int:
         """Return the bounded number of largest visible rectangles."""
         return len(self._owner.entries)
+
+    def focusChild(self) -> QAccessibleInterface:
+        """Return the active virtual item while its canvas owns keyboard focus."""
+        index = self._owner.focus_index
+        if index is not None and self.widget().hasFocus():
+            return self.child(index)
+        return super().focusChild()
 
     def indexOfChild(self, child: QAccessibleInterface) -> int:
         """Find a virtual child by its QObject proxy identity."""

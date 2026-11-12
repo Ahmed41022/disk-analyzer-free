@@ -13,7 +13,9 @@ Find out what's using your disk space — fast, free and open source.
 
 The interactive [Treemap tab](docs/reference/treemap.md) supports directory zoom,
 tree selection, size tooltips, flat colours, and screen-reader descriptions.
-Developers can also use its native layout, RGBA rendering, and hit-testing API.
+The Charts tab compares folders, extensions and categories with pie and bar charts,
+localized legends and keyboard navigation. Developers can also use the native
+treemap API and the chart-data facade.
 
 ## Screenshots
 
