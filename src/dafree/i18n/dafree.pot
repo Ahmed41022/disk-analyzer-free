@@ -216,6 +216,10 @@ msgid "Could not prepare charts: {error}"
 msgstr ""
 
 #, python-brace-format
+msgid "Could not prepare largest items: {error}"
+msgstr ""
+
+#, python-brace-format
 msgid "Could not prepare tree: {error}"
 msgstr ""
 
@@ -437,6 +441,11 @@ msgstr ""
 msgid "Include alternate data streams (Windows only)"
 msgstr ""
 
+msgid ""
+"Include folders with no child folder using at least one percent of their "
+"size."
+msgstr ""
+
 msgid "Include hidden files"
 msgstr ""
 
@@ -474,10 +483,16 @@ msgstr ""
 msgid "Language changes take effect after restarting the application."
 msgstr ""
 
+msgid "Largest files and folders"
+msgstr ""
+
 msgid "Last Modified"
 msgstr ""
 
 msgid "Lazy"
+msgstr ""
+
+msgid "Leaf folders only"
 msgstr ""
 
 msgid "Light"
@@ -603,6 +618,9 @@ msgstr ""
 msgid "Preparing charts…"
 msgstr ""
 
+msgid "Preparing largest items…"
+msgstr ""
+
 msgid "Preparing scan…"
 msgstr ""
 
@@ -619,6 +637,9 @@ msgid "Print the preferences file path."
 msgstr ""
 
 msgid "Properties"
+msgstr ""
+
+msgid "Ranked items"
 msgstr ""
 
 msgid "Rate: —"
@@ -655,6 +676,9 @@ msgid "Restart as administrator"
 msgstr ""
 
 msgid "Restore default shortcuts"
+msgstr ""
+
+msgid "Result limit"
 msgstr ""
 
 msgid "Resume"
@@ -978,6 +1002,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{name}, {size}"
+msgstr ""
+
+#, python-brace-format
+msgid "{name}, {size}, {path}"
 msgstr ""
 
 #, python-brace-format

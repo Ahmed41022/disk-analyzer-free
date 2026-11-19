@@ -1005,3 +1005,29 @@ msgstr "{chart}: {slice}"
 #, python-brace-format
 msgid "{label}: {value} ({percent})"
 msgstr "{label}: {value} ({percent})"
+
+#, python-brace-format
+msgid "Could not prepare largest items: {error}"
+msgstr "Could not prepare largest items: {error}"
+
+msgid "Include folders with no child folder using at least one percent of their size."
+msgstr "Include folders with no child folder using at least one percent of their size."
+
+msgid "Largest files and folders"
+msgstr "Largest files and folders"
+
+msgid "Leaf folders only"
+msgstr "Leaf folders only"
+
+msgid "Preparing largest items…"
+msgstr "Preparing largest items…"
+
+msgid "Ranked items"
+msgstr "Ranked items"
+
+msgid "Result limit"
+msgstr "Result limit"
+
+#, python-brace-format
+msgid "{name}, {size}, {path}"
+msgstr "{name}, {size}, {path}"
