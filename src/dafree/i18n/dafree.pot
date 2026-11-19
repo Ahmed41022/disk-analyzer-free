@@ -136,6 +136,9 @@ msgstr ""
 msgid "Categories by size"
 msgstr ""
 
+msgid "Category"
+msgstr ""
+
 msgid "Changed during scan"
 msgstr ""
 
@@ -213,6 +216,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Could not prepare charts: {error}"
+msgstr ""
+
+#, python-brace-format
+msgid "Could not prepare extension breakdown: {error}"
 msgstr ""
 
 #, python-brace-format
@@ -351,6 +358,9 @@ msgstr ""
 msgid "Extension"
 msgstr ""
 
+msgid "Extension breakdown"
+msgstr ""
+
 msgid "Extensions by file count"
 msgstr ""
 
@@ -368,6 +378,9 @@ msgid "Files: {count}"
 msgstr ""
 
 msgid "Find"
+msgstr ""
+
+msgid "Find query"
 msgstr ""
 
 msgid "Finishing scan…"
@@ -618,6 +631,9 @@ msgstr ""
 msgid "Preparing charts…"
 msgstr ""
 
+msgid "Preparing extension breakdown…"
+msgstr ""
+
 msgid "Preparing largest items…"
 msgstr ""
 
@@ -747,10 +763,16 @@ msgstr ""
 msgid "Scheduled scans"
 msgstr ""
 
+msgid "Scope share (%)"
+msgstr ""
+
 msgid "Search"
 msgstr ""
 
 msgid "Search file and folder names."
+msgstr ""
+
+msgid "Search is not available yet. Your query and scope are shown here."
 msgstr ""
 
 msgid "Search results"

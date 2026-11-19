@@ -14,6 +14,7 @@ Find out what's using your disk space — fast, free and open source.
 The interactive [Treemap tab](docs/reference/treemap.md) supports directory zoom,
 tree selection, size tooltips, flat colours, and screen-reader descriptions.
 The [Top tab](docs/reference/top-view.md) ranks the largest files or folders in the selected scope, with 20–500 results and full paths.
+The [Types tab](docs/reference/types-view.md) groups extensions with counts, sizes, scope percentages and a bar chart; row activation prepares a scoped query for the forthcoming Find engine.
 The Charts tab compares folders, extensions and categories with pie and bar charts,
 localized legends and keyboard navigation. Developers can also use the native
 treemap API and the chart-data facade.

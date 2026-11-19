@@ -1036,3 +1036,25 @@ msgstr "الحد الأقصى للنتائج"
 #, python-brace-format
 msgid "{name}, {size}, {path}"
 msgstr "{name}، {size}، {path}"
+
+msgid "Category"
+msgstr "الفئة"
+
+#, python-brace-format
+msgid "Could not prepare extension breakdown: {error}"
+msgstr "تعذر إعداد تفصيل الامتدادات: {error}"
+
+msgid "Extension breakdown"
+msgstr "تفصيل الامتدادات"
+
+msgid "Find query"
+msgstr "استعلام البحث"
+
+msgid "Preparing extension breakdown…"
+msgstr "جارٍ إعداد تفصيل الامتدادات…"
+
+msgid "Scope share (%)"
+msgstr "النسبة من النطاق (%)"
+
+msgid "Search is not available yet. Your query and scope are shown here."
+msgstr "البحث غير متاح بعد. يظهر استعلامك ونطاقه هنا."

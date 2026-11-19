@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDockWidget,
     QLabel,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QMainWindow,
@@ -43,6 +44,7 @@ from dafree.gui.views.issues_tab import IssuesTab
 from dafree.gui.views.top_tab import TopTab
 from dafree.gui.views.tree_tab import TreeTab
 from dafree.gui.views.treemap_tab import TreemapTab
+from dafree.gui.views.types_tab import TypesTab
 from dafree.gui.widgets.breadcrumb import ElidedPathLabel
 from dafree.gui.widgets.progress_panel import ProgressPanel, elapsed_text
 from dafree.gui.widgets.query_edit import QueryEdit
@@ -100,8 +102,13 @@ class MainWindow(QMainWindow):
         self._total_bytes = 0
         self._issues: list[ScanIssue] = []
         self._issue_total = 0
-        self._pages: dict[str, TreeTab | TreemapTab | ChartsTab | TopTab | IssuesTab] = {}
+        self._pages: dict[
+            str, TreeTab | TreemapTab | ChartsTab | TopTab | TypesTab | IssuesTab
+        ] = {}
         self._tab_keys: list[str] = []
+        self.find_tree: api.Tree | None = None
+        self.find_scope: int | None = None
+        self.find_query_value = ""
         self._closing = False
         self.runner = TaskRunner(self)
         self.controller = ScanController(self, runner=self.runner, backend=scan_backend)
@@ -270,6 +277,9 @@ class MainWindow(QMainWindow):
         top = self._pages.get("top")
         if isinstance(top, TopTab):
             top.refresh_settings()
+        types = self._pages.get("types")
+        if isinstance(types, TypesTab):
+            types.refresh_settings()
         self.total_label.setText(
             _("Total: {size}").format(
                 size=_format_size(
@@ -341,7 +351,25 @@ class MainWindow(QMainWindow):
             page.setObjectName(f"tab.{key}")
             index = self.tabs.addTab(page, title)
             self._tab_keys.append(key)
-            self.tabs.setTabEnabled(index, key in ("tree", "treemap", "charts", "top", "issues"))
+            self.tabs.setTabEnabled(
+                index, key in ("tree", "treemap", "charts", "top", "types", "issues")
+            )
+        find_page = self.tabs.widget(self._tab_keys.index("find"))
+        if find_page is None:
+            raise RuntimeError("Find tab is missing")
+        find_layout = QVBoxLayout(find_page)
+        self.find_query = QLineEdit(find_page)
+        self.find_query.setReadOnly(True)
+        self.find_query.setAccessibleName(_("Find query"))
+        self.find_scope_label = ElidedPathLabel(find_page)
+        self.find_message = QLabel(
+            _("Search is not available yet. Your query and scope are shown here."), find_page
+        )
+        self.find_message.setWordWrap(True)
+        find_layout.addWidget(self.find_query)
+        find_layout.addWidget(self.find_scope_label)
+        find_layout.addWidget(self.find_message)
+        find_layout.addStretch()
         self.tabs.currentChanged.connect(self._activate_tab)
         self._activate_tab(0)
 
@@ -359,7 +387,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.tabs, 1)
         self.setCentralWidget(body)
 
-    def _create_page(self, key: str) -> TreeTab | TreemapTab | ChartsTab | TopTab | IssuesTab:
+    def _create_page(
+        self, key: str
+    ) -> TreeTab | TreemapTab | ChartsTab | TopTab | TypesTab | IssuesTab:
         if key == "tree":
             tree = TreeTab(self._settings, self.runner, self.tabs, paths=self._paths)
             tree.propertiesRequested.connect(self.propertiesRequested.emit)
@@ -380,13 +410,17 @@ class MainWindow(QMainWindow):
             top.nodeSelected.connect(self._treemap_selected)
             top.contextMenuRequested.connect(self.contextMenuRequested.emit)
             return top
+        if key == "types":
+            types = TypesTab(self._settings, self.runner, self.tabs)
+            types.findRequested.connect(self.show_find)
+            return types
         return IssuesTab(self.tabs, runner=self.runner)
 
     def _activate_tab(self, index: int) -> None:
         if index < 0:
             return
         key = self._tab_keys[index]
-        if key not in ("tree", "treemap", "charts", "top", "issues"):
+        if key not in ("tree", "treemap", "charts", "top", "types", "issues"):
             return
         if key not in self._pages:
             page = self._create_page(key)
@@ -400,11 +434,12 @@ class MainWindow(QMainWindow):
                 old.deleteLater()
         selected = self._pages[key]
         if (
-            isinstance(selected, (TreeTab, TreemapTab, ChartsTab, TopTab))
+            isinstance(selected, (TreeTab, TreemapTab, ChartsTab, TopTab, TypesTab))
             and self._latest_tree is not None
         ):
             seed_scope = (
-                isinstance(selected, (ChartsTab, TopTab)) and selected.tree is not self._latest_tree
+                isinstance(selected, (ChartsTab, TopTab, TypesTab))
+                and selected.tree is not self._latest_tree
             )
             selected.set_tree(self._latest_tree)
             if isinstance(selected, TreemapTab) or seed_scope:
@@ -426,6 +461,26 @@ class MainWindow(QMainWindow):
         """Activate an implemented tab, creating its contents on first use."""
         self.tabs.setCurrentIndex(self._tab_keys.index(key))
 
+    def show_find(self, tree: api.Tree, scope: int, query: str) -> None:
+        """Keep a scoped analysis query visible for the forthcoming Find engine."""
+        if tree is not self._latest_tree:
+            return
+        self.find_tree, self.find_scope, self.find_query_value = tree, scope, query
+        self.find_query.setText(_display_text(query))
+        self.find_scope_label.set_path(_("All scan targets") if scope == 0 else tree.path(scope))
+        index = self._tab_keys.index("find")
+        self.tabs.setTabEnabled(index, True)
+        self.shortcuts.actions[f"switch_tab_{index + 1}"].setEnabled(True)
+        self.tabs.setCurrentIndex(index)
+
+    def _clear_find(self) -> None:
+        self.find_tree = self.find_scope = None
+        self.find_query_value = ""
+        self.find_query.clear()
+        self.find_scope_label.set_path("")
+        self.tabs.setTabEnabled(self._tab_keys.index("find"), False)
+        self.shortcuts.actions["switch_tab_7"].setEnabled(False)
+
     def _tree_selected(self, tree: api.Tree, node: int) -> None:
         page = self._pages.get("treemap")
         if isinstance(page, TreemapTab) and page.widget.tree is tree:
@@ -436,6 +491,9 @@ class MainWindow(QMainWindow):
         top = self._pages.get("top")
         if isinstance(top, TopTab) and top.tree is tree:
             top.select_node(node)
+        types = self._pages.get("types")
+        if isinstance(types, TypesTab) and types.tree is tree:
+            types.select_node(node)
 
     def _treemap_selected(self, tree: api.Tree, node: int) -> None:
         page = self._pages.get("tree")
@@ -592,6 +650,10 @@ class MainWindow(QMainWindow):
         top = self._pages.get("top")
         if isinstance(top, TopTab):
             top.clear()
+        types = self._pages.get("types")
+        if isinstance(types, TypesTab):
+            types.clear()
+        self._clear_find()
         issues_page = self._pages.get("issues")
         if isinstance(issues_page, IssuesTab):
             issues_page.set_issues([], 0)
@@ -621,9 +683,11 @@ class MainWindow(QMainWindow):
 
     def _tree_ready(self, tree: api.Tree) -> None:
         self._latest_tree = tree
+        if self.find_tree is not None and self.find_tree is not tree:
+            self._clear_find()
         if not self._closing:
             page = self._pages.get(self._tab_keys[self.tabs.currentIndex()])
-            if isinstance(page, (TreeTab, TreemapTab, ChartsTab, TopTab)):
+            if isinstance(page, (TreeTab, TreemapTab, ChartsTab, TopTab, TypesTab)):
                 page.set_tree(tree)
 
     def _finished(self, result: api.ScanResult) -> None:
