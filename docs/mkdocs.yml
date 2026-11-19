@@ -29,6 +29,7 @@ nav:
   - CSV export: reference/csv-export.md
   - Treemap API: reference/treemap.md
   - Chart data: reference/charts.md
+  - Largest files and folders: reference/top-view.md
   - Desktop bootstrap: gui.md
   - Keyboard shortcuts: guide/shortcuts.md
   - Performance and fixtures: performance.md

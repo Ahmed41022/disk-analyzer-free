@@ -1631,7 +1631,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T2.5, T4.6
   - **Acceptance:** `test_pie_angles_sum_to_360`, `test_other_slice_aggregates_remainder`, `test_bar_labels_use_units`, `test_slice_keyboard_focus`.
 
-- [ ] **T5.4 — Top-N view**
+- [x] **T5.4 — Top-N view**
   - **Files:** C `src/dafree/gui/views/top_tab.py`, `src/dafree/gui/models/list_models.py` (`NodeListModel` paging over a `list[int]` of node ids).
   - **Behavior:** Files/Folders toggle, N ∈ {20, 50, 100, 500}, "leaf folders only", path column, scope = selection; shared context menu.
   - **Depends on:** T2.5, T4.6

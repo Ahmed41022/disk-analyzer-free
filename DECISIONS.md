@@ -10,6 +10,18 @@ Scope assigned to later whole tasks remains explicit: `frozen-smoke` verifies th
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0086 — 2026-11-19 — Scope and page the Top-N view
+
+Question: T5.4 specifies ranked IDs and selection scope but leaves table columns, file selection, leaf semantics, navigation and request ownership unspecified.
+
+Choice: Reuse api.top_n unchanged, ranking by descending logical size with its existing natural-name/node-ID ties. Keep native folder behavior: the selected scope may itself appear, and leaf_only means no child directory uses at least 1% of its size. Offer Files/Folders, 20/50/100/500 results, and the leaf option only for folders. Display Name, Size, Allocated and Path in NodeListModel, retaining copied node IDs and a lazy LRU of at most eight 64-row metadata pages. Scope a selected file to its parent, default to the single scan target or synthetic root for multiple targets, and preserve breadcrumb scope across tab/unit changes. Enter/double-click selects the result in Tree. Reuse the existing Properties context menu; destructive actions remain M8. Persist no new settings and add no dependencies.
+
+Reasoning: Reusing native ranking preserves existing CLI/accounting behavior and avoids Python tree enumeration. Bounded metadata pages preserve the flat-model contract without allocating one widget per result. Generation/owner checks and one coalesced pending request prevent obsolete scope, option or scan results from replacing the current report. Formatting changes reuse the existing pages. Run the model and GUI-test work in parallel with tab/window integration, then review and verify the combined result before accepting it.
+
+Verification: Cover all four result limits, descendant and file-parent scope, folder/leaf semantics, live unit formatting, full paths, Qt model invariants, bounded lazy page eviction, keyboard activation, clicked-row context identity, new-scan/clear rejection, rapid option coalescing, worker-error recovery and multi-target navigation. Integration tests poll the current table after asynchronous replacement instead of holding a deleted widget. Spell out one percent in the translated leaf tooltip so gettext cannot mistake percent-plus-prose for a printf placeholder. The complete Linux collection passed 471 tests with 12 existing platform skips, including scroll median 6.509 ms/p95 9.504 ms against unchanged limits. Keep the local Windows timing miss separate from the dedicated CI performance verdict; no assertion, marker or threshold is changed.
+
+CI follow-up: macOS did not activate QTableView results on Return through Qt's default key handling. Handle Return and keypad Enter explicitly in the Top table, consuming the event after one activation. Keep the existing keyboard and MainWindow navigation assertions and extend the test to require exactly one activation for each key on every OS; do not special-case or skip macOS.
+
 ## D-0085 — 2026-11-12 — Define bounded chart reports and selection scope
 
 Question: T5.3 names ChartSlice and chart_data but leaves slice fields, ties, empty groups, scope and overflow behavior unspecified. How should the charts share native analysis and navigation?
