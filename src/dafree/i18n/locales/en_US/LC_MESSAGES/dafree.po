@@ -1053,3 +1053,71 @@ msgstr "Scope share (%)"
 
 msgid "Search is not available yet. Your query and scope are shown here."
 msgstr "Search is not available yet. Your query and scope are shown here."
+
+#, python-brace-format
+msgid "<{age}"
+msgstr "<{age}"
+
+msgid "Access times can be unreliable with noatime/relatime or NTFS DisableLastAccess."
+msgstr "Access times can be unreliable with noatime/relatime or NTFS DisableLastAccess."
+
+msgid "Age buckets"
+msgstr "Age buckets"
+
+msgid "Age cutoffs must be positive and strictly increasing."
+msgstr "Age cutoffs must be positive and strictly increasing."
+
+msgid "Age cutoffs must fit in unsigned 64-bit seconds."
+msgstr "Age cutoffs must fit in unsigned 64-bit seconds."
+
+msgid "Age cutoffs need a positive whole number followed by d, w, m, or y."
+msgstr "Age cutoffs need a positive whole number followed by d, w, m, or y."
+
+msgid "Apply"
+msgstr "Apply"
+
+msgid "Apply age buckets"
+msgstr "Apply age buckets"
+
+msgid "Checking whether creation times are available for this selection."
+msgstr "Checking whether creation times are available for this selection."
+
+#, python-brace-format
+msgid "Could not prepare age analysis: {error}"
+msgstr "Could not prepare age analysis: {error}"
+
+msgid "Creation times are unavailable for this selection."
+msgstr "Creation times are unavailable for this selection."
+
+msgid "Files by age"
+msgstr "Files by age"
+
+msgid "Preparing age analysis…"
+msgstr "Preparing age analysis…"
+
+msgid "Separate cutoffs with commas. A month is 30 days; a year is 365 days."
+msgstr "Separate cutoffs with commas. A month is 30 days; a year is 365 days."
+
+msgid "Size by age"
+msgstr "Size by age"
+
+msgid "Time field"
+msgstr "Time field"
+
+msgid "Unknown timestamps cannot be opened as a time query."
+msgstr "Unknown timestamps cannot be opened as a time query."
+
+msgid "Use between one and 14 age cutoffs."
+msgstr "Use between one and 14 age cutoffs."
+
+#, python-brace-format
+msgid "{age} and older"
+msgstr "{age} and older"
+
+#, python-brace-format
+msgid "{label}: {note}"
+msgstr "{label}: {note}"
+
+#, python-brace-format
+msgid "{lower} to {upper}"
+msgstr "{lower} to {upper}"

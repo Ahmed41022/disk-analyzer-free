@@ -1643,7 +1643,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T2.5, T5.3
   - **Acceptance:** `test_activate_extension_opens_find_with_query`.
 
-- [ ] **T5.6 — Age analysis view**
+- [x] **T5.6 — Age analysis view**
   - **Files:** C `src/dafree/gui/views/age_tab.py`.
   - **Behavior:** field selector (Created disabled with tooltip when the volume has no birth times), editable buckets (`30d,90d,1y,…`), bar chart of size and count per bucket; clicking a bucket opens Find with the matching time query; note about unreliable access times (`noatime`/`relatime`, NTFS `DisableLastAccess`).
   - **Depends on:** T2.5, T5.3

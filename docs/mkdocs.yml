@@ -31,6 +31,7 @@ nav:
   - Chart data: reference/charts.md
   - Largest files and folders: reference/top-view.md
   - Extension breakdown: reference/types-view.md
+  - Age analysis: reference/age-view.md
   - Desktop bootstrap: gui.md
   - Keyboard shortcuts: guide/shortcuts.md
   - Performance and fixtures: performance.md

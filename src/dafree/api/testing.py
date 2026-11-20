@@ -23,7 +23,7 @@ class TreeBuilder:
 
 @dataclass
 class MockEntry:
-    """Synthetic entry metadata; zero inode IDs are assigned stable distinct IDs."""
+    """Synthetic metadata with optional Unix-second times and stable generated inode IDs."""
 
     path: str | os.PathLike[str]
     kind: EntryKind = EntryKind.FILE
@@ -40,6 +40,9 @@ class MockEntry:
     compressed: bool = False
     cloud: bool = False
     access_denied: bool = False
+    mtime: int | None = None
+    btime: int | None = None
+    atime: int | None = None
 
 
 @dataclass
@@ -60,6 +63,7 @@ def make_mock_backend(spec: MockSpec) -> Backend:
     entries: list[_core.MockEntry] = []
     for value in spec.entries:
         raw = _core.RawEntry()
+        raw.mtime, raw.btime, raw.atime = value.mtime, value.btime, value.atime
         raw.kind = _core.EntryKind(value.kind.value)
         raw.size, raw.alloc = value.size, value.size if value.alloc is None else value.alloc
         raw.dev, raw.ino_lo, raw.ino_hi, raw.nlink = (

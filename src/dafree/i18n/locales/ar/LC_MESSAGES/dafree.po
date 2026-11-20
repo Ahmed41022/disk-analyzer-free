@@ -1058,3 +1058,71 @@ msgstr "النسبة من النطاق (%)"
 
 msgid "Search is not available yet. Your query and scope are shown here."
 msgstr "البحث غير متاح بعد. يظهر استعلامك ونطاقه هنا."
+
+#, python-brace-format
+msgid "<{age}"
+msgstr "أقل من {age}"
+
+msgid "Access times can be unreliable with noatime/relatime or NTFS DisableLastAccess."
+msgstr "قد لا تكون أوقات الوصول موثوقة عند استخدام noatime/relatime أو إعداد DisableLastAccess في NTFS."
+
+msgid "Age buckets"
+msgstr "الفئات الزمنية"
+
+msgid "Age cutoffs must be positive and strictly increasing."
+msgstr "يجب أن تكون الحدود الزمنية موجبة ومرتبة تصاعديًا دون تكرار."
+
+msgid "Age cutoffs must fit in unsigned 64-bit seconds."
+msgstr "يجب أن تقع الحدود الزمنية بالثواني ضمن نطاق عدد صحيح غير موقّع من 64 بت."
+
+msgid "Age cutoffs need a positive whole number followed by d, w, m, or y."
+msgstr "يجب أن يتكوّن كل حد زمني من عدد صحيح موجب متبوع بـ d أو w أو m أو y."
+
+msgid "Apply"
+msgstr "تطبيق"
+
+msgid "Apply age buckets"
+msgstr "تطبيق الفئات الزمنية"
+
+msgid "Checking whether creation times are available for this selection."
+msgstr "جارٍ التحقق من توفّر أوقات الإنشاء لهذا التحديد."
+
+#, python-brace-format
+msgid "Could not prepare age analysis: {error}"
+msgstr "تعذر إعداد التحليل الزمني: {error}"
+
+msgid "Creation times are unavailable for this selection."
+msgstr "أوقات الإنشاء غير متاحة لهذا التحديد."
+
+msgid "Files by age"
+msgstr "الملفات حسب عمرها"
+
+msgid "Preparing age analysis…"
+msgstr "جارٍ إعداد التحليل الزمني…"
+
+msgid "Separate cutoffs with commas. A month is 30 days; a year is 365 days."
+msgstr "افصل الحدود الزمنية بفواصل. يُحسب الشهر على أنه 30 يومًا والسنة على أنها 365 يومًا."
+
+msgid "Size by age"
+msgstr "الحجم حسب عمر الملفات"
+
+msgid "Time field"
+msgstr "نوع الطابع الزمني"
+
+msgid "Unknown timestamps cannot be opened as a time query."
+msgstr "لا يمكن فتح استعلام زمني للطوابع الزمنية غير المعروفة."
+
+msgid "Use between one and 14 age cutoffs."
+msgstr "أدخل من حد زمني واحد إلى 14 حدًا."
+
+#, python-brace-format
+msgid "{age} and older"
+msgstr "{age} فأكثر"
+
+#, python-brace-format
+msgid "{label}: {note}"
+msgstr "{label}: {note}"
+
+#, python-brace-format
+msgid "{lower} to {upper}"
+msgstr "من {lower} إلى {upper}"
