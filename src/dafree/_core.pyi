@@ -706,6 +706,24 @@ class RawEntry:
     @kind.setter
     def kind(self, arg: EntryKind, /) -> None: ...
     @property
+    def mtime(self) -> int | None:
+        """Synthetic modification time in Unix seconds."""
+
+    @mtime.setter
+    def mtime(self, arg: int | None, /) -> None: ...
+    @property
+    def btime(self) -> int | None:
+        """Synthetic creation time in Unix seconds."""
+
+    @btime.setter
+    def btime(self, arg: int | None, /) -> None: ...
+    @property
+    def atime(self) -> int | None:
+        """Synthetic access time in Unix seconds."""
+
+    @atime.setter
+    def atime(self, arg: int | None, /) -> None: ...
+    @property
     def size(self) -> int: ...
     @size.setter
     def size(self, arg: int, /) -> None: ...

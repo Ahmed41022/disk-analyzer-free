@@ -39,6 +39,7 @@ from dafree.gui.dialogs.scan_dialog import ScanDialog
 from dafree.gui.dialogs.settings_dialog import SettingsDialog
 from dafree.gui.shortcuts import ShortcutRegistry, shortcut_specs
 from dafree.gui.theme.palette import ThemeController
+from dafree.gui.views.age_tab import AgeTab
 from dafree.gui.views.charts_tab import ChartsTab
 from dafree.gui.views.issues_tab import IssuesTab
 from dafree.gui.views.top_tab import TopTab
@@ -103,7 +104,7 @@ class MainWindow(QMainWindow):
         self._issues: list[ScanIssue] = []
         self._issue_total = 0
         self._pages: dict[
-            str, TreeTab | TreemapTab | ChartsTab | TopTab | TypesTab | IssuesTab
+            str, TreeTab | TreemapTab | ChartsTab | TopTab | TypesTab | AgeTab | IssuesTab
         ] = {}
         self._tab_keys: list[str] = []
         self.find_tree: api.Tree | None = None
@@ -280,6 +281,9 @@ class MainWindow(QMainWindow):
         types = self._pages.get("types")
         if isinstance(types, TypesTab):
             types.refresh_settings()
+        age = self._pages.get("age")
+        if isinstance(age, AgeTab):
+            age.refresh_settings()
         self.total_label.setText(
             _("Total: {size}").format(
                 size=_format_size(
@@ -352,7 +356,7 @@ class MainWindow(QMainWindow):
             index = self.tabs.addTab(page, title)
             self._tab_keys.append(key)
             self.tabs.setTabEnabled(
-                index, key in ("tree", "treemap", "charts", "top", "types", "issues")
+                index, key in ("tree", "treemap", "charts", "top", "types", "age", "issues")
             )
         find_page = self.tabs.widget(self._tab_keys.index("find"))
         if find_page is None:
@@ -389,7 +393,7 @@ class MainWindow(QMainWindow):
 
     def _create_page(
         self, key: str
-    ) -> TreeTab | TreemapTab | ChartsTab | TopTab | TypesTab | IssuesTab:
+    ) -> TreeTab | TreemapTab | ChartsTab | TopTab | TypesTab | AgeTab | IssuesTab:
         if key == "tree":
             tree = TreeTab(self._settings, self.runner, self.tabs, paths=self._paths)
             tree.propertiesRequested.connect(self.propertiesRequested.emit)
@@ -410,17 +414,19 @@ class MainWindow(QMainWindow):
             top.nodeSelected.connect(self._treemap_selected)
             top.contextMenuRequested.connect(self.contextMenuRequested.emit)
             return top
-        if key == "types":
-            types = TypesTab(self._settings, self.runner, self.tabs)
-            types.findRequested.connect(self.show_find)
-            return types
+        if key in ("types", "age"):
+            analysis = (TypesTab if key == "types" else AgeTab)(
+                self._settings, self.runner, self.tabs
+            )
+            analysis.findRequested.connect(self.show_find)
+            return analysis
         return IssuesTab(self.tabs, runner=self.runner)
 
     def _activate_tab(self, index: int) -> None:
         if index < 0:
             return
         key = self._tab_keys[index]
-        if key not in ("tree", "treemap", "charts", "top", "types", "issues"):
+        if key not in ("tree", "treemap", "charts", "top", "types", "age", "issues"):
             return
         if key not in self._pages:
             page = self._create_page(key)
@@ -434,11 +440,11 @@ class MainWindow(QMainWindow):
                 old.deleteLater()
         selected = self._pages[key]
         if (
-            isinstance(selected, (TreeTab, TreemapTab, ChartsTab, TopTab, TypesTab))
+            isinstance(selected, (TreeTab, TreemapTab, ChartsTab, TopTab, TypesTab, AgeTab))
             and self._latest_tree is not None
         ):
             seed_scope = (
-                isinstance(selected, (ChartsTab, TopTab, TypesTab))
+                isinstance(selected, (ChartsTab, TopTab, TypesTab, AgeTab))
                 and selected.tree is not self._latest_tree
             )
             selected.set_tree(self._latest_tree)
@@ -494,6 +500,9 @@ class MainWindow(QMainWindow):
         types = self._pages.get("types")
         if isinstance(types, TypesTab) and types.tree is tree:
             types.select_node(node)
+        age = self._pages.get("age")
+        if isinstance(age, AgeTab) and age.tree is tree:
+            age.select_node(node)
 
     def _treemap_selected(self, tree: api.Tree, node: int) -> None:
         page = self._pages.get("tree")
@@ -653,6 +662,9 @@ class MainWindow(QMainWindow):
         types = self._pages.get("types")
         if isinstance(types, TypesTab):
             types.clear()
+        age = self._pages.get("age")
+        if isinstance(age, AgeTab):
+            age.clear()
         self._clear_find()
         issues_page = self._pages.get("issues")
         if isinstance(issues_page, IssuesTab):
@@ -687,7 +699,7 @@ class MainWindow(QMainWindow):
             self._clear_find()
         if not self._closing:
             page = self._pages.get(self._tab_keys[self.tabs.currentIndex()])
-            if isinstance(page, (TreeTab, TreemapTab, ChartsTab, TopTab, TypesTab)):
+            if isinstance(page, (TreeTab, TreemapTab, ChartsTab, TopTab, TypesTab, AgeTab)):
                 page.set_tree(tree)
 
     def _finished(self, result: api.ScanResult) -> None:

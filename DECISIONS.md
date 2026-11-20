@@ -10,6 +10,20 @@ Scope assigned to later whole tasks remains explicit: `frozen-smoke` verifies th
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0088 — 2026-11-20 — Bound age charts and preserve timestamp semantics
+
+Question: T5.6 leaves duration units, interval limits, missing-time navigation and Created availability unspecified. The mock fixture facade also cannot currently supply timestamps for native histogram tests.
+
+Choice: Parse positive whole-number d/w/m/y cutoffs, case-insensitively, with a week of seven days, a month of 30 days and a year of 365 days. Require strictly increasing unsigned-64-bit seconds and at most 14 cutoffs, keeping the existing 16-slice chart bound for 15 intervals plus Unknown. Invalid input preserves the last valid report with an explanation. Use native age_histogram and capture one request clock; future times remain age zero. Show separate size/count charts, retaining true histogram bucket IDs when zero bars are omitted. Never encode bucket indexes as fake tree node IDs.
+
+Infer creation-time availability from native known-file histogram counts because public volume metadata exposes no birth-time capability. Reuse the requested Created report or perform a one-bucket native Created probe; do not walk nodes in Python. Disable Created with an informative tooltip until known and fall back to Modified when unavailable. Missing timestamps stay in Unknown, which is visible and explained but does not navigate because the specified query grammar has no missing-time predicate. Known intervals open the existing pending Find handoff using type:file and relative half-open field bounds; actual execution remains M6. Keep the access-time reliability note, established scopes/coalescing/unit refresh, and no new settings or dependencies.
+
+Append optional Unix-second mtime/btime/atime fields to MockEntry and expose the existing RawEntry members in test bindings, preserving None defaults. This small fixture-only addition allows exact native boundary/availability tests instead of mocking histogram behavior. Scanner timestamp conversion and accounting remain unchanged.
+
+Reasoning: Both charts must describe the same intervals despite independent zero-value filtering. Explicit bounds prevent the reusable chart's slice limit from failing after a valid edit. Native availability probes retain performance boundaries and avoid claiming that missing file metadata proves a platform capability. The pending-query and Unknown behavior keep M6 features out of M5 while stating current limits honestly.
+
+Verification: Retain exactly 539 collected tests. Final full suites passed on Windows (530 passed, nine existing platform skips) and Linux (527 passed, 12 existing platform skips). All 34 Age cases exercise real native timestamps, exact interval boundaries, independent zero-byte size/count mapping, availability/fallback, invalid input, scopes, units, query handoffs, stale/coalesced jobs and recovery. The first full suites caught an untranslated punctuation join in the Unknown accessibility description; replace the complete label/note composition with a translated template in both accessibility text and tooltip, retain the audit unchanged, then rerun the full suites. No tests, markers or thresholds were relaxed.
+
 ## D-0087 — 2026-11-19 — Share extension reports and defer Find execution
 
 Question: T5.5 requires a table, chart and navigation into Find, but the query parser and search interface are assigned to T6.1–T6.2. How should the handoff work without implementing later tasks early?

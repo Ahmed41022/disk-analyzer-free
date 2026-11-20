@@ -36,6 +36,10 @@ msgid "<30d"
 msgstr ""
 
 #, python-brace-format
+msgid "<{age}"
+msgstr ""
+
+#, python-brace-format
 msgid "<{end}"
 msgstr ""
 
@@ -49,6 +53,11 @@ msgid "A scan is already running."
 msgstr ""
 
 msgid "Access denied"
+msgstr ""
+
+msgid ""
+"Access times can be unreliable with noatime/relatime or NTFS "
+"DisableLastAccess."
 msgstr ""
 
 msgid "Accessed"
@@ -75,6 +84,18 @@ msgstr ""
 msgid "Age"
 msgstr ""
 
+msgid "Age buckets"
+msgstr ""
+
+msgid "Age cutoffs must be positive and strictly increasing."
+msgstr ""
+
+msgid "Age cutoffs must fit in unsigned 64-bit seconds."
+msgstr ""
+
+msgid "Age cutoffs need a positive whole number followed by d, w, m, or y."
+msgstr ""
+
 msgid "All kinds"
 msgstr ""
 
@@ -88,6 +109,12 @@ msgid "Allocated size is approximate"
 msgstr ""
 
 msgid "An unexpected error occurred. Details were saved to the application log."
+msgstr ""
+
+msgid "Apply"
+msgstr ""
+
+msgid "Apply age buckets"
 msgstr ""
 
 msgid "Arabic"
@@ -149,6 +176,9 @@ msgid "Charts"
 msgstr ""
 
 msgid "Checking folder…"
+msgstr ""
+
+msgid "Checking whether creation times are available for this selection."
 msgstr ""
 
 msgid "Children by allocated space"
@@ -215,6 +245,10 @@ msgid "Could not pass arguments to the other instance."
 msgstr ""
 
 #, python-brace-format
+msgid "Could not prepare age analysis: {error}"
+msgstr ""
+
+#, python-brace-format
 msgid "Could not prepare charts: {error}"
 msgstr ""
 
@@ -257,6 +291,9 @@ msgid "Count once"
 msgstr ""
 
 msgid "Created"
+msgstr ""
+
+msgid "Creation times are unavailable for this selection."
 msgstr ""
 
 msgid "Cross filesystems"
@@ -371,6 +408,9 @@ msgid "File"
 msgstr ""
 
 msgid "Files"
+msgstr ""
+
+msgid "Files by age"
 msgstr ""
 
 #, python-brace-format
@@ -628,6 +668,9 @@ msgstr ""
 msgid "Prefix bytes"
 msgstr ""
 
+msgid "Preparing age analysis…"
+msgstr ""
+
 msgid "Preparing charts…"
 msgstr ""
 
@@ -784,6 +827,9 @@ msgstr ""
 msgid "Select a row to inspect it."
 msgstr ""
 
+msgid "Separate cutoffs with commas. A month is 30 days; a year is 365 days."
+msgstr ""
+
 msgid "Settings"
 msgstr ""
 
@@ -805,6 +851,9 @@ msgid "Showing {shown} of {total} issues"
 msgstr ""
 
 msgid "Size"
+msgstr ""
+
+msgid "Size by age"
 msgstr ""
 
 msgid "Snapshots"
@@ -851,6 +900,9 @@ msgstr ""
 msgid "Threads"
 msgstr ""
 
+msgid "Time field"
+msgstr ""
+
 msgid "Timeout"
 msgstr ""
 
@@ -891,11 +943,17 @@ msgstr ""
 msgid "Unknown"
 msgstr ""
 
+msgid "Unknown timestamps cannot be opened as a time query."
+msgstr ""
+
 #, python-brace-format
 msgid "Unsupported settings version: {version}"
 msgstr ""
 
 msgid "Up"
+msgstr ""
+
+msgid "Use between one and 14 age cutoffs."
 msgstr ""
 
 msgid "Validate and save a setting."
@@ -964,6 +1022,10 @@ msgid "user preference (version is managed by migrations)"
 msgstr ""
 
 #, python-brace-format
+msgid "{age} and older"
+msgstr ""
+
+#, python-brace-format
 msgid "{chart}: {slice}"
 msgstr ""
 
@@ -995,7 +1057,15 @@ msgid "{label} ({mount})"
 msgstr ""
 
 #, python-brace-format
+msgid "{label}: {note}"
+msgstr ""
+
+#, python-brace-format
 msgid "{label}: {value} ({percent})"
+msgstr ""
+
+#, python-brace-format
+msgid "{lower} to {upper}"
 msgstr ""
 
 #, python-brace-format

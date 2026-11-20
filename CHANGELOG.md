@@ -6,6 +6,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Changed
 
+- Added the Age tab with editable intervals, separate size/count charts, creation-time availability, access-time notices, and scoped time-query navigation.
+
 - Added the Types tab with scoped extension statistics, a bounded bar chart, localized percentages, and a pending Find-query handoff.
 
 - Added the Top tab with scoped largest-file/folder rankings, configurable result limits, native leaf-folder filtering, paged metadata, and shared Properties menus.

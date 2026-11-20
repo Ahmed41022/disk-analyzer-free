@@ -1057,3 +1057,73 @@ msgstr "Anteil am Bereich (%)"
 
 msgid "Search is not available yet. Your query and scope are shown here."
 msgstr "Die Suche ist noch nicht verfügbar. Ihre Abfrage und Ihr Suchbereich werden hier angezeigt."
+
+#, python-brace-format
+msgid "<{age}"
+msgstr "Unter {age}"
+
+msgid "Access times can be unreliable with noatime/relatime or NTFS DisableLastAccess."
+msgstr ""
+"Zugriffszeiten können bei noatime/relatime oder der NTFS-Einstellung DisableLastAccess "
+"unzuverlässig sein."
+
+msgid "Age buckets"
+msgstr "Altersintervalle"
+
+msgid "Age cutoffs must be positive and strictly increasing."
+msgstr "Altersgrenzen müssen positiv und streng aufsteigend sein."
+
+msgid "Age cutoffs must fit in unsigned 64-bit seconds."
+msgstr "Altersgrenzen müssen als Sekundenwert in eine vorzeichenlose 64-Bit-Zahl passen."
+
+msgid "Age cutoffs need a positive whole number followed by d, w, m, or y."
+msgstr "Altersgrenzen erfordern eine positive ganze Zahl mit d, w, m oder y als Einheit."
+
+msgid "Apply"
+msgstr "Anwenden"
+
+msgid "Apply age buckets"
+msgstr "Altersintervalle anwenden"
+
+msgid "Checking whether creation times are available for this selection."
+msgstr "Es wird geprüft, ob Erstellungszeiten für diese Auswahl verfügbar sind."
+
+#, python-brace-format
+msgid "Could not prepare age analysis: {error}"
+msgstr "Altersanalyse konnte nicht vorbereitet werden: {error}"
+
+msgid "Creation times are unavailable for this selection."
+msgstr "Für diese Auswahl sind keine Erstellungszeiten verfügbar."
+
+msgid "Files by age"
+msgstr "Dateien nach Alter"
+
+msgid "Preparing age analysis…"
+msgstr "Altersanalyse wird vorbereitet…"
+
+msgid "Separate cutoffs with commas. A month is 30 days; a year is 365 days."
+msgstr "Grenzen durch Kommas trennen. Ein Monat entspricht 30 Tagen, ein Jahr 365 Tagen."
+
+msgid "Size by age"
+msgstr "Größe nach Alter"
+
+msgid "Time field"
+msgstr "Zeitstempel"
+
+msgid "Unknown timestamps cannot be opened as a time query."
+msgstr "Für unbekannte Zeitstempel kann keine zeitbasierte Suchabfrage geöffnet werden."
+
+msgid "Use between one and 14 age cutoffs."
+msgstr "Eine bis 14 Altersgrenzen angeben."
+
+#, python-brace-format
+msgid "{age} and older"
+msgstr "{age} und älter"
+
+#, python-brace-format
+msgid "{label}: {note}"
+msgstr "{label}: {note}"
+
+#, python-brace-format
+msgid "{lower} to {upper}"
+msgstr "{lower} bis {upper}"
