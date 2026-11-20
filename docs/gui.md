@@ -90,7 +90,7 @@ percentage without exposing internal numeric IDs.
 
 The main window includes a Locations sidebar, the planned tab positions, and a
 status bar with mode, file/folder counts, total size, elapsed time, and a clickable
-issue count. Tree, Treemap, Charts, Top and Issues contents are created only when activated. Later
+issue count. Tree, Treemap, Charts, Top, Types and Issues contents are created only when activated. Later
 analysis tabs and deferred toolbar actions remain disabled. The sidebar discovers
 native volumes in a worker, shows used/free capacity and network icons, and retains
 recent targets and the snapshot directory. Snapshot opening belongs to M6.

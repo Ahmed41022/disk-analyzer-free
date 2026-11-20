@@ -1637,7 +1637,7 @@ Machine formats write only data to stdout; progress/warnings/errors go to stderr
   - **Depends on:** T2.5, T4.6
   - **Acceptance:** `test_top_files_sorted_desc_n_rows`.
 
-- [ ] **T5.5 — Extension breakdown view**
+- [x] **T5.5 — Extension breakdown view**
   - **Files:** C `src/dafree/gui/views/types_tab.py`.
   - **Behavior:** table (ext, category, files, size, allocated, % of scope) + bar chart; activating an extension opens Find with `ext:<x>`.
   - **Depends on:** T2.5, T5.3

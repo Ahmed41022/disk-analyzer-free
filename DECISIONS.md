@@ -10,6 +10,18 @@ Scope assigned to later whole tasks remains explicit: `frozen-smoke` verifies th
 
 Coverage now collects/enforces Python coverage on all three OSes and wires conditional Codecov upload (T4.13). No repository `CODECOV_TOKEN` is configured, so external upload is inactive as allowed by §7.3; local thresholds and downloadable reports remain required.
 
+## D-0087 — 2026-11-19 — Share extension reports and defer Find execution
+
+Question: T5.5 requires a table, chart and navigation into Find, but the query parser and search interface are assigned to T6.1–T6.2. How should the handoff work without implementing later tasks early?
+
+Choice: Prepare one native ext_breakdown report in TaskRunner and share its grouped rows with the table and top-15-plus-Other bar chart. Preserve native extension normalization, ranking, counts and saturated byte accounting. Table percentages divide by the selected scope's native logical-size total; a zero total displays zero percent. Keep zero-byte groups in the table, use localized categories/counts/sizes, and mark unreliable allocation. Retain the established file-parent scope, synthetic root, breadcrumbs, generation/coalescing and unit-refresh behavior. Persist no new settings or dependencies.
+
+Activate an extension row through Return, keypad Enter or double-click to open a read-only pending Find query and scope. Safe suffixes use ext:txt; empty suffixes and unsafe values use JSON quoting. Retain the raw query separately from escaped Qt display text. Pending handoffs reject other scan identities and clear when a new snapshot replaces their tree. The Find page explicitly states that search is unavailable; actual parsing, editing and result execution remain T6.1–T6.2. This completes the navigation contract while keeping the later search engine out of M5.
+
+Reasoning: Two independent native aggregations would unnecessarily traverse the same subtree twice. Grouped metadata already contains everything needed by both views. A visible, honestly labelled pending query provides a testable navigation handoff without presenting fabricated search results. Native suffix rules reject Unicode whitespace and suffixes over 16 UTF-8 bytes; tests for escaping arbitrary query values must use explicit grouped data rather than change those accounting rules. Use floating-point zero for Qt's decimal-formatting overload.
+
+Verification: The complete 505-test collection passed on Windows (496 passed, nine existing platform skips) and Linux (493 passed, 12 existing platform skips), retaining the unchanged scroll budgets. Test safe/reserved/empty extension activation through both Return and Enter, arbitrary query escaping with explicit grouped rows, zero-size formatting, saturated counts, allocation warnings, true scope percentages, a 15-plus-Other chart, scope/unit persistence, stale/coalesced jobs, error recovery, and stale Find handoffs. Correct the whitespace-suffix fixture to native normalization rather than changing the accounting rules. Visual review sets an initial two-to-one table/chart split with a minimum readable chart width.
+
 ## D-0086 — 2026-11-19 — Scope and page the Top-N view
 
 Question: T5.4 specifies ranked IDs and selection scope but leaves table columns, file selection, leaf semantics, navigation and request ownership unspecified.

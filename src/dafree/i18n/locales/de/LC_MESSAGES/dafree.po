@@ -1035,3 +1035,25 @@ msgstr "Ergebnislimit"
 #, python-brace-format
 msgid "{name}, {size}, {path}"
 msgstr "{name}, {size}, {path}"
+
+msgid "Category"
+msgstr "Kategorie"
+
+#, python-brace-format
+msgid "Could not prepare extension breakdown: {error}"
+msgstr "Erweiterungsübersicht konnte nicht vorbereitet werden: {error}"
+
+msgid "Extension breakdown"
+msgstr "Erweiterungsübersicht"
+
+msgid "Find query"
+msgstr "Suchabfrage"
+
+msgid "Preparing extension breakdown…"
+msgstr "Erweiterungsübersicht wird vorbereitet…"
+
+msgid "Scope share (%)"
+msgstr "Anteil am Bereich (%)"
+
+msgid "Search is not available yet. Your query and scope are shown here."
+msgstr "Die Suche ist noch nicht verfügbar. Ihre Abfrage und Ihr Suchbereich werden hier angezeigt."

@@ -6,6 +6,8 @@ All notable changes to Disk Analyzer Free are documented here. This project foll
 
 ### Changed
 
+- Added the Types tab with scoped extension statistics, a bounded bar chart, localized percentages, and a pending Find-query handoff.
+
 - Added the Top tab with scoped largest-file/folder rankings, configurable result limits, native leaf-folder filtering, paged metadata, and shared Properties menus.
 
 - Added folder, extension and category pie/bar charts with background reports, bounded Other groups, synchronized folder selection, localized legends and keyboard navigation.
